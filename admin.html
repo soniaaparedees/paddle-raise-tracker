@@ -606,7 +606,7 @@ function confirmDelete() {
   closeDeleteModal();
   db.ref('sessions/' + sid).remove()
     .then(function() {
-      showToast(name + ''s session deleted.');
+      showToast(name + "'s session deleted.");
     })
     .catch(function(err) {
       showToast('Delete failed: ' + err.message);
