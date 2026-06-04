@@ -2,353 +2,375 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Paddle Raise Tracker</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Mono:wght@400;500;600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --gold:#8B5E0A; --gold-bg:#FDF3DC;
-    --ink:#111111; --bg:#F4F2EE; --border:#D6D0C4; --muted:#6B6355;
-    --l1:#B45309; --l1-bg:#FEF3C7; --l1-bd:#FCD34D;
-    --l2:#1D4ED8; --l2-bg:#DBEAFE; --l2-bd:#93C5FD;
-    --l3:#B91C1C; --l3-bg:#FEE2E2; --l3-bd:#FCA5A5;
-    --l4:#047857; --l4-bg:#D1FAE5; --l4-bd:#6EE7B7;
-    --l5:#6D28D9; --l5-bg:#EDE9FE; --l5-bd:#C4B5FD;
-    --l6:#0F766E; --l6-bg:#CCFBF1; --l6-bd:#5EEAD4;
-    --loc-a:#1D4ED8; --loc-b:#047857;
-  }
-  *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
-  html, body { height:100%; overflow:hidden; font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--ink); }
+:root {
+  --gold:#8B5E0A; --gold-bg:#FDF3DC; --gold-bd:#D97706;
+  --ink:#111; --bg:#F4F2EE; --border:#D6D0C4; --muted:#6B6355;
+  --white:#fff;
+  --l1:#B45309; --l1-bg:#FEF3C7; --l1-bd:#FCD34D;
+  --l2:#1D4ED8; --l2-bg:#DBEAFE; --l2-bd:#93C5FD;
+  --l3:#B91C1C; --l3-bg:#FEE2E2; --l3-bd:#FCA5A5;
+  --l4:#047857; --l4-bg:#D1FAE5; --l4-bd:#6EE7B7;
+  --l5:#6D28D9; --l5-bg:#EDE9FE; --l5-bd:#C4B5FD;
+  --l6:#0F766E; --l6-bg:#CCFBF1; --l6-bd:#5EEAD4;
+  --loc-a:#1D4ED8; --loc-b:#047857;
+}
+*, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+html { height:100%; }
+body { height:100%; font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--ink); overflow:hidden; -webkit-tap-highlight-color:transparent; }
 
-  /* ══════════════════════════════
-     SETUP SCREEN
-  ══════════════════════════════ */
-  .setup-overlay {
-    position:fixed; inset:0; background:var(--bg);
-    display:flex; align-items:center; justify-content:center;
-    z-index:500;
-  }
-  .setup-overlay.hidden { display:none; }
+/* ══ SETUP ══ */
+.setup-overlay { position:fixed; inset:0; background:var(--bg); display:flex; align-items:center; justify-content:center; z-index:500; padding:16px; }
+.setup-overlay.hidden { display:none; }
+.setup-card { background:var(--white); border:2px solid var(--border); border-radius:16px; padding:28px 24px; width:100%; max-width:420px; box-shadow:0 12px 48px rgba(0,0,0,.12); }
+.setup-card h1 { font-family:'Playfair Display',serif; font-size:1.5rem; font-weight:900; color:var(--gold); margin-bottom:4px; }
+.setup-card p.sub { font-size:.88rem; color:var(--muted); margin-bottom:24px; }
+.setup-label { font-size:.65rem; text-transform:uppercase; letter-spacing:.13em; font-weight:700; color:var(--muted); margin-bottom:5px; display:block; }
+.setup-input { width:100%; padding:11px 14px; border:1.5px solid var(--border); border-radius:9px; font-family:'DM Sans',sans-serif; font-size:1rem; color:var(--ink); background:var(--white); margin-bottom:20px; -webkit-appearance:none; }
+.setup-input:focus { outline:none; border-color:#6B7280; }
+.loc-options { display:flex; gap:10px; margin-bottom:24px; }
+.loc-option { flex:1; padding:14px 8px; border:2px solid var(--border); border-radius:11px; cursor:pointer; text-align:center; background:var(--white); user-select:none; -webkit-tap-highlight-color:transparent; }
+.loc-option .loc-icon { font-size:1.4rem; margin-bottom:4px; }
+.loc-option .loc-name { font-weight:700; font-size:.88rem; }
+.loc-option .loc-range { font-family:'DM Mono',monospace; font-size:.68rem; color:var(--muted); }
+.loc-option.selected-a { border-color:var(--loc-a); background:#EFF6FF; }
+.loc-option.selected-b { border-color:var(--loc-b); background:#ECFDF5; }
+.loc-option.selected-both { border-color:var(--gold); background:var(--gold-bg); }
+.setup-btn { width:100%; padding:13px; background:var(--ink); color:#fff; border:none; border-radius:10px; font-family:'DM Sans',sans-serif; font-size:1rem; font-weight:700; cursor:pointer; -webkit-appearance:none; }
+.setup-btn:disabled { background:#D1D5DB; }
+.setup-err { color:#B91C1C; font-size:.8rem; margin-top:8px; text-align:center; min-height:18px; }
 
-  .setup-card {
-    background:#fff; border:2px solid var(--border); border-radius:14px;
-    padding:36px 40px; width:440px; max-width:95vw;
-    box-shadow:0 12px 48px rgba(0,0,0,.12);
-  }
-  .setup-card h1 {
-    font-family:'Playfair Display',serif; font-size:1.6rem; font-weight:900;
-    color:var(--gold); margin-bottom:4px;
-  }
-  .setup-card p.sub { font-size:.85rem; color:var(--muted); margin-bottom:28px; }
+/* ══ APP SHELL ══ */
+.app { display:none; flex-direction:column; height:100%; }
 
-  .setup-label {
-    font-size:.68rem; text-transform:uppercase; letter-spacing:.13em;
-    font-weight:700; color:var(--muted); margin-bottom:5px; display:block;
-  }
-  .setup-input {
-    width:100%; padding:9px 13px; border:1.5px solid var(--border);
-    border-radius:7px; font-family:'DM Sans',sans-serif; font-size:.95rem;
-    color:var(--ink); background:#fff; margin-bottom:20px;
-    transition:border-color .15s;
-  }
-  .setup-input:focus { outline:none; border-color:#6B7280; }
+/* ── TOP BAR ── */
+.top-bar {
+  background:var(--white); border-bottom:2px solid var(--border);
+  padding:10px 14px; display:flex; flex-direction:column; gap:8px;
+  flex-shrink:0; position:sticky; top:0; z-index:50;
+  box-shadow:0 1px 6px rgba(0,0,0,.07);
+}
+.top-bar-row1 { display:flex; align-items:center; gap:8px; }
+.top-bar-title { font-family:'Playfair Display',serif; font-size:1rem; font-weight:900; color:var(--gold); flex:1; }
+.operator-tag { font-size:.72rem; color:var(--muted); font-weight:500; }
+.fb-status { display:flex; align-items:center; gap:3px; }
+.fb-dot { width:6px; height:6px; border-radius:50%; background:#D1D5DB; flex-shrink:0; }
+.fb-label { font-size:.6rem; font-weight:600; color:#9CA3AF; }
+.fb-status.connected .fb-dot { background:#047857; animation:fbpulse 2s infinite; }
+.fb-status.connected .fb-label { color:#047857; }
+.fb-status.syncing .fb-dot { background:#D97706; }
+.fb-status.syncing .fb-label { color:#D97706; }
+.fb-status.error .fb-dot { background:#B91C1C; }
+.fb-status.error .fb-label { color:#B91C1C; }
+@keyframes fbpulse { 0%,100%{opacity:1} 50%{opacity:.3} }
 
-  .loc-options { display:flex; gap:10px; margin-bottom:28px; }
-  .loc-option {
-    flex:1; padding:12px 10px; border:2px solid var(--border); border-radius:9px;
-    cursor:pointer; text-align:center; transition:all .15s; background:#fff;
-    user-select:none;
-  }
-  .loc-option:hover { border-color:#9CA3AF; }
-  .loc-option.selected-a { border-color:var(--loc-a); background:#EFF6FF; }
-  .loc-option.selected-b { border-color:var(--loc-b); background:#ECFDF5; }
-  .loc-option.selected-both { border-color:var(--gold); background:var(--gold-bg); }
-  .loc-option .loc-icon { font-size:1.4rem; margin-bottom:4px; }
-  .loc-option .loc-name { font-weight:700; font-size:.88rem; color:var(--ink); }
-  .loc-option .loc-range { font-family:'DM Mono',monospace; font-size:.7rem; color:var(--muted); }
+/* Total box */
+.total-pill {
+  background:var(--gold-bg); border:1.5px solid var(--gold-bd);
+  border-radius:8px; padding:4px 12px; text-align:center; flex-shrink:0;
+}
+.total-pill-label { font-size:.52rem; text-transform:uppercase; letter-spacing:.12em; color:var(--gold); font-weight:700; display:block; }
+.total-pill-val { font-family:'DM Mono',monospace; font-size:1.05rem; font-weight:700; color:var(--gold); }
 
-  .setup-btn {
-    width:100%; padding:12px; background:var(--ink); color:#fff;
-    border:none; border-radius:8px; font-family:'DM Sans',sans-serif;
-    font-size:1rem; font-weight:700; cursor:pointer; transition:background .15s;
-  }
-  .setup-btn:hover { background:#374151; }
-  .setup-btn:disabled { background:#D1D5DB; cursor:not-allowed; }
-  .setup-err { color:#B91C1C; font-size:.8rem; margin-top:8px; text-align:center; min-height:18px; }
+/* ── LEVEL BUTTONS ROW ── */
+.level-row {
+  display:flex; gap:5px; overflow-x:auto; padding-bottom:2px;
+  -webkit-overflow-scrolling:touch; scrollbar-width:none;
+}
+.level-row::-webkit-scrollbar { display:none; }
+.level-btn {
+  font-family:'DM Mono',monospace; font-size:.82rem; font-weight:700;
+  padding:8px 14px; border:2px solid #E5E7EB; border-left-width:4px;
+  border-radius:8px; cursor:pointer; background:var(--white); color:var(--ink);
+  white-space:nowrap; flex-shrink:0; position:relative;
+  box-shadow:0 1px 3px rgba(0,0,0,.08); -webkit-appearance:none;
+}
+.level-btn::after {
+  content:attr(data-count); position:absolute; top:-7px; right:-6px;
+  background:var(--ink); color:#fff; font-size:.52rem; font-weight:700;
+  width:15px; height:15px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+  opacity:0; transition:opacity .12s;
+}
+.level-btn[data-count]:not([data-count="0"])::after { opacity:1; }
+.level-btn.active { transform:translateY(-1px); box-shadow:0 3px 10px rgba(0,0,0,.15); }
+.level-btn.active.lvl-l1{background:var(--l1-bg);border-color:var(--l1);color:var(--l1);}
+.level-btn.active.lvl-l2{background:var(--l2-bg);border-color:var(--l2);color:var(--l2);}
+.level-btn.active.lvl-l3{background:var(--l3-bg);border-color:var(--l3);color:var(--l3);}
+.level-btn.active.lvl-l4{background:var(--l4-bg);border-color:var(--l4);color:var(--l4);}
+.level-btn.active.lvl-l5{background:var(--l5-bg);border-color:var(--l5);color:var(--l5);}
+.level-btn.active.lvl-l6{background:var(--l6-bg);border-color:var(--l6);color:var(--l6);}
 
-  /* ══════════════════════════════
-     MAIN APP
-  ══════════════════════════════ */
-  .body-wrap { display:flex; height:100%; overflow:hidden; }
+/* ── ACTIVE STATUS BAR ── */
+.active-bar {
+  padding:5px 10px; border-radius:7px; border:1.5px solid var(--border);
+  font-size:.8rem; font-weight:500; background:var(--white);
+  display:flex; align-items:center; gap:7px; min-height:34px;
+  flex-shrink:0;
+}
+.active-bar.empty { color:var(--muted); font-style:italic; font-size:.78rem; justify-content:center; }
+.active-bar strong { font-family:'DM Mono',monospace; font-size:.85rem; }
+.active-bar .hint { margin-left:auto; font-size:.68rem; color:var(--muted); }
 
-  /* ── SIDEBAR ── */
-  .sidebar {
-    width:272px; min-width:220px; background:#fff;
-    border-right:2px solid var(--border);
-    display:flex; flex-direction:column; overflow:hidden; flex-shrink:0;
-  }
-  .sidebar-top { padding:8px 13px 6px; border-bottom:2px solid var(--border); background:#fff; flex-shrink:0; }
-  .sidebar-top-row { display:flex; align-items:flex-start; justify-content:space-between; gap:6px; margin-bottom:6px; }
-  .sidebar-top h2 { font-family:'Playfair Display',serif; font-size:1.05rem; font-weight:900; color:var(--gold); }
-  .operator-name { font-size:.75rem; color:var(--muted); font-weight:500; margin-top:1px; }
-  .fb-status { font-size:.63rem; font-weight:600; display:flex; align-items:center; gap:4px; margin-top:3px; }
-  .fb-dot { width:6px; height:6px; border-radius:50%; background:#D1D5DB; flex-shrink:0; }
-  .fb-label { color:#9CA3AF; }
-  .fb-status.syncing .fb-dot { background:#D97706; }
-  .fb-status.syncing .fb-label { color:#D97706; }
-  .fb-status.connected .fb-dot { background:#047857; animation:pulse 2s infinite; }
-  .fb-status.connected .fb-label { color:#047857; }
-  .fb-status.error .fb-dot { background:#B91C1C; }
-  .fb-status.error .fb-label { color:#B91C1C; }
-  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
-  .export-btn {
-    font-family:'DM Mono',monospace; font-size:.62rem; font-weight:700;
-    text-transform:uppercase; letter-spacing:.07em; padding:4px 9px;
-    border:1.5px solid #047857; border-radius:5px; background:#D1FAE5; color:#047857;
-    cursor:pointer; transition:all .12s; white-space:nowrap; flex-shrink:0;
-  }
-  .export-btn:hover { background:#A7F3D0; }
+/* ── ACTION BTNS ROW ── */
+.action-row { display:flex; gap:6px; flex-shrink:0; }
+.undo-btn {
+  flex:1; font-family:'DM Mono',monospace; font-size:.72rem; font-weight:700;
+  text-transform:uppercase; letter-spacing:.07em; padding:9px 12px;
+  border:1.5px solid var(--ink); border-radius:8px; background:var(--ink); color:#fff;
+  cursor:pointer; -webkit-appearance:none;
+}
+.reset-btn {
+  flex:1; font-family:'DM Mono',monospace; font-size:.72rem; font-weight:700;
+  text-transform:uppercase; letter-spacing:.07em; padding:9px 12px;
+  border:1.5px solid #FCA5A5; border-radius:8px; background:#FEF2F2; color:#B91C1C;
+  cursor:pointer; -webkit-appearance:none;
+}
+.export-btn {
+  flex:1; font-family:'DM Mono',monospace; font-size:.72rem; font-weight:700;
+  text-transform:uppercase; letter-spacing:.07em; padding:9px 12px;
+  border:1.5px solid #047857; border-radius:8px; background:#D1FAE5; color:#047857;
+  cursor:pointer; -webkit-appearance:none;
+}
 
-  .total-box { background:var(--gold-bg); border:2px solid #D97706; border-radius:7px; padding:6px 12px; margin-bottom:4px; }
-  .sidebar-total-label { font-size:.58rem; text-transform:uppercase; letter-spacing:.13em; color:var(--gold); font-weight:700; display:block; margin-bottom:1px; }
-  .sidebar-total-value { font-family:'DM Mono',monospace; font-size:1.75rem; font-weight:700; color:var(--gold); line-height:1.1; display:block; }
-  .paddle-count-label { font-size:.72rem; color:var(--muted); font-weight:500; margin-top:1px; }
+/* ── LOCATION TABS ── */
+.loc-tab-bar {
+  display:flex; gap:0; border-bottom:2px solid var(--border);
+  flex-shrink:0; background:var(--bg);
+}
+.loc-tab {
+  flex:1; padding:10px 8px; font-family:'DM Mono',monospace; font-size:.78rem; font-weight:700;
+  text-align:center; cursor:pointer; color:var(--muted); border-bottom:3px solid transparent;
+  margin-bottom:-2px; background:none; border-top:none; border-left:none; border-right:none;
+  transition:all .15s; -webkit-appearance:none;
+}
+.loc-tab.active-a { color:var(--loc-a); border-bottom-color:var(--loc-a); background:var(--white); }
+.loc-tab.active-b { color:var(--loc-b); border-bottom-color:var(--loc-b); background:var(--white); }
 
-  .sidebar-tabs { display:flex; border-bottom:1.5px solid var(--border); background:var(--bg); flex-shrink:0; }
-  .sidebar-tab {
-    flex:1; padding:6px 0; font-size:.8rem; font-weight:600; text-align:center;
-    cursor:pointer; color:var(--muted); border-bottom:2px solid transparent;
-    margin-bottom:-1.5px; background:none; border-top:none; border-left:none; border-right:none; transition:all .12s;
-  }
-  .sidebar-tab:hover { color:var(--ink); }
-  .sidebar-tab.active-tab { color:var(--ink); border-bottom-color:var(--gold); background:#fff; }
-  .sidebar-pane { display:none; flex-direction:column; overflow-y:auto; flex:1; }
-  .sidebar-pane.active { display:flex; flex-direction:column; }
+/* ── PADDLE AREA ── */
+.paddle-area { flex:1; overflow:hidden; display:flex; min-height:0; }
+.loc-pane { display:none; flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:8px 10px 16px; }
+.loc-pane.active { display:block; }
 
-  .level-summary { padding:6px 10px; border-bottom:1px solid #F0EDE8; border-left:3px solid transparent; }
-  .level-summary-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:4px; }
-  .level-label { display:flex; align-items:center; gap:6px; font-size:.92rem; font-weight:700; }
-  .level-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
-  .level-subtotal { font-family:'DM Mono',monospace; font-size:.92rem; font-weight:700; }
-  .paddle-chips { display:flex; flex-wrap:wrap; gap:3px; }
-  .chip {
-    font-family:'DM Mono',monospace; font-size:.78rem; font-weight:600;
-    padding:2px 6px; border-radius:3px; cursor:pointer; border:1px solid transparent;
-    transition:filter .1s; line-height:1.5;
-  }
-  .chip:hover { filter:brightness(.85); }
-  .chip.empty-chip { color:#9CA3AF; font-style:italic; background:none!important; border:none!important; cursor:default; font-size:.8rem; }
-  .chip.voided { opacity:.45; text-decoration:line-through; cursor:pointer; filter:none; }
-  .chip.voided:hover { opacity:.65; }
-  .chip-l1{background:var(--l1-bg);color:var(--l1);border-color:var(--l1-bd);}
-  .chip-l2{background:var(--l2-bg);color:var(--l2);border-color:var(--l2-bd);}
-  .chip-l3{background:var(--l3-bg);color:var(--l3);border-color:var(--l3-bd);}
-  .chip-l4{background:var(--l4-bg);color:var(--l4);border-color:var(--l4-bd);}
-  .chip-l5{background:var(--l5-bg);color:var(--l5);border-color:var(--l5-bd);}
-  .chip-l6{background:var(--l6-bg);color:var(--l6);border-color:var(--l6-bd);}
+/* Three col layout for loc A (many paddles), two col for B */
+.loc-cols { display:flex; gap:0; height:100%; }
+.hundreds-col { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; border-right:1px solid var(--border); padding:6px 6px 16px; }
+.hundreds-col:last-child { border-right:none; }
 
-  /* ── MAIN ── */
-  main { flex:1; display:flex; flex-direction:column; overflow:hidden; padding:6px 10px 4px; gap:0; min-width:0; }
+.col-header-row { display:flex; align-items:center; gap:5px; margin-bottom:4px; }
+.col-header { font-family:'DM Mono',monospace; font-size:.6rem; font-weight:700; text-transform:uppercase; letter-spacing:.1em; color:#fff; padding:2px 6px; border-radius:3px; white-space:nowrap; flex-shrink:0; }
+.col-header.loc-a { background:var(--loc-a); }
+.col-header.loc-b { background:var(--loc-b); }
+.col-header-line { flex:1; height:1px; background:var(--border); }
 
-  .controls-row { display:flex; align-items:center; gap:6px; margin-bottom:5px; flex-shrink:0; flex-wrap:nowrap; }
-  .level-buttons { display:flex; flex-wrap:wrap; gap:6px; flex-shrink:0; }
-  .level-btn {
-    font-family:'DM Mono',monospace; font-size:1.05rem; font-weight:700;
-    padding:9px 22px; border:2px solid #E5E7EB; border-left-width:5px;
-    border-radius:7px; cursor:pointer; transition:all .12s; background:#fff;
-    color:var(--ink); position:relative; box-shadow:0 1px 4px rgba(0,0,0,.09); white-space:nowrap;
-  }
-  .level-btn::after {
-    content:attr(data-count); position:absolute; top:-7px; right:-7px;
-    background:var(--ink); color:#fff; font-size:.58rem; font-weight:700;
-    width:17px; height:17px; border-radius:50%; display:flex; align-items:center; justify-content:center;
-    opacity:0; transition:opacity .12s;
-  }
-  .level-btn[data-count]:not([data-count="0"])::after { opacity:1; }
-  .level-btn:hover { transform:translateY(-1px); box-shadow:0 3px 9px rgba(0,0,0,.13); }
-  .level-btn.active { transform:translateY(-1px); box-shadow:0 3px 14px rgba(0,0,0,.17); }
-  .level-btn.active.lvl-l1{background:var(--l1-bg);border-color:var(--l1);color:var(--l1);}
-  .level-btn.active.lvl-l2{background:var(--l2-bg);border-color:var(--l2);color:var(--l2);}
-  .level-btn.active.lvl-l3{background:var(--l3-bg);border-color:var(--l3);color:var(--l3);}
-  .level-btn.active.lvl-l4{background:var(--l4-bg);border-color:var(--l4);color:var(--l4);}
-  .level-btn.active.lvl-l5{background:var(--l5-bg);border-color:var(--l5);color:var(--l5);}
-  .level-btn.active.lvl-l6{background:var(--l6-bg);border-color:var(--l6);color:var(--l6);}
+.digit-group { margin-bottom:4px; }
+.digit-group-line { width:100%; height:1px; background:var(--border); margin-bottom:3px; }
 
-  .active-status {
-    flex:1; min-width:0; display:flex; align-items:center; gap:8px;
-    padding:5px 12px; border-radius:7px; border:1.5px solid var(--border);
-    font-size:.85rem; font-weight:500; background:#fff; overflow:hidden; white-space:nowrap;
-  }
-  .active-status .hint { font-size:.72rem; color:var(--muted); overflow:hidden; text-overflow:ellipsis; }
-  .active-status strong { font-family:'DM Mono',monospace; font-size:.88rem; }
-  .active-status.empty { color:var(--muted); font-style:italic; font-size:.8rem; justify-content:center; }
+.paddle-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(40px,1fr)); gap:3px; }
+.paddle-btn {
+  font-family:'DM Mono',monospace; font-size:.75rem; font-weight:700;
+  aspect-ratio:1/1; border:1.5px solid #D1D5DB; border-radius:5px;
+  background:var(--white); color:#374151; cursor:pointer;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  line-height:1; padding:0; -webkit-appearance:none; transition:all .1s;
+  -webkit-tap-highlight-color:transparent;
+}
+.paddle-btn:active:not(.raised-any) { background:#F3F4F6; }
+.paddle-btn.raised-any { cursor:default; }
+.paddle-btn.raised-l1{background:var(--l1-bg);border-color:var(--l1);color:var(--l1);font-weight:800;}
+.paddle-btn.raised-l2{background:var(--l2-bg);border-color:var(--l2);color:var(--l2);font-weight:800;}
+.paddle-btn.raised-l3{background:var(--l3-bg);border-color:var(--l3);color:var(--l3);font-weight:800;}
+.paddle-btn.raised-l4{background:var(--l4-bg);border-color:var(--l4);color:var(--l4);font-weight:800;}
+.paddle-btn.raised-l5{background:var(--l5-bg);border-color:var(--l5);color:var(--l5);font-weight:800;}
+.paddle-btn.raised-l6{background:var(--l6-bg);border-color:var(--l6);color:var(--l6);font-weight:800;}
+.pip-row { display:flex; justify-content:center; gap:2px; margin-top:2px; height:4px; }
+.pip { width:4px; height:4px; border-radius:50%; flex-shrink:0; }
 
-  .undo-btn {
-    flex-shrink:0; font-family:'DM Mono',monospace; font-size:.7rem;
-    text-transform:uppercase; letter-spacing:.08em; padding:8px 13px;
-    border:1.5px solid #374151; border-radius:7px; background:#111; color:#fff;
-    cursor:pointer; transition:all .15s; white-space:nowrap; align-self:stretch;
-  }
-  .undo-btn:hover { background:#374151; }
+/* ── SUMMARY SHEET (bottom drawer) ── */
+.summary-backdrop { display:none; position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:200; }
+.summary-backdrop.show { display:block; }
+.summary-sheet {
+  position:fixed; bottom:0; left:0; right:0; z-index:201;
+  background:var(--white); border-radius:18px 18px 0 0;
+  box-shadow:0 -8px 32px rgba(0,0,0,.15);
+  transform:translateY(100%); transition:transform .3s ease;
+  max-height:80vh; display:flex; flex-direction:column;
+}
+.summary-sheet.show { transform:translateY(0); }
+.sheet-handle { width:40px; height:4px; background:#D1D5DB; border-radius:2px; margin:12px auto 8px; flex-shrink:0; }
+.sheet-header { padding:0 16px 10px; border-bottom:1.5px solid var(--border); flex-shrink:0; display:flex; align-items:center; justify-content:space-between; }
+.sheet-title { font-family:'Playfair Display',serif; font-size:1rem; font-weight:900; color:var(--ink); }
+.sheet-close { font-size:1.1rem; color:var(--muted); cursor:pointer; padding:4px; }
+.sheet-body { overflow-y:auto; -webkit-overflow-scrolling:touch; flex:1; padding:8px 0 24px; }
+.sheet-level { padding:8px 16px; border-bottom:1px solid #F0EDE8; border-left:3px solid transparent; }
+.sheet-level-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:5px; }
+.sheet-level-label { display:flex; align-items:center; gap:6px; font-size:.92rem; font-weight:700; }
+.sheet-level-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+.sheet-level-sub { font-family:'DM Mono',monospace; font-size:.9rem; font-weight:700; }
+.sheet-chips { display:flex; flex-wrap:wrap; gap:4px; }
+.chip { font-family:'DM Mono',monospace; font-size:.78rem; font-weight:600; padding:2px 7px; border-radius:4px; cursor:pointer; border:1px solid transparent; line-height:1.5; -webkit-tap-highlight-color:transparent; }
+.chip:active { filter:brightness(.85); }
+.chip.empty-chip { color:#9CA3AF; font-style:italic; background:none!important; border:none!important; cursor:default; }
+.chip.voided { opacity:.45; text-decoration:line-through; }
+.chip-l1{background:var(--l1-bg);color:var(--l1);border-color:var(--l1-bd);}
+.chip-l2{background:var(--l2-bg);color:var(--l2);border-color:var(--l2-bd);}
+.chip-l3{background:var(--l3-bg);color:var(--l3);border-color:var(--l3-bd);}
+.chip-l4{background:var(--l4-bg);color:var(--l4);border-color:var(--l4-bd);}
+.chip-l5{background:var(--l5-bg);color:var(--l5);border-color:var(--l5-bd);}
+.chip-l6{background:var(--l6-bg);color:var(--l6);border-color:var(--l6-bd);}
 
-  .reset-btn {
-    flex-shrink:0; font-family:'DM Mono',monospace; font-size:.7rem;
-    text-transform:uppercase; letter-spacing:.08em; padding:8px 13px;
-    border:1.5px solid #FCA5A5; border-radius:7px; background:#FEF2F2; color:#B91C1C;
-    cursor:pointer; transition:all .15s; white-space:nowrap; align-self:stretch;
-  }
-  .reset-btn:hover { background:#FEE2E2; border-color:#B91C1C; }
+/* ── SUMMARY TABS (inside sheet) ── */
+.sheet-tabs { display:flex; border-bottom:1.5px solid var(--border); flex-shrink:0; background:var(--bg); }
+.sheet-tab {
+  flex:1; padding:7px 0; font-size:.78rem; font-weight:600; text-align:center;
+  cursor:pointer; color:var(--muted); border-bottom:2px solid transparent;
+  margin-bottom:-1.5px; background:none; border-top:none; border-left:none; border-right:none;
+  -webkit-appearance:none;
+}
+.sheet-tab.active-tab { color:var(--ink); border-bottom-color:var(--gold); background:var(--white); }
 
-  /* ── LOCATIONS ── */
-  .locations-split { flex:1; display:flex; flex-direction:column; gap:0; overflow:hidden; min-height:0; }
-  .loc-panel { display:flex; flex-direction:column; overflow:hidden; min-width:0; border-bottom:2px solid var(--border); }
-  .loc-panel:last-child { border-bottom:none; }
-  .loc-panel.loc-panel-a { flex:2; }
-  .loc-panel.loc-panel-b { flex:1; }
-  .loc-panel.loc-single { flex:1; }
-  .loc-cols { flex:1; display:flex; gap:0; overflow:hidden; }
-  .hundreds-col { flex:1; overflow-y:auto; min-width:0; border-right:1px solid var(--border); padding:4px 5px; }
-  .hundreds-col:last-child { border-right:none; }
-  .col-header-row { display:flex; align-items:center; gap:6px; margin-bottom:3px; }
-  .col-header { font-family:'DM Mono',monospace; font-size:.62rem; font-weight:700; text-transform:uppercase; letter-spacing:.1em; color:#fff; padding:2px 7px; border-radius:3px; white-space:nowrap; flex-shrink:0; }
-  .col-header.loc-a { background:var(--loc-a); }
-  .col-header.loc-b { background:var(--loc-b); }
-  .col-header-line { flex:1; height:1px; background:var(--border); }
-  .digit-group { margin-bottom:3px; }
-  .digit-group-header { margin-bottom:2px; }
-  .digit-group-line { width:100%; height:1px; background:var(--border); }
-  .paddle-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(36px,1fr)); gap:2px; }
-  .paddle-btn {
-    font-family:'DM Mono',monospace; font-size:.78rem; font-weight:700;
-    aspect-ratio:1/1; border:1.5px solid #D1D5DB; border-radius:4px;
-    background:#fff; color:#374151; cursor:pointer; transition:all .1s;
-    display:flex; flex-direction:column; align-items:center; justify-content:center;
-    line-height:1; padding:0;
-  }
-  .paddle-btn:hover:not(.raised-any) { border-color:#6B7280; background:#F9FAFB; transform:translateY(-1px); }
-  .paddle-btn.raised-any { cursor:default; }
-  .paddle-btn.raised-l1{background:var(--l1-bg);border-color:var(--l1);color:var(--l1);font-weight:800;}
-  .paddle-btn.raised-l2{background:var(--l2-bg);border-color:var(--l2);color:var(--l2);font-weight:800;}
-  .paddle-btn.raised-l3{background:var(--l3-bg);border-color:var(--l3);color:var(--l3);font-weight:800;}
-  .paddle-btn.raised-l4{background:var(--l4-bg);border-color:var(--l4);color:var(--l4);font-weight:800;}
-  .paddle-btn.raised-l5{background:var(--l5-bg);border-color:var(--l5);color:var(--l5);font-weight:800;}
-  .paddle-btn.raised-l6{background:var(--l6-bg);border-color:var(--l6);color:var(--l6);font-weight:800;}
-  .pip-row { display:flex; justify-content:center; gap:2px; margin-top:2px; height:5px; }
-  .pip { width:4px; height:4px; border-radius:50%; flex-shrink:0; }
+/* Summary button (FAB) */
+.summary-fab {
+  position:fixed; bottom:20px; right:16px; z-index:100;
+  background:var(--ink); color:#fff;
+  font-family:'DM Mono',monospace; font-size:.72rem; font-weight:700;
+  text-transform:uppercase; letter-spacing:.07em;
+  padding:11px 16px; border-radius:30px; border:none; cursor:pointer;
+  box-shadow:0 4px 16px rgba(0,0,0,.3); -webkit-appearance:none;
+  display:flex; align-items:center; gap:6px;
+}
+.fab-badge {
+  background:var(--gold); color:var(--ink); font-size:.62rem; font-weight:800;
+  padding:1px 6px; border-radius:10px; min-width:18px; text-align:center;
+}
 
-  /* ── TOAST ── */
-  .toast {
-    position:fixed; bottom:12px; left:50%; transform:translateX(-50%) translateY(70px);
-    background:var(--ink); color:#fff; border-radius:6px; padding:7px 14px;
-    font-size:.8rem; font-weight:500; display:flex; align-items:center; gap:10px;
-    box-shadow:0 6px 24px rgba(0,0,0,.22); z-index:999; transition:transform .22s ease; white-space:nowrap;
-  }
-  .toast.show { transform:translateX(-50%) translateY(0); }
+/* ── TOAST ── */
+.toast { position:fixed; bottom:80px; left:50%; transform:translateX(-50%) translateY(60px); background:var(--ink); color:#fff; border-radius:8px; padding:9px 16px; font-size:.82rem; font-weight:500; box-shadow:0 6px 20px rgba(0,0,0,.25); z-index:999; transition:transform .22s ease; white-space:nowrap; }
+.toast.show { transform:translateX(-50%) translateY(0); }
 
-  /* ── MODAL ── */
-  .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.35); z-index:200; align-items:center; justify-content:center; }
-  .modal-overlay.show { display:flex; }
-  .modal { background:#fff; border:1.5px solid var(--border); border-radius:10px; padding:22px 26px; max-width:320px; text-align:center; box-shadow:0 16px 50px rgba(0,0,0,.18); }
-  .modal h3 { font-family:'Playfair Display',serif; font-size:1.05rem; margin-bottom:8px; }
-  .modal p { font-size:.85rem; color:var(--muted); margin-bottom:18px; line-height:1.5; }
-  .modal-btns { display:flex; gap:9px; justify-content:center; }
-  .modal-btns button { font-family:'DM Sans',sans-serif; font-weight:600; font-size:.8rem; padding:8px 18px; border-radius:5px; cursor:pointer; border:1.5px solid var(--border); background:#fff; color:var(--ink); transition:all .12s; }
-  .modal-btns .confirm { background:#FEF2F2; border-color:#B91C1C; color:#B91C1C; }
-  .modal-btns .confirm:hover { background:#FEE2E2; }
-  .modal-btns .cancel:hover { background:#F9FAFB; }
+/* ── MODAL ── */
+.modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:300; align-items:flex-end; justify-content:center; padding:0; }
+.modal-overlay.show { display:flex; }
+.modal-card { background:var(--white); border-radius:18px 18px 0 0; padding:28px 24px 36px; width:100%; max-width:480px; box-shadow:0 -8px 32px rgba(0,0,0,.15); }
+.modal-card h3 { font-family:'Playfair Display',serif; font-size:1.1rem; color:var(--ink); margin-bottom:8px; }
+.modal-card p { font-size:.88rem; color:var(--muted); margin-bottom:22px; line-height:1.5; }
+.modal-btns { display:flex; gap:10px; }
+.modal-btns button { flex:1; padding:13px; border-radius:10px; font-family:'DM Sans',sans-serif; font-size:.95rem; font-weight:700; cursor:pointer; border:1.5px solid var(--border); background:var(--white); color:var(--ink); -webkit-appearance:none; }
+.modal-confirm { background:#FEF2F2!important; border-color:#FCA5A5!important; color:#B91C1C!important; }
+
+/* ── DESKTOP ENHANCEMENT ── */
+@media (min-width:768px) {
+  .top-bar { flex-direction:row; align-items:center; padding:0 16px; height:56px; flex-wrap:wrap; gap:10px; }
+  .top-bar > * { flex-shrink:0; }
+  .level-row { flex-wrap:wrap; overflow:visible; }
+  .active-bar { flex:1; min-width:200px; }
+  .action-row { flex-wrap:nowrap; }
+  .summary-fab { display:none; }
+  /* On desktop show summary inline instead of FAB */
+}
 </style>
 </head>
 <body>
 
-<!-- ══ SETUP SCREEN ══ -->
+<!-- SETUP -->
 <div class="setup-overlay" id="setup-overlay">
   <div class="setup-card">
     <h1>🏆 Paddle Raise</h1>
-    <p class="sub">Enter your name and select which location(s) you're tracking.</p>
-
-    <label class="setup-label" for="operator-input">Your Name</label>
+    <p class="sub">Enter your name and select your location(s).</p>
+    <label class="setup-label">Your Name</label>
     <input class="setup-input" id="operator-input" type="text" placeholder="e.g. Sarah Johnson" autocomplete="off">
-
     <label class="setup-label">Location(s)</label>
     <div class="loc-options">
       <div class="loc-option" id="opt-a" onclick="toggleLocOption('a')">
         <div class="loc-icon">🅰</div>
-        <div class="loc-name">Location A</div>
-        <div class="loc-range">101 – 375</div>
+        <div class="loc-name">Loc A</div>
+        <div class="loc-range">101–375</div>
       </div>
       <div class="loc-option" id="opt-b" onclick="toggleLocOption('b')">
         <div class="loc-icon">🅱</div>
-        <div class="loc-name">Location B</div>
-        <div class="loc-range">376 – 450</div>
+        <div class="loc-name">Loc B</div>
+        <div class="loc-range">376–450</div>
       </div>
       <div class="loc-option" id="opt-both" onclick="toggleLocOption('both')">
         <div class="loc-icon">🔀</div>
         <div class="loc-name">Both</div>
-        <div class="loc-range">101 – 450</div>
+        <div class="loc-range">101–450</div>
       </div>
     </div>
-
-    <button class="setup-btn" id="setup-start-btn" onclick="startApp()">Start Tracking</button>
+    <button class="setup-btn" onclick="startApp()">Start Tracking</button>
     <div class="setup-err" id="setup-err"></div>
   </div>
 </div>
 
-<!-- ══ MAIN APP ══ -->
-<div class="body-wrap" id="app" style="display:none">
+<!-- APP -->
+<div class="app" id="app">
 
-  <aside class="sidebar">
-    <div class="sidebar-top">
-      <div class="sidebar-top-row">
-        <div>
-          <h2>🏆 Paddle Raise</h2>
-          <div class="operator-name" id="operator-display"></div>
-          <div class="fb-status" id="fb-status">
-            <div class="fb-dot"></div>
-            <span class="fb-label" id="fb-label">Not connected</span>
-          </div>
-        </div>
-        <button class="export-btn" onclick="exportCSV()">⬇ Export CSV</button>
+  <!-- Top bar -->
+  <div class="top-bar">
+    <div class="top-bar-row1">
+      <span class="top-bar-title">🏆 Paddle Raise</span>
+      <span class="operator-tag" id="operator-tag"></span>
+      <div class="fb-status" id="fb-status"><div class="fb-dot"></div><span class="fb-label" id="fb-label">–</span></div>
+      <div class="total-pill">
+        <span class="total-pill-label">Total</span>
+        <span class="total-pill-val" id="total-val">$0</span>
       </div>
-      <div class="total-box">
-        <span class="sidebar-total-label">Total Raised</span>
-        <span class="sidebar-total-value" id="sidebar-total">$0</span>
-      </div>
-      <div class="paddle-count-label" id="paddle-count-label">0 paddles raised</div>
     </div>
-    <div class="sidebar-tabs" id="sidebar-tabs"></div>
-    <div class="sidebar-pane active" id="sb-pane-all"></div>
-    <div class="sidebar-pane" id="sb-pane-a"></div>
-    <div class="sidebar-pane" id="sb-pane-b"></div>
-  </aside>
+    <!-- Level buttons -->
+    <div class="level-row" id="level-buttons"></div>
+    <!-- Active status + actions -->
+    <div class="active-bar empty" id="active-bar">Select a giving level</div>
+    <div class="action-row">
+      <button class="undo-btn" onclick="undoLast()">↩ Undo</button>
+      <button class="reset-btn" onclick="openReset()">Reset</button>
+      <button class="export-btn" onclick="exportCSV()">⬇ CSV</button>
+    </div>
+  </div>
 
-  <main>
-    <div class="controls-row">
-      <div class="level-buttons" id="level-buttons"></div>
-      <div class="active-status empty" id="active-status">Select a giving level above</div>
-      <button class="undo-btn" onclick="undoLast()">Undo</button>
-      <button class="reset-btn" onclick="openReset()">Reset All</button>
-    </div>
-    <div class="locations-split" id="locations-split"></div>
-  </main>
+  <!-- Location tabs -->
+  <div class="loc-tab-bar" id="loc-tab-bar"></div>
+
+  <!-- Paddle area -->
+  <div class="paddle-area" id="paddle-area"></div>
+
 </div>
 
-<div class="toast" id="toast"><span id="toast-msg"></span></div>
+<!-- Summary FAB -->
+<button class="summary-fab" id="summary-fab" onclick="openSummary()">
+  📋 Summary <span class="fab-badge" id="fab-badge">0</span>
+</button>
 
+<!-- Summary sheet -->
+<div class="summary-backdrop" id="summary-backdrop" onclick="closeSummary()"></div>
+<div class="summary-sheet" id="summary-sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-header">
+    <span class="sheet-title">Live Summary</span>
+    <span class="sheet-close" onclick="closeSummary()">✕</span>
+  </div>
+  <div class="sheet-tabs" id="sheet-tabs"></div>
+  <div class="sheet-body" id="sheet-body"></div>
+</div>
+
+<!-- Reset modal -->
 <div class="modal-overlay" id="modal">
-  <div class="modal">
+  <div class="modal-card">
     <h3>Reset Everything?</h3>
     <p>This will clear all raised paddles. This cannot be undone.</p>
     <div class="modal-btns">
-      <button class="cancel" onclick="closeReset()">Cancel</button>
-      <button class="confirm" onclick="confirmReset()">Yes, Reset</button>
+      <button onclick="closeReset()">Cancel</button>
+      <button class="modal-confirm" onclick="confirmReset()">Yes, Reset</button>
     </div>
   </div>
 </div>
 
+<!-- Toast -->
+<div class="toast" id="toast"><span id="toast-msg"></span></div>
+
 <script>
-/* ════════════════════════════════
-   CONSTANTS
-════════════════════════════════ */
+/* ════════ CONSTANTS ════════ */
 const LEVELS = [
   { id:'l1', label:'$10,000', value:10000 },
   { id:'l2', label:'$5,000',  value:5000  },
@@ -366,90 +388,76 @@ const HEX = {
   l6:{ c:'#0F766E', bg:'#CCFBF1', bd:'#5EEAD4' },
 };
 
-// Column definitions per location
-const COL_DEFS_A = {
-  'a-1': buildGroups(101,199), 'a-2': buildGroups(200,299), 'a-3': buildGroups(300,375),
-};
-const COL_LABELS_A = {
-  'a-1':{text:'100s',cls:'loc-a'}, 'a-2':{text:'200s',cls:'loc-a'}, 'a-3':{text:'300s',cls:'loc-a'},
-};
-const COL_DEFS_B = {
-  'b-1': buildGroups(376,399), 'b-2': buildGroups(400,424), 'b-3': buildGroups(425,450),
-};
-const COL_LABELS_B = {
-  'b-1':{text:'376–399',cls:'loc-b'}, 'b-2':{text:'400–424',cls:'loc-b'}, 'b-3':{text:'425–450',cls:'loc-b'},
-};
-
 function buildGroups(start, end) {
-  const groups=[]; let i=start;
-  while(i<=end){ const p=Math.floor(i/10),e=Math.min(p*10+9,end); groups.push({prefix:p,start:i,end:e}); i=e+1; }
-  return groups;
+  const g=[]; let i=start;
+  while(i<=end){const p=Math.floor(i/10),e=Math.min(p*10+9,end);g.push({prefix:p,start:i,end:e});i=e+1;}
+  return g;
 }
 
-/* ════════════════════════════════
-   APP STATE
-════════════════════════════════ */
-let log = [];          // [{num, levelId, voided, ts}]
+const LOC_CONFIG = {
+  a: {
+    cols: [
+      { id:'a-1', label:'100s', groups:buildGroups(101,199) },
+      { id:'a-2', label:'200s', groups:buildGroups(200,299) },
+      { id:'a-3', label:'300s', groups:buildGroups(300,375) },
+    ]
+  },
+  b: {
+    cols: [
+      { id:'b-1', label:'376–399', groups:buildGroups(376,399) },
+      { id:'b-2', label:'400–424', groups:buildGroups(400,424) },
+      { id:'b-3', label:'425–450', groups:buildGroups(425,450) },
+    ]
+  }
+};
+
+/* ════════ STATE ════════ */
+let log = [];
 let activeLevel = null;
 let lastAction = null;
 let toastTimer = null;
 let operatorName = '';
-let activeLocs = [];   // ['a'], ['b'], or ['a','b']
-
-/* ════════════════════════════════
-   SETUP
-════════════════════════════════ */
+let activeLocs = [];
+let activeLocTab = null;
+let activeSummaryTab = 'all';
 let selectedLoc = null;
 
+/* ════════ SETUP ════════ */
 function toggleLocOption(loc) {
   selectedLoc = (selectedLoc === loc) ? null : loc;
   ['a','b','both'].forEach(l => {
-    const el = document.getElementById(`opt-${l}`);
-    el.classList.remove('selected-a','selected-b','selected-both');
+    document.getElementById('opt-'+l).className = 'loc-option' + (l===selectedLoc ? ' selected-'+l : '');
   });
-  if (selectedLoc) {
-    document.getElementById(`opt-${selectedLoc}`).classList.add(`selected-${selectedLoc}`);
-  }
 }
 
 function startApp() {
-  const nameVal = document.getElementById('operator-input').value.trim();
-  const err = document.getElementById('setup-err');
-  if (!nameVal) { err.textContent = 'Please enter your name.'; return; }
-  if (!selectedLoc) { err.textContent = 'Please select a location.'; return; }
-  err.textContent = '';
-
-  operatorName = nameVal;
+  const name = document.getElementById('operator-input').value.trim();
+  const err  = document.getElementById('setup-err');
+  if (!name) { err.textContent='Please enter your name.'; return; }
+  if (!selectedLoc) { err.textContent='Please select a location.'; return; }
+  err.textContent='';
+  operatorName = name;
   activeLocs = selectedLoc === 'both' ? ['a','b'] : [selectedLoc];
-
   document.getElementById('setup-overlay').classList.add('hidden');
   document.getElementById('app').style.display = 'flex';
-
+  document.getElementById('app').style.flexDirection = 'column';
+  document.getElementById('app').style.height = '100%';
   initApp();
   if (window._fbInitSession) window._fbInitSession(operatorName, activeLocs);
 }
+document.getElementById('operator-input').addEventListener('keydown', e => { if(e.key==='Enter') startApp(); });
 
-// Allow Enter key in name field
-document.getElementById('operator-input').addEventListener('keydown', e => {
-  if (e.key === 'Enter') startApp();
-});
-
-/* ════════════════════════════════
-   APP INIT
-════════════════════════════════ */
+/* ════════ INIT ════════ */
 function initApp() {
-  document.getElementById('operator-display').textContent = operatorName;
+  document.getElementById('operator-tag').textContent = operatorName;
 
-  // Build sidebar tabs dynamically
-  buildSidebarTabs();
-
-  // Build level buttons
+  // Level buttons
   const levelBtnsEl = document.getElementById('level-buttons');
   LEVELS.forEach(lvl => {
     const h = HEX[lvl.id];
     const btn = document.createElement('button');
-    btn.className = `level-btn lvl-${lvl.id}`;
-    btn.id = `lvl-btn-${lvl.id}`;
+    btn.className = 'level-btn lvl-'+lvl.id;
+    btn.id = 'lvl-btn-'+lvl.id;
     btn.dataset.count = '0';
     btn.style.borderLeftColor = h.c;
     btn.textContent = lvl.label;
@@ -457,171 +465,156 @@ function initApp() {
     levelBtnsEl.appendChild(btn);
   });
 
-  // Build location panels
-  buildLocationPanels();
+  // Location tabs
+  buildLocTabs();
 
-  renderSidebar(); renderTotals(); renderLevelCounts();
+  // Summary sheet tabs
+  buildSheetTabs();
 }
 
-function buildSidebarTabs() {
-  const tabsEl = document.getElementById('sidebar-tabs');
-  tabsEl.innerHTML = '';
-
-  const tabs = [{ id:'all', label:'All' }];
-  if (activeLocs.includes('a')) tabs.push({ id:'a', label:'Loc A' });
-  if (activeLocs.includes('b')) tabs.push({ id:'b', label:'Loc B' });
-
-  tabs.forEach((t, i) => {
+function buildLocTabs() {
+  const bar = document.getElementById('loc-tab-bar');
+  bar.innerHTML = '';
+  activeLocs.forEach((loc, i) => {
     const btn = document.createElement('button');
-    btn.className = `sidebar-tab${i===0?' active-tab':''}`;
-    btn.textContent = t.label;
-    btn.addEventListener('click', () => switchSidebarTab(t.id, btn));
-    tabsEl.appendChild(btn);
+    btn.className = 'loc-tab';
+    btn.id = 'loc-tab-'+loc;
+    btn.textContent = loc === 'a' ? 'Location A · 101–375' : 'Location B · 376–450';
+    btn.addEventListener('click', () => switchLocTab(loc));
+    bar.appendChild(btn);
+    if (i === 0) { activeLocTab = loc; btn.classList.add('active-'+loc); }
   });
-
-  // Show/hide panes
-  ['all','a','b'].forEach(id => {
-    const pane = document.getElementById(`sb-pane-${id}`);
-    pane.classList.remove('active');
-  });
-  document.getElementById('sb-pane-all').classList.add('active');
+  if (activeLocs.length === 1) bar.style.display = 'none'; // hide tab bar if only one location
+  buildPaddleArea();
 }
 
-function buildLocationPanels() {
-  const split = document.getElementById('locations-split');
-  split.innerHTML = '';
-
-  activeLocs.forEach((loc, idx) => {
-    const panel = document.createElement('div');
-    const isOnly = activeLocs.length === 1;
-    const isBoth = activeLocs.length === 2;
-    panel.className = `loc-panel${isOnly ? ' loc-single' : (loc==='a' ? ' loc-panel-a' : ' loc-panel-b')}`;
-
+function buildPaddleArea() {
+  const area = document.getElementById('paddle-area');
+  area.innerHTML = '';
+  activeLocs.forEach((loc, i) => {
+    const pane = document.createElement('div');
+    pane.className = 'loc-pane' + (i===0 ? ' active' : '');
+    pane.id = 'loc-pane-'+loc;
     const colsWrap = document.createElement('div');
     colsWrap.className = 'loc-cols';
-
-    const colDefs = loc === 'a' ? COL_DEFS_A : COL_DEFS_B;
-    const colLabels = loc === 'a' ? COL_LABELS_A : COL_LABELS_B;
-
-    Object.keys(colDefs).forEach(colId => {
+    LOC_CONFIG[loc].cols.forEach(colDef => {
       const col = document.createElement('div');
       col.className = 'hundreds-col';
-      col.id = `col-${colId}`;
-
-      // Header badge inline with rule
+      // Header row
       const hdrRow = document.createElement('div');
       hdrRow.className = 'col-header-row';
-      hdrRow.innerHTML = `<span class="col-header ${colLabels[colId].cls}">${colLabels[colId].text}</span><div class="col-header-line"></div>`;
+      hdrRow.innerHTML = '<span class="col-header loc-'+loc+'">'+colDef.label+'</span><div class="col-header-line"></div>';
       col.appendChild(hdrRow);
-
-      colDefs[colId].forEach(g => {
+      // Digit groups
+      colDef.groups.forEach(g => {
         const wrap = document.createElement('div');
         wrap.className = 'digit-group';
-        const ghdr = document.createElement('div');
-        ghdr.className = 'digit-group-header';
-        ghdr.innerHTML = `<div class="digit-group-line"></div>`;
-        wrap.appendChild(ghdr);
+        wrap.innerHTML = '<div class="digit-group-line"></div>';
         const grid = document.createElement('div');
         grid.className = 'paddle-grid';
-        for (let n = g.start; n <= g.end; n++) {
+        for (let n=g.start; n<=g.end; n++) {
           const btn = document.createElement('button');
-          btn.className = 'paddle-btn'; btn.id = `p${n}`;
-          btn.innerHTML = `${n}<div class="pip-row" id="pips-${n}"></div>`;
+          btn.className = 'paddle-btn';
+          btn.id = 'p'+n;
+          btn.innerHTML = n+'<div class="pip-row" id="pips-'+n+'"></div>';
           btn.addEventListener('click', () => togglePaddle(n));
           grid.appendChild(btn);
         }
         wrap.appendChild(grid);
         col.appendChild(wrap);
       });
-
       colsWrap.appendChild(col);
     });
-
-    panel.appendChild(colsWrap);
-    split.appendChild(panel);
+    pane.appendChild(colsWrap);
+    area.appendChild(pane);
   });
 }
 
-/* ════════════════════════════════
-   STATE HELPERS
-════════════════════════════════ */
-function activeEntries() { return log.filter(e => !e.voided); }
-function isPaddleActive(num, levelId) {
-  return log.some(e => e.num===num && e.levelId===levelId && !e.voided);
-}
-function activeLevelsForPaddle(num) {
-  const seen = new Set();
-  return log.filter(e => e.num===num && !e.voided && !seen.has(e.levelId) && seen.add(e.levelId));
-}
-
-/* ════════════════════════════════
-   TABS
-════════════════════════════════ */
-function switchSidebarTab(tab, el) {
-  document.querySelectorAll('.sidebar-tab').forEach(b => b.classList.remove('active-tab'));
-  el.classList.add('active-tab');
-  document.querySelectorAll('.sidebar-pane').forEach(p => p.classList.remove('active'));
-  document.getElementById(`sb-pane-${tab}`).classList.add('active');
+function buildSheetTabs() {
+  const tabs = document.getElementById('sheet-tabs');
+  tabs.innerHTML = '';
+  const defs = [{ id:'all', label:'All' }];
+  if (activeLocs.includes('a')) defs.push({ id:'a', label:'Loc A' });
+  if (activeLocs.includes('b')) defs.push({ id:'b', label:'Loc B' });
+  defs.forEach((t,i) => {
+    const btn = document.createElement('button');
+    btn.className = 'sheet-tab' + (i===0?' active-tab':'');
+    btn.textContent = t.label;
+    btn.addEventListener('click', () => switchSheetTab(t.id, btn));
+    tabs.appendChild(btn);
+  });
 }
 
-/* ════════════════════════════════
-   LEVEL SELECT
-════════════════════════════════ */
+/* ════════ LOC TAB SWITCH ════════ */
+function switchLocTab(loc) {
+  activeLocTab = loc;
+  activeLocs.forEach(l => {
+    const t = document.getElementById('loc-tab-'+l);
+    if (t) t.className = 'loc-tab' + (l===loc?' active-'+l:'');
+    const p = document.getElementById('loc-pane-'+l);
+    if (p) p.className = 'loc-pane' + (l===loc?' active':'');
+  });
+}
+
+/* ════════ LEVEL SELECT ════════ */
 function selectLevel(id) {
   activeLevel = (activeLevel===id) ? null : id;
   document.querySelectorAll('.level-btn').forEach(b => b.classList.remove('active'));
-  const el = document.getElementById('active-status');
+  const bar = document.getElementById('active-bar');
   if (activeLevel) {
-    document.getElementById(`lvl-btn-${id}`).classList.add('active');
+    document.getElementById('lvl-btn-'+id).classList.add('active');
     const h=HEX[id], lvl=LEVELS.find(l=>l.id===id);
-    el.className = 'active-status';
-    el.style.borderColor=h.bd; el.style.background=h.bg;
-    el.innerHTML = `<div class="level-dot" style="background:${h.c}"></div><strong style="color:${h.c}">${lvl.label}</strong><span class="hint">Click paddle to raise · again to lower</span>`;
+    bar.className='active-bar';
+    bar.style.borderColor=h.bd; bar.style.background=h.bg;
+    bar.innerHTML='<div class="level-dot" style="background:'+h.c+'"></div><strong style="color:'+h.c+'">'+lvl.label+'</strong><span class="hint">Tap paddle to raise · tap again to lower</span>';
   } else {
-    el.className='active-status empty'; el.style.borderColor=''; el.style.background='';
-    el.innerHTML='Select a giving level above';
+    bar.className='active-bar empty'; bar.style.borderColor=''; bar.style.background='';
+    bar.innerHTML='Select a giving level';
   }
 }
 
-/* ════════════════════════════════
-   PADDLE TOGGLE
-════════════════════════════════ */
+/* ════════ TOGGLE PADDLE ════════ */
 function togglePaddle(num) {
-  if (!activeLevel) { flashBanner(); return; }
+  if (!activeLevel) { flashBar(); return; }
   const lvl = LEVELS.find(l=>l.id===activeLevel);
   if (isPaddleActive(num, activeLevel)) {
     const idx = [...log].reverse().findIndex(e=>e.num===num&&e.levelId===activeLevel&&!e.voided);
-    const realIdx = log.length - 1 - idx;
-    log[realIdx].voided = true;
-    lastAction = { type:'void', logIdx:realIdx };
-    showToast(`Paddle ${num} removed from ${lvl.label}`);
+    const real = log.length-1-idx;
+    log[real].voided = true;
+    lastAction = { type:'void', logIdx:real };
+    showToast('Paddle '+num+' removed from '+lvl.label);
   } else {
-    log.push({ num, levelId:activeLevel, voided:false, ts: new Date() });
+    log.push({ num, levelId:activeLevel, voided:false, ts:new Date() });
     lastAction = { type:'add', logIdx:log.length-1 };
-    showToast(`Paddle ${num} raised at ${lvl.label}!`);
+    showToast('Paddle '+num+' raised at '+lvl.label+'!');
   }
-  renderPaddle(num); renderSidebar(); renderTotals(); renderLevelCounts();
+  renderPaddle(num); renderTotals(); renderLevelCounts(); renderSummary();
   syncToFirebase();
 }
 
-/* ════════════════════════════════
-   RENDER PADDLE BUTTON
-════════════════════════════════ */
+/* ════════ STATE HELPERS ════════ */
+function isPaddleActive(num, levelId) { return log.some(e=>e.num===num&&e.levelId===levelId&&!e.voided); }
+function activeLevelsForPaddle(num) {
+  const seen=new Set();
+  return log.filter(e=>e.num===num&&!e.voided&&!seen.has(e.levelId)&&seen.add(e.levelId));
+}
+function activeEntries() { return log.filter(e=>!e.voided); }
+
+/* ════════ RENDER PADDLE ════════ */
 function renderPaddle(num) {
-  const btn = document.getElementById(`p${num}`); if(!btn)return;
-  LEVELS.forEach(l => btn.classList.remove(`raised-${l.id}`));
+  const btn=document.getElementById('p'+num); if(!btn)return;
+  LEVELS.forEach(l=>btn.classList.remove('raised-'+l.id));
   btn.classList.remove('raised-any');
-  const pips = document.getElementById(`pips-${num}`); pips.innerHTML='';
-  const activeLvls = activeLevelsForPaddle(num);
-  if (activeLvls.length > 0) {
+  const pips=document.getElementById('pips-'+num); pips.innerHTML='';
+  const lvls=activeLevelsForPaddle(num);
+  if(lvls.length>0){
     btn.classList.add('raised-any');
-    const dom = LEVELS.find(l=>activeLvls.some(e=>e.levelId===l.id));
-    if(dom) btn.classList.add(`raised-${dom.id}`);
-    const shown = new Set();
-    activeLvls.forEach(e => {
-      if(!shown.has(e.levelId)){
-        shown.add(e.levelId);
-        const pip = document.createElement('div');
+    const dom=LEVELS.find(l=>lvls.some(e=>e.levelId===l.id));
+    if(dom) btn.classList.add('raised-'+dom.id);
+    const seen=new Set();
+    lvls.forEach(e=>{
+      if(!seen.has(e.levelId)){seen.add(e.levelId);
+        const pip=document.createElement('div');
         pip.className='pip'; pip.style.background=HEX[e.levelId].c;
         pips.appendChild(pip);
       }
@@ -629,173 +622,145 @@ function renderPaddle(num) {
   }
 }
 
-/* ════════════════════════════════
-   SIDEBAR RENDER
-════════════════════════════════ */
-function buildSidebarPane(paneId, filterFn) {
-  const container = document.getElementById(paneId); container.innerHTML='';
-  LEVELS.forEach(lvl => {
-    const h = HEX[lvl.id];
-    const entries = log.filter(e => e.levelId===lvl.id && filterFn(e.num));
-    const activeCount = entries.filter(e=>!e.voided).length;
-    const subtotal = activeCount * lvl.value;
-    const div = document.createElement('div');
-    div.className='level-summary'; div.style.borderLeftColor=h.c;
-    const chipsHtml = entries.length===0
-      ? `<span class="chip empty-chip">none yet</span>`
-      : entries.map(e => {
-          const idx = log.indexOf(e);
-          const cls = `chip chip-${lvl.id}${e.voided?' voided':''}`;
-          return `<span class="${cls}" onclick="toggleVoidFromSidebar(${idx})" title="${e.voided?'Restore':'Remove'}">${e.num}</span>`;
-        }).join('');
-    div.innerHTML=`
-      <div class="level-summary-head">
-        <div class="level-label"><div class="level-dot" style="background:${h.c}"></div><span style="color:${h.c}">${lvl.label}</span></div>
-        <div class="level-subtotal" style="color:${h.c}">${subtotal>0?'$'+subtotal.toLocaleString():'—'}</div>
-      </div>
-      <div class="paddle-chips">${chipsHtml}</div>`;
-    container.appendChild(div);
-  });
-}
-
-function renderSidebar() {
-  buildSidebarPane('sb-pane-all', ()=>true);
-  buildSidebarPane('sb-pane-a', n=>n>=101&&n<=375);
-  buildSidebarPane('sb-pane-b', n=>n>=376&&n<=450);
-}
-
+/* ════════ TOTALS ════════ */
 function renderTotals() {
-  const active = activeEntries();
-  let total = 0;
-  LEVELS.forEach(lvl => { total += active.filter(e=>e.levelId===lvl.id).length * lvl.value; });
-  const raisedPaddles = new Set(active.map(e=>e.num));
-  document.getElementById('sidebar-total').textContent = '$'+total.toLocaleString();
-  document.getElementById('paddle-count-label').textContent = `${raisedPaddles.size} paddle${raisedPaddles.size!==1?'s':''} raised`;
+  const active=activeEntries();
+  let total=0;
+  LEVELS.forEach(l=>{total+=active.filter(e=>e.levelId===l.id).length*l.value;});
+  document.getElementById('total-val').textContent='$'+total.toLocaleString();
+  const raised=new Set(active.map(e=>e.num));
+  document.getElementById('fab-badge').textContent=raised.size;
 }
 
 function renderLevelCounts() {
-  LEVELS.forEach(lvl => {
-    const el = document.getElementById(`lvl-btn-${lvl.id}`);
-    if(el) el.dataset.count = log.filter(e=>e.levelId===lvl.id&&!e.voided).length;
+  LEVELS.forEach(lvl=>{
+    const el=document.getElementById('lvl-btn-'+lvl.id);
+    if(el) el.dataset.count=log.filter(e=>e.levelId===lvl.id&&!e.voided).length;
   });
 }
 
-/* ════════════════════════════════
-   VOID / UNDO
-════════════════════════════════ */
-function toggleVoidFromSidebar(logIdx) {
-  const e = log[logIdx];
-  e.voided = !e.voided;
-  lastAction = { type: e.voided?'void':'unvoid', logIdx };
-  const lvl = LEVELS.find(l=>l.id===e.levelId);
-  showToast(e.voided ? `Paddle ${e.num} removed from ${lvl.label}` : `Paddle ${e.num} restored to ${lvl.label}`);
-  renderPaddle(e.num); renderSidebar(); renderTotals(); renderLevelCounts();
+/* ════════ SUMMARY SHEET ════════ */
+function openSummary() {
+  document.getElementById('summary-backdrop').classList.add('show');
+  document.getElementById('summary-sheet').classList.add('show');
+  renderSummary();
+}
+function closeSummary() {
+  document.getElementById('summary-backdrop').classList.remove('show');
+  document.getElementById('summary-sheet').classList.remove('show');
+}
+function switchSheetTab(id, el) {
+  activeSummaryTab = id;
+  document.querySelectorAll('.sheet-tab').forEach(b=>b.classList.remove('active-tab'));
+  el.classList.add('active-tab');
+  renderSummary();
+}
+
+function renderSummary() {
+  const filterFn = activeSummaryTab==='all' ? ()=>true :
+    activeSummaryTab==='a' ? n=>n>=101&&n<=375 : n=>n>=376&&n<=450;
+  const body = document.getElementById('sheet-body');
+  body.innerHTML='';
+  LEVELS.forEach(lvl=>{
+    const h=HEX[lvl.id];
+    const entries=log.filter(e=>e.levelId===lvl.id&&filterFn(e.num));
+    const active=entries.filter(e=>!e.voided).length;
+    const subtotal=active*lvl.value;
+    const div=document.createElement('div');
+    div.className='sheet-level'; div.style.borderLeftColor=h.c;
+    const chips=entries.length===0
+      ?'<span class="chip empty-chip">none yet</span>'
+      :entries.map((e,_)=>{
+          const idx=log.indexOf(e);
+          return '<span class="chip chip-'+lvl.id+(e.voided?' voided':'')+'" onclick="toggleVoidFromSummary('+idx+')" title="'+(e.voided?'Restore':'Remove')+'">'+e.num+'</span>';
+        }).join('');
+    div.innerHTML='<div class="sheet-level-head"><div class="sheet-level-label"><div class="sheet-level-dot" style="background:'+h.c+'"></div><span style="color:'+h.c+'">'+lvl.label+'</span></div><div class="sheet-level-sub" style="color:'+h.c+'">'+(subtotal>0?'$'+subtotal.toLocaleString():'—')+'</div></div><div class="sheet-chips">'+chips+'</div>';
+    body.appendChild(div);
+  });
+}
+
+function toggleVoidFromSummary(idx) {
+  const e=log[idx]; e.voided=!e.voided;
+  lastAction={type:e.voided?'void':'unvoid',logIdx:idx};
+  const lvl=LEVELS.find(l=>l.id===e.levelId);
+  showToast(e.voided?'Paddle '+e.num+' removed from '+lvl.label:'Paddle '+e.num+' restored to '+lvl.label);
+  renderPaddle(e.num); renderTotals(); renderLevelCounts(); renderSummary();
   syncToFirebase();
 }
 
+/* ════════ UNDO ════════ */
 function undoLast() {
-  if(!lastAction) return;
-  const e = log[lastAction.logIdx];
+  if(!lastAction)return;
+  const e=log[lastAction.logIdx];
   if(lastAction.type==='add') e.voided=true;
   else if(lastAction.type==='void') e.voided=false;
   else if(lastAction.type==='unvoid') e.voided=true;
-  lastAction = null;
-  renderPaddle(e.num); renderSidebar(); renderTotals(); renderLevelCounts();
+  lastAction=null;
+  renderPaddle(e.num); renderTotals(); renderLevelCounts(); renderSummary();
   syncToFirebase();
 }
 
-/* ════════════════════════════════
-   EXPORT CSV
-════════════════════════════════ */
+/* ════════ EXPORT ════════ */
 function exportCSV() {
-  const rows = [
-    ['Operator','Paddle Number','Level','Amount','Timestamp','Status']
-  ];
-  log.forEach(e => {
-    const lvl = LEVELS.find(l=>l.id===e.levelId);
-    const ts = e.ts ? e.ts.toLocaleString('en-US', {
-      month:'2-digit', day:'2-digit', year:'numeric',
-      hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:true
-    }) : '';
-    rows.push([
-      operatorName,
-      e.num,
-      lvl.label,
-      lvl.value,
-      ts,
-      e.voided ? 'Removed' : 'Active'
-    ]);
+  const rows=[['Operator','Paddle Number','Level','Amount','Timestamp','Status']];
+  log.forEach(e=>{
+    const lvl=LEVELS.find(l=>l.id===e.levelId);
+    const ts=e.ts?e.ts.toLocaleString('en-US',{month:'2-digit',day:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true}):'';
+    rows.push([operatorName,e.num,lvl.label,lvl.value,ts,e.voided?'Removed':'Active']);
   });
-
-  if (rows.length === 1) { showToast('No entries to export yet.'); return; }
-
-  const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
-  const blob = new Blob([csv], { type:'text/csv' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  const now = new Date();
-  const stamp = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}_${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}`;
-  a.href = url;
-  a.download = `paddle_raise_${operatorName.replace(/\s+/g,'_')}_${stamp}.csv`;
-  a.click();
+  if(rows.length===1){showToast('No entries to export yet.');return;}
+  const csv=rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n');
+  const blob=new Blob([csv],{type:'text/csv'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  const now=new Date();
+  const stamp=now.getFullYear()+String(now.getMonth()+1).padStart(2,'0')+String(now.getDate()).padStart(2,'0')+'_'+String(now.getHours()).padStart(2,'0')+String(now.getMinutes()).padStart(2,'0');
+  a.href=url; a.download='paddle_raise_'+operatorName.replace(/\s+/g,'_')+'_'+stamp+'.csv'; a.click();
   URL.revokeObjectURL(url);
   showToast('CSV exported!');
 }
 
-/* ════════════════════════════════
-   TOAST / FLASH / RESET
-════════════════════════════════ */
+/* ════════ TOAST / FLASH / RESET ════════ */
 function showToast(msg) {
-  document.getElementById('toast-msg').textContent = msg;
+  document.getElementById('toast-msg').textContent=msg;
   document.getElementById('toast').classList.add('show');
-  if(toastTimer) clearTimeout(toastTimer);
-  toastTimer = setTimeout(()=>document.getElementById('toast').classList.remove('show'), 3500);
+  if(toastTimer)clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>document.getElementById('toast').classList.remove('show'),3000);
 }
 
-function flashBanner() {
-  const el = document.getElementById('active-status');
-  el.className='active-status'; el.style.borderColor='#FCA5A5'; el.style.background='#FEF2F2';
-  el.innerHTML=`<span style="color:#B91C1C;font-weight:600">⚠ Select a giving level first.</span>`;
-  setTimeout(()=>{
-    if(!activeLevel){
-      el.className='active-status empty'; el.style.borderColor=''; el.style.background='';
-      el.innerHTML='Select a giving level above';
-    }
-  }, 2200);
+function flashBar() {
+  const bar=document.getElementById('active-bar');
+  bar.className='active-bar'; bar.style.borderColor='#FCA5A5'; bar.style.background='#FEF2F2';
+  bar.innerHTML='<span style="color:#B91C1C;font-weight:600">⚠ Select a giving level first</span>';
+  setTimeout(()=>{if(!activeLevel){bar.className='active-bar empty';bar.style.borderColor='';bar.style.background='';bar.innerHTML='Select a giving level';}},2200);
 }
 
-function openReset() { document.getElementById('modal').classList.add('show'); }
-function closeReset() { document.getElementById('modal').classList.remove('show'); }
-function confirmReset() {
-  log = [];
-  const allNums = [...document.querySelectorAll('.paddle-btn')].map(b=>parseInt(b.id.slice(1)));
-  allNums.forEach(n => renderPaddle(n));
-  activeLevel = null; selectLevel(null);
-  renderSidebar(); renderTotals(); renderLevelCounts(); closeReset();
+function openReset(){document.getElementById('modal').classList.add('show');}
+function closeReset(){document.getElementById('modal').classList.remove('show');}
+function confirmReset(){
+  log=[];
+  document.querySelectorAll('.paddle-btn').forEach(b=>renderPaddle(parseInt(b.id.slice(1))));
+  activeLevel=null; selectLevel(null);
+  renderTotals(); renderLevelCounts(); renderSummary(); closeReset();
   syncToFirebase();
 }
 
-/* ════════════════════════════════
-   FIREBASE SYNC
-   No-op until Firebase block below
-   initialises window._fbReady.
-════════════════════════════════ */
+/* ════════ FIREBASE SYNC ════════ */
 function syncToFirebase() {
-  if (!window._fbReady) return;
-  window._fbSyncLog(log.map(e => Object.assign({}, e, { ts: e.ts ? e.ts.toISOString() : null })));
+  if(!window._fbReady)return;
+  window._fbSyncLog(log.map(e=>Object.assign({},e,{ts:e.ts?e.ts.toISOString():null})));
 }
 </script>
 
-<!-- Firebase compat SDK — plain script tags, no modules needed -->
+<!-- Firebase compat SDK -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 
 <!--
-  ═══════════════════════════════════════════════════════
+  ═══════════════════════════════════════
   FIREBASE ACTIVATION
-  Replace every PASTE_YOUR_* value with values from
-  your Firebase project settings. That's all.
-  ═══════════════════════════════════════════════════════
+  Replace PASTE_YOUR_* with your config.
+  ═══════════════════════════════════════
 -->
 <script>
 var firebaseConfig = {
@@ -807,48 +772,30 @@ var firebaseConfig = {
   messagingSenderId: "238911011317",
   appId:             "1:238911011317:web:4f5b306447b5abb28dc8bc"
 };
-
 firebase.initializeApp(firebaseConfig);
-var _db = firebase.database();
-var _sessionId = _db.ref('sessions').push().key;
+var _db=firebase.database();
+var _sessionId=_db.ref('sessions').push().key;
 
-function setFbStatus(state, label) {
-  var el = document.getElementById('fb-status');
-  var lb = document.getElementById('fb-label');
-  if (!el) return;
-  el.className = 'fb-status ' + state;
-  lb.textContent = label;
+function setFbStatus(state,label){
+  var el=document.getElementById('fb-status');
+  var lb=document.getElementById('fb-label');
+  if(!el)return;
+  el.className='fb-status '+state;
+  lb.textContent=label;
 }
-
-// Monitor real-time connection state
-_db.ref('.info/connected').on('value', function(snap) {
-  if (snap.val() === true) {
-    setFbStatus('connected', '● Live sync');
-  } else {
-    setFbStatus('syncing', '○ Reconnecting…');
-  }
+_db.ref('.info/connected').on('value',function(snap){
+  setFbStatus(snap.val()===true?'connected':'syncing',snap.val()===true?'● Live':'○ Reconnecting');
 });
-
-window._fbReady = true;
-
-window._fbInitSession = function(operator, locations) {
-  setFbStatus('syncing', '↑ Saving session…');
-  _db.ref('sessions/' + _sessionId + '/meta').set({
-    operator: operator,
-    locations: locations,
-    startedAt: new Date().toISOString()
-  }).then(function() {
-    setFbStatus('connected', '● Live sync');
-  }).catch(function(err) {
-    setFbStatus('error', '✕ ' + err.code);
-  });
+window._fbReady=true;
+window._fbInitSession=function(operator,locations){
+  setFbStatus('syncing','↑ Saving…');
+  _db.ref('sessions/'+_sessionId+'/meta').set({operator:operator,locations:locations,startedAt:new Date().toISOString()})
+    .then(function(){setFbStatus('connected','● Live');})
+    .catch(function(err){setFbStatus('error','✕ '+err.code);});
 };
-
-window._fbSyncLog = function(logData) {
-  _db.ref('sessions/' + _sessionId + '/log').set(logData)
-    .catch(function(err) {
-      setFbStatus('error', '✕ Write failed: ' + err.code);
-    });
+window._fbSyncLog=function(logData){
+  _db.ref('sessions/'+_sessionId+'/log').set(logData)
+    .catch(function(err){setFbStatus('error','✕ Write failed');});
 };
 </script>
 
