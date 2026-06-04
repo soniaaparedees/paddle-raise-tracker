@@ -225,21 +225,20 @@ import { getDatabase, ref, onValue }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-analytics.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyC3-7fk-G7mSA9DSdfR217uVdDsWuk-2n4",
-  authDomain: "paddle-raise-tracker.firebaseapp.com",
-  databaseURL: "https://paddle-raise-tracker-default-rtdb.firebaseio.com",
-  projectId: "paddle-raise-tracker",
-  storageBucket: "paddle-raise-tracker.firebasestorage.app",
-  messagingSenderId: "238911011317",
-  appId: "1:238911011317:web:4f5b306447b5abb28dc8bc",
-  measurementId: "G-60N20XETTG"
-};
+  const firebaseConfig = {
+    apiKey: "AIzaSyC3-7fk-G7mSA9DSdfR217uVdDsWuk-2n4",
+    authDomain: "paddle-raise-tracker.firebaseapp.com",
+    databaseURL: "https://paddle-raise-tracker-default-rtdb.firebaseio.com",
+    projectId: "paddle-raise-tracker",
+    storageBucket: "paddle-raise-tracker.firebasestorage.app",
+    messagingSenderId: "238911011317",
+    appId: "1:238911011317:web:4f5b306447b5abb28dc8bc",
+    measurementId: "G-60N20XETTG"
+  };
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getDatabase(app);
-const analytics = getAnalytics(app);
 
 // ─────────────────────────────────────────
 // CONSTANTS
@@ -272,6 +271,9 @@ onAuthStateChanged(auth, user => {
   } else {
     document.getElementById('login-overlay').classList.remove('hidden');
     document.getElementById('dashboard').style.display = 'none';
+    const btn = document.getElementById('login-btn');
+    btn.textContent = 'Sign In';
+    btn.disabled = false;
   }
 });
 
@@ -279,15 +281,49 @@ async function doLogin() {
   const email = document.getElementById('login-email').value.trim();
   const pass  = document.getElementById('login-password').value;
   const err   = document.getElementById('login-err');
-  err.textContent = '';
+  const btn   = document.getElementById('login-btn');
+
+  // Step 1 — confirm the click handler is firing at all
+  err.style.color = '#047857';
+  err.textContent = '⏳ Button clicked — checking inputs…';
+
+  if (!email || !pass) {
+    err.style.color = '#B91C1C';
+    err.textContent = 'Please enter your email and password.';
+    return;
+  }
+
+  // Step 2 — confirm we're reaching Firebase
+  err.style.color = '#047857';
+  err.textContent = '⏳ Contacting Firebase…';
+  btn.textContent = 'Signing in…';
+  btn.disabled = true;
+
   try {
     await signInWithEmailAndPassword(auth, email, pass);
+    err.textContent = '✅ Signed in!';
   } catch(e) {
-    err.textContent = e.code === 'auth/invalid-credential' || e.code === 'auth/wrong-password' || e.code === 'auth/user-not-found'
-      ? 'Invalid email or password.'
-      : `Error: ${e.message}`;
+    btn.textContent = 'Sign In';
+    btn.disabled = false;
+    const codes = {
+      'auth/invalid-email':           'Invalid email address.',
+      'auth/user-not-found':          'No account with that email.',
+      'auth/wrong-password':          'Incorrect password.',
+      'auth/invalid-credential':      'Incorrect email or password.',
+      'auth/too-many-requests':       'Too many attempts — try again later.',
+      'auth/network-request-failed':  'Network error — check your connection.',
+      'auth/operation-not-allowed':   'Email/Password login not enabled in Firebase → Authentication → Sign-in method → Email/Password → Enable.',
+      'auth/configuration-not-found': 'Firebase Auth not configured. Check authDomain and that Email/Password sign-in is enabled.',
+      'auth/api-key-not-valid':       'Invalid API key — re-check your firebaseConfig values.',
+    };
+    err.style.color = '#B91C1C';
+    err.textContent = codes[e.code] || `Firebase error [${e.code}]: ${e.message}`;
   }
 }
+
+// ── confirm the module loaded and wired up ──
+document.getElementById('login-err').style.color = '#6B6355';
+document.getElementById('login-err').textContent  = 'Ready — enter credentials above.';
 
 document.getElementById('login-btn').addEventListener('click', doLogin);
 document.getElementById('login-password').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
