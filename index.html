@@ -761,55 +761,55 @@ function confirmReset() {
   syncToFirebase();
 }
 
+/* ════════════════════════════════
+   FIREBASE SYNC
+   No-op until Firebase block below
+   initialises window._fbReady.
+════════════════════════════════ */
 function syncToFirebase() {
-  if (!window._fbSet || !window._fbSessionRef) return;
-  window._fbSet(window._fbSessionRef('log'),
-    log.map(e => ({ ...e, ts: e.ts ? e.ts.toISOString() : null }))
-  );
+  if (!window._fbReady) return;
+  window._fbSyncLog(log.map(e => Object.assign({}, e, { ts: e.ts ? e.ts.toISOString() : null })));
 }
 </script>
+
+<!-- Firebase compat SDK — plain script tags, no modules needed -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 
 <!--
   ═══════════════════════════════════════════════════════
   FIREBASE ACTIVATION
-  1. Replace every PASTE_YOUR_* value below with the
-     values from your Firebase project settings.
-  2. That's it — no other changes needed.
+  Replace every PASTE_YOUR_* value with values from
+  your Firebase project settings. That's all.
   ═══════════════════════════════════════════════════════
 -->
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getDatabase, ref, push, set }
-  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyC3-7fk-G7mSA9DSdfR217uVdDsWuk-2n4",
-  authDomain: "paddle-raise-tracker.firebaseapp.com",
-  databaseURL: "https://paddle-raise-tracker-default-rtdb.firebaseio.com",
-  projectId: "paddle-raise-tracker",
-  storageBucket: "paddle-raise-tracker.firebasestorage.app",
-  messagingSenderId: "238911011317",
-  appId: "1:238911011317:web:4f5b306447b5abb28dc8bc",
-  measurementId: "G-60N20XETTG"
+<script>
+var firebaseConfig = {
+    apiKey: "AIzaSyC3-7fk-G7mSA9DSdfR217uVdDsWuk-2n4",
+    authDomain: "paddle-raise-tracker.firebaseapp.com",
+    databaseURL: "https://paddle-raise-tracker-default-rtdb.firebaseio.com",
+    projectId: "paddle-raise-tracker",
+    storageBucket: "paddle-raise-tracker.firebasestorage.app",
+    messagingSenderId: "238911011317",
+    appId: "1:238911011317:web:4f5b306447b5abb28dc8bc"
 };
 
+firebase.initializeApp(firebaseConfig);
+var _db = firebase.database();
+var _sessionId = _db.ref('sessions').push().key;
 
-const app = initializeApp(firebaseConfig);
-const db  = getDatabase(app);
+window._fbReady = true;
 
-// Create a new session node; its key is the session ID
-const sessionId = push(ref(db, 'sessions')).key;
-
-// Expose helpers to the main (non-module) script
-window._fbSet        = set;
-window._fbSessionRef = (path) => ref(db, `sessions/${sessionId}/${path}`);
-
-window._fbInitSession = (operator, locations) => {
-  set(window._fbSessionRef('meta'), {
-    operator,
-    locations,
+window._fbInitSession = function(operator, locations) {
+  _db.ref('sessions/' + _sessionId + '/meta').set({
+    operator: operator,
+    locations: locations,
     startedAt: new Date().toISOString()
   });
+};
+
+window._fbSyncLog = function(logData) {
+  _db.ref('sessions/' + _sessionId + '/log').set(logData);
 };
 </script>
 
