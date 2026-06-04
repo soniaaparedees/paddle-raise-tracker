@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Paddle Raise Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Mono:wght@400;500;600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold:#8B5E0A; --gold-bg:#FDF3DC;
+    --ink:#111111; --bg:#F4F2EE; --border:#D6D0C4; --muted:#6B6355;
+    --l1:#B45309; --l1-bg:#FEF3C7; --l1-bd:#FCD34D;
+    --l2:#1D4ED8; --l2-bg:#DBEAFE; --l2-bd:#93C5FD;
+    --l3:#B91C1C; --l3-bg:#FEE2E2; --l3-bd:#FCA5A5;
+    --l4:#047857; --l4-bg:#D1FAE5; --l4-bd:#6EE7B7;
+    --l5:#6D28D9; --l5-bg:#EDE9FE; --l5-bd:#C4B5FD;
+    --l6:#0F766E; --l6-bg:#CCFBF1; --l6-bd:#5EEAD4;
+    --loc-a:#1D4ED8; --loc-b:#047857;
+  }
+  *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+  html, body { height:100%; overflow:hidden; font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--ink); }
+
+  /* ══════════════════════════════
+     SETUP SCREEN
+  ══════════════════════════════ */
+  .setup-overlay {
+    position:fixed; inset:0; background:var(--bg);
+    display:flex; align-items:center; justify-content:center;
+    z-index:500;
+  }
+  .setup-overlay.hidden { display:none; }
+
+  .setup-card {
+    background:#fff; border:2px solid var(--border); border-radius:14px;
+    padding:36px 40px; width:440px; max-width:95vw;
+    box-shadow:0 12px 48px rgba(0,0,0,.12);
+  }
+  .setup-card h1 {
+    font-family:'Playfair Display',serif; font-size:1.6rem; font-weight:900;
+    color:var(--gold); margin-bottom:4px;
+  }
+  .setup-card p.sub { font-size:.85rem; color:var(--muted); margin-bottom:28px; }
+
+  .setup-label {
+    font-size:.68rem; text-transform:uppercase; letter-spacing:.13em;
+    font-weight:700; color:var(--muted); margin-bottom:5px; display:block;
+  }
+  .setup-input {
+    width:100%; padding:9px 13px; border:1.5px solid var(--border);
+    border-radius:7px; font-family:'DM Sans',sans-serif; font-size:.95rem;
+    color:var(--ink); background:#fff; margin-bottom:20px;
+    transition:border-color .15s;
+  }
+  .setup-input:focus { outline:none; border-color:#6B7280; }
+
+  .loc-options { display:flex; gap:10px; margin-bottom:28px; }
+  .loc-option {
+    flex:1; padding:12px 10px; border:2px solid var(--border); border-radius:9px;
+    cursor:pointer; text-align:center; transition:all .15s; background:#fff;
+    user-select:none;
+  }
+  .loc-option:hover { border-color:#9CA3AF; }
+  .loc-option.selected-a { border-color:var(--loc-a); background:#EFF6FF; }
+  .loc-option.selected-b { border-color:var(--loc-b); background:#ECFDF5; }
+  .loc-option.selected-both { border-color:var(--gold); background:var(--gold-bg); }
+  .loc-option .loc-icon { font-size:1.4rem; margin-bottom:4px; }
+  .loc-option .loc-name { font-weight:700; font-size:.88rem; color:var(--ink); }
+  .loc-option .loc-range { font-family:'DM Mono',monospace; font-size:.7rem; color:var(--muted); }
+
+  .setup-btn {
+    width:100%; padding:12px; background:var(--ink); color:#fff;
+    border:none; border-radius:8px; font-family:'DM Sans',sans-serif;
+    font-size:1rem; font-weight:700; cursor:pointer; transition:background .15s;
+  }
+  .setup-btn:hover { background:#374151; }
+  .setup-btn:disabled { background:#D1D5DB; cursor:not-allowed; }
+  .setup-err { color:#B91C1C; font-size:.8rem; margin-top:8px; text-align:center; min-height:18px; }
+
+  /* ══════════════════════════════
+     MAIN APP
+  ══════════════════════════════ */
+  .body-wrap { display:flex; height:100%; overflow:hidden; }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    width:272px; min-width:220px; background:#fff;
+    border-right:2px solid var(--border);
+    display:flex; flex-direction:column; overflow:hidden; flex-shrink:0;
+  }
+  .sidebar-top { padding:8px 13px 6px; border-bottom:2px solid var(--border); background:#fff; flex-shrink:0; }
+  .sidebar-top-row { display:flex; align-items:flex-start; justify-content:space-between; gap:6px; margin-bottom:6px; }
+  .sidebar-top h2 { font-family:'Playfair Display',serif; font-size:1.05rem; font-weight:900; color:var(--gold); }
+  .operator-name { font-size:.75rem; color:var(--muted); font-weight:500; margin-top:1px; }
+  .export-btn {
+    font-family:'DM Mono',monospace; font-size:.62rem; font-weight:700;
+    text-transform:uppercase; letter-spacing:.07em; padding:4px 9px;
+    border:1.5px solid #047857; border-radius:5px; background:#D1FAE5; color:#047857;
+    cursor:pointer; transition:all .12s; white-space:nowrap; flex-shrink:0;
+  }
+  .export-btn:hover { background:#A7F3D0; }
+
+  .total-box { background:var(--gold-bg); border:2px solid #D97706; border-radius:7px; padding:6px 12px; margin-bottom:4px; }
+  .sidebar-total-label { font-size:.58rem; text-transform:uppercase; letter-spacing:.13em; color:var(--gold); font-weight:700; display:block; margin-bottom:1px; }
+  .sidebar-total-value { font-family:'DM Mono',monospace; font-size:1.75rem; font-weight:700; color:var(--gold); line-height:1.1; display:block; }
+  .paddle-count-label { font-size:.72rem; color:var(--muted); font-weight:500; margin-top:1px; }
+
+  .sidebar-tabs { display:flex; border-bottom:1.5px solid var(--border); background:var(--bg); flex-shrink:0; }
+  .sidebar-tab {
+    flex:1; padding:6px 0; font-size:.8rem; font-weight:600; text-align:center;
+    cursor:pointer; color:var(--muted); border-bottom:2px solid transparent;
+    margin-bottom:-1.5px; background:none; border-top:none; border-left:none; border-right:none; transition:all .12s;
+  }
+  .sidebar-tab:hover { color:var(--ink); }
+  .sidebar-tab.active-tab { color:var(--ink); border-bottom-color:var(--gold); background:#fff; }
+  .sidebar-pane { display:none; flex-direction:column; overflow-y:auto; flex:1; }
+  .sidebar-pane.active { display:flex; flex-direction:column; }
+
+  .level-summary { padding:6px 10px; border-bottom:1px solid #F0EDE8; border-left:3px solid transparent; }
+  .level-summary-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:4px; }
+  .level-label { display:flex; align-items:center; gap:6px; font-size:.92rem; font-weight:700; }
+  .level-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+  .level-subtotal { font-family:'DM Mono',monospace; font-size:.92rem; font-weight:700; }
+  .paddle-chips { display:flex; flex-wrap:wrap; gap:3px; }
+  .chip {
+    font-family:'DM Mono',monospace; font-size:.78rem; font-weight:600;
+    padding:2px 6px; border-radius:3px; cursor:pointer; border:1px solid transparent;
+    transition:filter .1s; line-height:1.5;
+  }
+  .chip:hover { filter:brightness(.85); }
+  .chip.empty-chip { color:#9CA3AF; font-style:italic; background:none!important; border:none!important; cursor:default; font-size:.8rem; }
+  .chip.voided { opacity:.45; text-decoration:line-through; cursor:pointer; filter:none; }
+  .chip.voided:hover { opacity:.65; }
+  .chip-l1{background:var(--l1-bg);color:var(--l1);border-color:var(--l1-bd);}
+  .chip-l2{background:var(--l2-bg);color:var(--l2);border-color:var(--l2-bd);}
+  .chip-l3{background:var(--l3-bg);color:var(--l3);border-color:var(--l3-bd);}
+  .chip-l4{background:var(--l4-bg);color:var(--l4);border-color:var(--l4-bd);}
+  .chip-l5{background:var(--l5-bg);color:var(--l5);border-color:var(--l5-bd);}
+  .chip-l6{background:var(--l6-bg);color:var(--l6);border-color:var(--l6-bd);}
+
+  /* ── MAIN ── */
+  main { flex:1; display:flex; flex-direction:column; overflow:hidden; padding:6px 10px 4px; gap:0; min-width:0; }
+
+  .controls-row { display:flex; align-items:center; gap:6px; margin-bottom:5px; flex-shrink:0; flex-wrap:nowrap; }
+  .level-buttons { display:flex; flex-wrap:wrap; gap:6px; flex-shrink:0; }
+  .level-btn {
+    font-family:'DM Mono',monospace; font-size:1.05rem; font-weight:700;
+    padding:9px 22px; border:2px solid #E5E7EB; border-left-width:5px;
+    border-radius:7px; cursor:pointer; transition:all .12s; background:#fff;
+    color:var(--ink); position:relative; box-shadow:0 1px 4px rgba(0,0,0,.09); white-space:nowrap;
+  }
+  .level-btn::after {
+    content:attr(data-count); position:absolute; top:-7px; right:-7px;
+    background:var(--ink); color:#fff; font-size:.58rem; font-weight:700;
+    width:17px; height:17px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    opacity:0; transition:opacity .12s;
+  }
+  .level-btn[data-count]:not([data-count="0"])::after { opacity:1; }
+  .level-btn:hover { transform:translateY(-1px); box-shadow:0 3px 9px rgba(0,0,0,.13); }
+  .level-btn.active { transform:translateY(-1px); box-shadow:0 3px 14px rgba(0,0,0,.17); }
+  .level-btn.active.lvl-l1{background:var(--l1-bg);border-color:var(--l1);color:var(--l1);}
+  .level-btn.active.lvl-l2{background:var(--l2-bg);border-color:var(--l2);color:var(--l2);}
+  .level-btn.active.lvl-l3{background:var(--l3-bg);border-color:var(--l3);color:var(--l3);}
+  .level-btn.active.lvl-l4{background:var(--l4-bg);border-color:var(--l4);color:var(--l4);}
+  .level-btn.active.lvl-l5{background:var(--l5-bg);border-color:var(--l5);color:var(--l5);}
+  .level-btn.active.lvl-l6{background:var(--l6-bg);border-color:var(--l6);color:var(--l6);}
+
+  .active-status {
+    flex:1; min-width:0; display:flex; align-items:center; gap:8px;
+    padding:5px 12px; border-radius:7px; border:1.5px solid var(--border);
+    font-size:.85rem; font-weight:500; background:#fff; overflow:hidden; white-space:nowrap;
+  }
+  .active-status .hint { font-size:.72rem; color:var(--muted); overflow:hidden; text-overflow:ellipsis; }
+  .active-status strong { font-family:'DM Mono',monospace; font-size:.88rem; }
+  .active-status.empty { color:var(--muted); font-style:italic; font-size:.8rem; justify-content:center; }
+
+  .undo-btn {
+    flex-shrink:0; font-family:'DM Mono',monospace; font-size:.7rem;
+    text-transform:uppercase; letter-spacing:.08em; padding:8px 13px;
+    border:1.5px solid #374151; border-radius:7px; background:#111; color:#fff;
+    cursor:pointer; transition:all .15s; white-space:nowrap; align-self:stretch;
+  }
+  .undo-btn:hover { background:#374151; }
+
+  .reset-btn {
+    flex-shrink:0; font-family:'DM Mono',monospace; font-size:.7rem;
+    text-transform:uppercase; letter-spacing:.08em; padding:8px 13px;
+    border:1.5px solid #FCA5A5; border-radius:7px; background:#FEF2F2; color:#B91C1C;
+    cursor:pointer; transition:all .15s; white-space:nowrap; align-self:stretch;
+  }
+  .reset-btn:hover { background:#FEE2E2; border-color:#B91C1C; }
+
+  /* ── LOCATIONS ── */
+  .locations-split { flex:1; display:flex; flex-direction:column; gap:0; overflow:hidden; min-height:0; }
+  .loc-panel { display:flex; flex-direction:column; overflow:hidden; min-width:0; border-bottom:2px solid var(--border); }
+  .loc-panel:last-child { border-bottom:none; }
+  .loc-panel.loc-panel-a { flex:2; }
+  .loc-panel.loc-panel-b { flex:1; }
+  .loc-panel.loc-single { flex:1; }
+  .loc-cols { flex:1; display:flex; gap:0; overflow:hidden; }
+  .hundreds-col { flex:1; overflow-y:auto; min-width:0; border-right:1px solid var(--border); padding:4px 5px; }
+  .hundreds-col:last-child { border-right:none; }
+  .col-header-row { display:flex; align-items:center; gap:6px; margin-bottom:3px; }
+  .col-header { font-family:'DM Mono',monospace; font-size:.62rem; font-weight:700; text-transform:uppercase; letter-spacing:.1em; color:#fff; padding:2px 7px; border-radius:3px; white-space:nowrap; flex-shrink:0; }
+  .col-header.loc-a { background:var(--loc-a); }
+  .col-header.loc-b { background:var(--loc-b); }
+  .col-header-line { flex:1; height:1px; background:var(--border); }
+  .digit-group { margin-bottom:3px; }
+  .digit-group-header { margin-bottom:2px; }
+  .digit-group-line { width:100%; height:1px; background:var(--border); }
+  .paddle-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(36px,1fr)); gap:2px; }
+  .paddle-btn {
+    font-family:'DM Mono',monospace; font-size:.78rem; font-weight:700;
+    aspect-ratio:1/1; border:1.5px solid #D1D5DB; border-radius:4px;
+    background:#fff; color:#374151; cursor:pointer; transition:all .1s;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    line-height:1; padding:0;
+  }
+  .paddle-btn:hover:not(.raised-any) { border-color:#6B7280; background:#F9FAFB; transform:translateY(-1px); }
+  .paddle-btn.raised-any { cursor:default; }
+  .paddle-btn.raised-l1{background:var(--l1-bg);border-color:var(--l1);color:var(--l1);font-weight:800;}
+  .paddle-btn.raised-l2{background:var(--l2-bg);border-color:var(--l2);color:var(--l2);font-weight:800;}
+  .paddle-btn.raised-l3{background:var(--l3-bg);border-color:var(--l3);color:var(--l3);font-weight:800;}
+  .paddle-btn.raised-l4{background:var(--l4-bg);border-color:var(--l4);color:var(--l4);font-weight:800;}
+  .paddle-btn.raised-l5{background:var(--l5-bg);border-color:var(--l5);color:var(--l5);font-weight:800;}
+  .paddle-btn.raised-l6{background:var(--l6-bg);border-color:var(--l6);color:var(--l6);font-weight:800;}
+  .pip-row { display:flex; justify-content:center; gap:2px; margin-top:2px; height:5px; }
+  .pip { width:4px; height:4px; border-radius:50%; flex-shrink:0; }
+
+  /* ── TOAST ── */
+  .toast {
+    position:fixed; bottom:12px; left:50%; transform:translateX(-50%) translateY(70px);
+    background:var(--ink); color:#fff; border-radius:6px; padding:7px 14px;
+    font-size:.8rem; font-weight:500; display:flex; align-items:center; gap:10px;
+    box-shadow:0 6px 24px rgba(0,0,0,.22); z-index:999; transition:transform .22s ease; white-space:nowrap;
+  }
+  .toast.show { transform:translateX(-50%) translateY(0); }
+
+  /* ── MODAL ── */
+  .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.35); z-index:200; align-items:center; justify-content:center; }
+  .modal-overlay.show { display:flex; }
+  .modal { background:#fff; border:1.5px solid var(--border); border-radius:10px; padding:22px 26px; max-width:320px; text-align:center; box-shadow:0 16px 50px rgba(0,0,0,.18); }
+  .modal h3 { font-family:'Playfair Display',serif; font-size:1.05rem; margin-bottom:8px; }
+  .modal p { font-size:.85rem; color:var(--muted); margin-bottom:18px; line-height:1.5; }
+  .modal-btns { display:flex; gap:9px; justify-content:center; }
+  .modal-btns button { font-family:'DM Sans',sans-serif; font-weight:600; font-size:.8rem; padding:8px 18px; border-radius:5px; cursor:pointer; border:1.5px solid var(--border); background:#fff; color:var(--ink); transition:all .12s; }
+  .modal-btns .confirm { background:#FEF2F2; border-color:#B91C1C; color:#B91C1C; }
+  .modal-btns .confirm:hover { background:#FEE2E2; }
+  .modal-btns .cancel:hover { background:#F9FAFB; }
+</style>
+</head>
+<body>
+
+<!-- ══ SETUP SCREEN ══ -->
+<div class="setup-overlay" id="setup-overlay">
+  <div class="setup-card">
+    <h1>🏆 Paddle Raise</h1>
+    <p class="sub">Enter your name and select which location(s) you're tracking.</p>
+
+    <label class="setup-label" for="operator-input">Your Name</label>
+    <input class="setup-input" id="operator-input" type="text" placeholder="e.g. Sarah Johnson" autocomplete="off">
+
+    <label class="setup-label">Location(s)</label>
+    <div class="loc-options">
+      <div class="loc-option" id="opt-a" onclick="toggleLocOption('a')">
+        <div class="loc-icon">🅰</div>
+        <div class="loc-name">Location A</div>
+        <div class="loc-range">101 – 375</div>
+      </div>
+      <div class="loc-option" id="opt-b" onclick="toggleLocOption('b')">
+        <div class="loc-icon">🅱</div>
+        <div class="loc-name">Location B</div>
+        <div class="loc-range">376 – 450</div>
+      </div>
+      <div class="loc-option" id="opt-both" onclick="toggleLocOption('both')">
+        <div class="loc-icon">🔀</div>
+        <div class="loc-name">Both</div>
+        <div class="loc-range">101 – 450</div>
+      </div>
+    </div>
+
+    <button class="setup-btn" id="setup-start-btn" onclick="startApp()">Start Tracking</button>
+    <div class="setup-err" id="setup-err"></div>
+  </div>
+</div>
+
+<!-- ══ MAIN APP ══ -->
+<div class="body-wrap" id="app" style="display:none">
+
+  <aside class="sidebar">
+    <div class="sidebar-top">
+      <div class="sidebar-top-row">
+        <div>
+          <h2>🏆 Paddle Raise</h2>
+          <div class="operator-name" id="operator-display"></div>
+        </div>
+        <button class="export-btn" onclick="exportCSV()">⬇ Export CSV</button>
+      </div>
+      <div class="total-box">
+        <span class="sidebar-total-label">Total Raised</span>
+        <span class="sidebar-total-value" id="sidebar-total">$0</span>
+      </div>
+      <div class="paddle-count-label" id="paddle-count-label">0 paddles raised</div>
+    </div>
+    <div class="sidebar-tabs" id="sidebar-tabs"></div>
+    <div class="sidebar-pane active" id="sb-pane-all"></div>
+    <div class="sidebar-pane" id="sb-pane-a"></div>
+    <div class="sidebar-pane" id="sb-pane-b"></div>
+  </aside>
+
+  <main>
+    <div class="controls-row">
+      <div class="level-buttons" id="level-buttons"></div>
+      <div class="active-status empty" id="active-status">Select a giving level above</div>
+      <button class="undo-btn" onclick="undoLast()">Undo</button>
+      <button class="reset-btn" onclick="openReset()">Reset All</button>
+    </div>
+    <div class="locations-split" id="locations-split"></div>
+  </main>
+</div>
+
+<div class="toast" id="toast"><span id="toast-msg"></span></div>
+
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <h3>Reset Everything?</h3>
+    <p>This will clear all raised paddles. This cannot be undone.</p>
+    <div class="modal-btns">
+      <button class="cancel" onclick="closeReset()">Cancel</button>
+      <button class="confirm" onclick="confirmReset()">Yes, Reset</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ════════════════════════════════
+   CONSTANTS
+════════════════════════════════ */
+const LEVELS = [
+  { id:'l1', label:'$10,000', value:10000 },
+  { id:'l2', label:'$5,000',  value:5000  },
+  { id:'l3', label:'$2,500',  value:2500  },
+  { id:'l4', label:'$1,000',  value:1000  },
+  { id:'l5', label:'$500',    value:500   },
+  { id:'l6', label:'$250',    value:250   },
+];
+const HEX = {
+  l1:{ c:'#B45309', bg:'#FEF3C7', bd:'#FCD34D' },
+  l2:{ c:'#1D4ED8', bg:'#DBEAFE', bd:'#93C5FD' },
+  l3:{ c:'#B91C1C', bg:'#FEE2E2', bd:'#FCA5A5' },
+  l4:{ c:'#047857', bg:'#D1FAE5', bd:'#6EE7B7' },
+  l5:{ c:'#6D28D9', bg:'#EDE9FE', bd:'#C4B5FD' },
+  l6:{ c:'#0F766E', bg:'#CCFBF1', bd:'#5EEAD4' },
+};
+
+// Column definitions per location
+const COL_DEFS_A = {
+  'a-1': buildGroups(101,199), 'a-2': buildGroups(200,299), 'a-3': buildGroups(300,375),
+};
+const COL_LABELS_A = {
+  'a-1':{text:'100s',cls:'loc-a'}, 'a-2':{text:'200s',cls:'loc-a'}, 'a-3':{text:'300s',cls:'loc-a'},
+};
+const COL_DEFS_B = {
+  'b-1': buildGroups(376,399), 'b-2': buildGroups(400,424), 'b-3': buildGroups(425,450),
+};
+const COL_LABELS_B = {
+  'b-1':{text:'376–399',cls:'loc-b'}, 'b-2':{text:'400–424',cls:'loc-b'}, 'b-3':{text:'425–450',cls:'loc-b'},
+};
+
+function buildGroups(start, end) {
+  const groups=[]; let i=start;
+  while(i<=end){ const p=Math.floor(i/10),e=Math.min(p*10+9,end); groups.push({prefix:p,start:i,end:e}); i=e+1; }
+  return groups;
+}
+
+/* ════════════════════════════════
+   APP STATE
+════════════════════════════════ */
+let log = [];          // [{num, levelId, voided, ts}]
+let activeLevel = null;
+let lastAction = null;
+let toastTimer = null;
+let operatorName = '';
+let activeLocs = [];   // ['a'], ['b'], or ['a','b']
+
+/* ════════════════════════════════
+   SETUP
+════════════════════════════════ */
+let selectedLoc = null;
+
+function toggleLocOption(loc) {
+  selectedLoc = (selectedLoc === loc) ? null : loc;
+  ['a','b','both'].forEach(l => {
+    const el = document.getElementById(`opt-${l}`);
+    el.classList.remove('selected-a','selected-b','selected-both');
+  });
+  if (selectedLoc) {
+    document.getElementById(`opt-${selectedLoc}`).classList.add(`selected-${selectedLoc}`);
+  }
+}
+
+function startApp() {
+  const nameVal = document.getElementById('operator-input').value.trim();
+  const err = document.getElementById('setup-err');
+  if (!nameVal) { err.textContent = 'Please enter your name.'; return; }
+  if (!selectedLoc) { err.textContent = 'Please select a location.'; return; }
+  err.textContent = '';
+
+  operatorName = nameVal;
+  activeLocs = selectedLoc === 'both' ? ['a','b'] : [selectedLoc];
+
+  document.getElementById('setup-overlay').classList.add('hidden');
+  document.getElementById('app').style.display = 'flex';
+
+  initApp();
+}
+
+// Allow Enter key in name field
+document.getElementById('operator-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') startApp();
+});
+
+/* ════════════════════════════════
+   APP INIT
+════════════════════════════════ */
+function initApp() {
+  document.getElementById('operator-display').textContent = operatorName;
+
+  // Build sidebar tabs dynamically
+  buildSidebarTabs();
+
+  // Build level buttons
+  const levelBtnsEl = document.getElementById('level-buttons');
+  LEVELS.forEach(lvl => {
+    const h = HEX[lvl.id];
+    const btn = document.createElement('button');
+    btn.className = `level-btn lvl-${lvl.id}`;
+    btn.id = `lvl-btn-${lvl.id}`;
+    btn.dataset.count = '0';
+    btn.style.borderLeftColor = h.c;
+    btn.textContent = lvl.label;
+    btn.addEventListener('click', () => selectLevel(lvl.id));
+    levelBtnsEl.appendChild(btn);
+  });
+
+  // Build location panels
+  buildLocationPanels();
+
+  renderSidebar(); renderTotals(); renderLevelCounts();
+}
+
+function buildSidebarTabs() {
+  const tabsEl = document.getElementById('sidebar-tabs');
+  tabsEl.innerHTML = '';
+
+  const tabs = [{ id:'all', label:'All' }];
+  if (activeLocs.includes('a')) tabs.push({ id:'a', label:'Loc A' });
+  if (activeLocs.includes('b')) tabs.push({ id:'b', label:'Loc B' });
+
+  tabs.forEach((t, i) => {
+    const btn = document.createElement('button');
+    btn.className = `sidebar-tab${i===0?' active-tab':''}`;
+    btn.textContent = t.label;
+    btn.addEventListener('click', () => switchSidebarTab(t.id, btn));
+    tabsEl.appendChild(btn);
+  });
+
+  // Show/hide panes
+  ['all','a','b'].forEach(id => {
+    const pane = document.getElementById(`sb-pane-${id}`);
+    pane.classList.remove('active');
+  });
+  document.getElementById('sb-pane-all').classList.add('active');
+}
+
+function buildLocationPanels() {
+  const split = document.getElementById('locations-split');
+  split.innerHTML = '';
+
+  activeLocs.forEach((loc, idx) => {
+    const panel = document.createElement('div');
+    const isOnly = activeLocs.length === 1;
+    const isBoth = activeLocs.length === 2;
+    panel.className = `loc-panel${isOnly ? ' loc-single' : (loc==='a' ? ' loc-panel-a' : ' loc-panel-b')}`;
+
+    const colsWrap = document.createElement('div');
+    colsWrap.className = 'loc-cols';
+
+    const colDefs = loc === 'a' ? COL_DEFS_A : COL_DEFS_B;
+    const colLabels = loc === 'a' ? COL_LABELS_A : COL_LABELS_B;
+
+    Object.keys(colDefs).forEach(colId => {
+      const col = document.createElement('div');
+      col.className = 'hundreds-col';
+      col.id = `col-${colId}`;
+
+      // Header badge inline with rule
+      const hdrRow = document.createElement('div');
+      hdrRow.className = 'col-header-row';
+      hdrRow.innerHTML = `<span class="col-header ${colLabels[colId].cls}">${colLabels[colId].text}</span><div class="col-header-line"></div>`;
+      col.appendChild(hdrRow);
+
+      colDefs[colId].forEach(g => {
+        const wrap = document.createElement('div');
+        wrap.className = 'digit-group';
+        const ghdr = document.createElement('div');
+        ghdr.className = 'digit-group-header';
+        ghdr.innerHTML = `<div class="digit-group-line"></div>`;
+        wrap.appendChild(ghdr);
+        const grid = document.createElement('div');
+        grid.className = 'paddle-grid';
+        for (let n = g.start; n <= g.end; n++) {
+          const btn = document.createElement('button');
+          btn.className = 'paddle-btn'; btn.id = `p${n}`;
+          btn.innerHTML = `${n}<div class="pip-row" id="pips-${n}"></div>`;
+          btn.addEventListener('click', () => togglePaddle(n));
+          grid.appendChild(btn);
+        }
+        wrap.appendChild(grid);
+        col.appendChild(wrap);
+      });
+
+      colsWrap.appendChild(col);
+    });
+
+    panel.appendChild(colsWrap);
+    split.appendChild(panel);
+  });
+}
+
+/* ════════════════════════════════
+   STATE HELPERS
+════════════════════════════════ */
+function activeEntries() { return log.filter(e => !e.voided); }
+function isPaddleActive(num, levelId) {
+  return log.some(e => e.num===num && e.levelId===levelId && !e.voided);
+}
+function activeLevelsForPaddle(num) {
+  const seen = new Set();
+  return log.filter(e => e.num===num && !e.voided && !seen.has(e.levelId) && seen.add(e.levelId));
+}
+
+/* ════════════════════════════════
+   TABS
+════════════════════════════════ */
+function switchSidebarTab(tab, el) {
+  document.querySelectorAll('.sidebar-tab').forEach(b => b.classList.remove('active-tab'));
+  el.classList.add('active-tab');
+  document.querySelectorAll('.sidebar-pane').forEach(p => p.classList.remove('active'));
+  document.getElementById(`sb-pane-${tab}`).classList.add('active');
+}
+
+/* ════════════════════════════════
+   LEVEL SELECT
+════════════════════════════════ */
+function selectLevel(id) {
+  activeLevel = (activeLevel===id) ? null : id;
+  document.querySelectorAll('.level-btn').forEach(b => b.classList.remove('active'));
+  const el = document.getElementById('active-status');
+  if (activeLevel) {
+    document.getElementById(`lvl-btn-${id}`).classList.add('active');
+    const h=HEX[id], lvl=LEVELS.find(l=>l.id===id);
+    el.className = 'active-status';
+    el.style.borderColor=h.bd; el.style.background=h.bg;
+    el.innerHTML = `<div class="level-dot" style="background:${h.c}"></div><strong style="color:${h.c}">${lvl.label}</strong><span class="hint">Click paddle to raise · again to lower</span>`;
+  } else {
+    el.className='active-status empty'; el.style.borderColor=''; el.style.background='';
+    el.innerHTML='Select a giving level above';
+  }
+}
+
+/* ════════════════════════════════
+   PADDLE TOGGLE
+════════════════════════════════ */
+function togglePaddle(num) {
+  if (!activeLevel) { flashBanner(); return; }
+  const lvl = LEVELS.find(l=>l.id===activeLevel);
+  if (isPaddleActive(num, activeLevel)) {
+    const idx = [...log].reverse().findIndex(e=>e.num===num&&e.levelId===activeLevel&&!e.voided);
+    const realIdx = log.length - 1 - idx;
+    log[realIdx].voided = true;
+    lastAction = { type:'void', logIdx:realIdx };
+    showToast(`Paddle ${num} removed from ${lvl.label}`);
+  } else {
+    log.push({ num, levelId:activeLevel, voided:false, ts: new Date() });
+    lastAction = { type:'add', logIdx:log.length-1 };
+    showToast(`Paddle ${num} raised at ${lvl.label}!`);
+  }
+  renderPaddle(num); renderSidebar(); renderTotals(); renderLevelCounts();
+}
+
+/* ════════════════════════════════
+   RENDER PADDLE BUTTON
+════════════════════════════════ */
+function renderPaddle(num) {
+  const btn = document.getElementById(`p${num}`); if(!btn)return;
+  LEVELS.forEach(l => btn.classList.remove(`raised-${l.id}`));
+  btn.classList.remove('raised-any');
+  const pips = document.getElementById(`pips-${num}`); pips.innerHTML='';
+  const activeLvls = activeLevelsForPaddle(num);
+  if (activeLvls.length > 0) {
+    btn.classList.add('raised-any');
+    const dom = LEVELS.find(l=>activeLvls.some(e=>e.levelId===l.id));
+    if(dom) btn.classList.add(`raised-${dom.id}`);
+    const shown = new Set();
+    activeLvls.forEach(e => {
+      if(!shown.has(e.levelId)){
+        shown.add(e.levelId);
+        const pip = document.createElement('div');
+        pip.className='pip'; pip.style.background=HEX[e.levelId].c;
+        pips.appendChild(pip);
+      }
+    });
+  }
+}
+
+/* ════════════════════════════════
+   SIDEBAR RENDER
+════════════════════════════════ */
+function buildSidebarPane(paneId, filterFn) {
+  const container = document.getElementById(paneId); container.innerHTML='';
+  LEVELS.forEach(lvl => {
+    const h = HEX[lvl.id];
+    const entries = log.filter(e => e.levelId===lvl.id && filterFn(e.num));
+    const activeCount = entries.filter(e=>!e.voided).length;
+    const subtotal = activeCount * lvl.value;
+    const div = document.createElement('div');
+    div.className='level-summary'; div.style.borderLeftColor=h.c;
+    const chipsHtml = entries.length===0
+      ? `<span class="chip empty-chip">none yet</span>`
+      : entries.map(e => {
+          const idx = log.indexOf(e);
+          const cls = `chip chip-${lvl.id}${e.voided?' voided':''}`;
+          return `<span class="${cls}" onclick="toggleVoidFromSidebar(${idx})" title="${e.voided?'Restore':'Remove'}">${e.num}</span>`;
+        }).join('');
+    div.innerHTML=`
+      <div class="level-summary-head">
+        <div class="level-label"><div class="level-dot" style="background:${h.c}"></div><span style="color:${h.c}">${lvl.label}</span></div>
+        <div class="level-subtotal" style="color:${h.c}">${subtotal>0?'$'+subtotal.toLocaleString():'—'}</div>
+      </div>
+      <div class="paddle-chips">${chipsHtml}</div>`;
+    container.appendChild(div);
+  });
+}
+
+function renderSidebar() {
+  buildSidebarPane('sb-pane-all', ()=>true);
+  buildSidebarPane('sb-pane-a', n=>n>=101&&n<=375);
+  buildSidebarPane('sb-pane-b', n=>n>=376&&n<=450);
+}
+
+function renderTotals() {
+  const active = activeEntries();
+  let total = 0;
+  LEVELS.forEach(lvl => { total += active.filter(e=>e.levelId===lvl.id).length * lvl.value; });
+  const raisedPaddles = new Set(active.map(e=>e.num));
+  document.getElementById('sidebar-total').textContent = '$'+total.toLocaleString();
+  document.getElementById('paddle-count-label').textContent = `${raisedPaddles.size} paddle${raisedPaddles.size!==1?'s':''} raised`;
+}
+
+function renderLevelCounts() {
+  LEVELS.forEach(lvl => {
+    const el = document.getElementById(`lvl-btn-${lvl.id}`);
+    if(el) el.dataset.count = log.filter(e=>e.levelId===lvl.id&&!e.voided).length;
+  });
+}
+
+/* ════════════════════════════════
+   VOID / UNDO
+════════════════════════════════ */
+function toggleVoidFromSidebar(logIdx) {
+  const e = log[logIdx];
+  e.voided = !e.voided;
+  lastAction = { type: e.voided?'void':'unvoid', logIdx };
+  const lvl = LEVELS.find(l=>l.id===e.levelId);
+  showToast(e.voided ? `Paddle ${e.num} removed from ${lvl.label}` : `Paddle ${e.num} restored to ${lvl.label}`);
+  renderPaddle(e.num); renderSidebar(); renderTotals(); renderLevelCounts();
+}
+
+function undoLast() {
+  if(!lastAction) return;
+  const e = log[lastAction.logIdx];
+  if(lastAction.type==='add') e.voided=true;
+  else if(lastAction.type==='void') e.voided=false;
+  else if(lastAction.type==='unvoid') e.voided=true;
+  lastAction = null;
+  renderPaddle(e.num); renderSidebar(); renderTotals(); renderLevelCounts();
+}
+
+/* ════════════════════════════════
+   EXPORT CSV
+════════════════════════════════ */
+function exportCSV() {
+  const rows = [
+    ['Operator','Paddle Number','Level','Amount','Timestamp','Status']
+  ];
+  log.forEach(e => {
+    const lvl = LEVELS.find(l=>l.id===e.levelId);
+    const ts = e.ts ? e.ts.toLocaleString('en-US', {
+      month:'2-digit', day:'2-digit', year:'numeric',
+      hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:true
+    }) : '';
+    rows.push([
+      operatorName,
+      e.num,
+      lvl.label,
+      lvl.value,
+      ts,
+      e.voided ? 'Removed' : 'Active'
+    ]);
+  });
+
+  if (rows.length === 1) { showToast('No entries to export yet.'); return; }
+
+  const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv], { type:'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const now = new Date();
+  const stamp = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}_${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}`;
+  a.href = url;
+  a.download = `paddle_raise_${operatorName.replace(/\s+/g,'_')}_${stamp}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('CSV exported!');
+}
+
+/* ════════════════════════════════
+   TOAST / FLASH / RESET
+════════════════════════════════ */
+function showToast(msg) {
+  document.getElementById('toast-msg').textContent = msg;
+  document.getElementById('toast').classList.add('show');
+  if(toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>document.getElementById('toast').classList.remove('show'), 3500);
+}
+
+function flashBanner() {
+  const el = document.getElementById('active-status');
+  el.className='active-status'; el.style.borderColor='#FCA5A5'; el.style.background='#FEF2F2';
+  el.innerHTML=`<span style="color:#B91C1C;font-weight:600">⚠ Select a giving level first.</span>`;
+  setTimeout(()=>{
+    if(!activeLevel){
+      el.className='active-status empty'; el.style.borderColor=''; el.style.background='';
+      el.innerHTML='Select a giving level above';
+    }
+  }, 2200);
+}
+
+function openReset() { document.getElementById('modal').classList.add('show'); }
+function closeReset() { document.getElementById('modal').classList.remove('show'); }
+function confirmReset() {
+  log = [];
+  const allNums = [...document.querySelectorAll('.paddle-btn')].map(b=>parseInt(b.id.slice(1)));
+  allNums.forEach(n => renderPaddle(n));
+  activeLevel = null; selectLevel(null);
+  renderSidebar(); renderTotals(); renderLevelCounts(); closeReset();
+  syncToFirebase();
+}
+
+/* ════════════════════════════════
+   FIREBASE SYNC
+   Uncomment and paste your config
+   to enable live saving.
+════════════════════════════════ */
+function syncToFirebase() {
+  if (!window._fbSet || !window._fbSessionRef) return;
+  window._fbSet(window._fbSessionRef('log'),
+    log.map(e => ({ ...e, ts: e.ts ? e.ts.toISOString() : null }))
+  );
+}
+</script>
+
+<!--
+  ═══════════════════════════════════════════════════
+  FIREBASE ACTIVATION — paste this block just before
+  the closing </body> tag once you have your config.
+  ═══════════════════════════════════════════════════
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, push, set }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "PASTE_YOUR_API_KEY",
+  authDomain: "PASTE_YOUR_AUTH_DOMAIN",
+  databaseURL: "PASTE_YOUR_DATABASE_URL",
+  projectId: "PASTE_YOUR_PROJECT_ID",
+  storageBucket: "PASTE_YOUR_STORAGE_BUCKET",
+  messagingSenderId: "PASTE_YOUR_MESSAGING_SENDER_ID",
+  appId: "PASTE_YOUR_APP_ID"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+const sessionId = push(ref(db, 'sessions')).key;
+
+window._fbSet = set;
+window._fbSessionRef = (path) => ref(db, `sessions/${sessionId}/${path}`);
+
+// Called once when operator clicks Start
+window._fbInitSession = (operator, locations) => {
+  set(window._fbSessionRef('meta'), {
+    operator, locations,
+    startedAt: new Date().toISOString()
+  });
+};
+</script>
+
+Then in your startApp() function, add this line right after initApp():
+  if (window._fbInitSession) window._fbInitSession(operatorName, activeLocs);
+
+And in togglePaddle() and toggleVoidFromSidebar() and undoLast(),
+add this line at the end:
+  syncToFirebase();
+-->
+
+</body>
+</html>

@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Paddle Raise — Admin Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Mono:wght@400;500;600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold:#8B5E0A; --gold-bg:#FDF3DC;
+    --ink:#111111; --bg:#F4F2EE; --border:#D6D0C4; --muted:#6B6355;
+    --l1:#B45309; --l1-bg:#FEF3C7; --l1-bd:#FCD34D;
+    --l2:#1D4ED8; --l2-bg:#DBEAFE; --l2-bd:#93C5FD;
+    --l3:#B91C1C; --l3-bg:#FEE2E2; --l3-bd:#FCA5A5;
+    --l4:#047857; --l4-bg:#D1FAE5; --l4-bd:#6EE7B7;
+    --l5:#6D28D9; --l5-bg:#EDE9FE; --l5-bd:#C4B5FD;
+    --l6:#0F766E; --l6-bg:#CCFBF1; --l6-bd:#5EEAD4;
+  }
+  *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+  html, body { height:100%; font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--ink); }
+
+  /* ── LOGIN SCREEN ── */
+  .login-overlay {
+    position:fixed; inset:0; background:var(--bg);
+    display:flex; align-items:center; justify-content:center; z-index:500;
+  }
+  .login-overlay.hidden { display:none; }
+  .login-card {
+    background:#fff; border:2px solid var(--border); border-radius:14px;
+    padding:36px 40px; width:380px; max-width:95vw;
+    box-shadow:0 12px 48px rgba(0,0,0,.12);
+  }
+  .login-card h1 { font-family:'Playfair Display',serif; font-size:1.5rem; font-weight:900; color:var(--gold); margin-bottom:4px; }
+  .login-card p { font-size:.85rem; color:var(--muted); margin-bottom:24px; }
+  .login-label { font-size:.68rem; text-transform:uppercase; letter-spacing:.13em; font-weight:700; color:var(--muted); margin-bottom:5px; display:block; }
+  .login-input {
+    width:100%; padding:9px 13px; border:1.5px solid var(--border);
+    border-radius:7px; font-family:'DM Sans',sans-serif; font-size:.95rem;
+    color:var(--ink); margin-bottom:14px; transition:border-color .15s;
+  }
+  .login-input:focus { outline:none; border-color:#6B7280; }
+  .login-btn {
+    width:100%; padding:11px; background:var(--ink); color:#fff;
+    border:none; border-radius:8px; font-family:'DM Sans',sans-serif;
+    font-size:1rem; font-weight:700; cursor:pointer; transition:background .15s;
+  }
+  .login-btn:hover { background:#374151; }
+  .login-err { color:#B91C1C; font-size:.8rem; margin-top:10px; text-align:center; min-height:18px; }
+
+  /* ── DASHBOARD ── */
+  #dashboard { display:none; flex-direction:column; height:100%; }
+
+  /* header */
+  .dash-header {
+    height:50px; background:#fff; border-bottom:2px solid var(--border);
+    padding:0 20px; display:flex; align-items:center; gap:14px;
+    box-shadow:0 1px 6px rgba(0,0,0,.07); flex-shrink:0;
+  }
+  .dash-header h1 { font-family:'Playfair Display',serif; font-size:1.1rem; font-weight:900; color:var(--gold); }
+  .live-dot { width:9px; height:9px; border-radius:50%; background:#047857; animation:pulse 1.5s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(.8)} }
+  .live-label { font-size:.75rem; color:#047857; font-weight:600; }
+  .session-count { font-size:.78rem; color:var(--muted); margin-left:auto; }
+
+  .grand-total-box {
+    font-family:'DM Mono',monospace; font-size:1rem; font-weight:700;
+    color:var(--gold); background:var(--gold-bg); border:1.5px solid #D97706;
+    padding:4px 14px; border-radius:5px; white-space:nowrap;
+  }
+  .grand-total-box small { font-size:.58rem; text-transform:uppercase; letter-spacing:.1em; color:var(--muted); display:block; font-weight:500; }
+
+  .export-all-btn {
+    font-family:'DM Mono',monospace; font-size:.66rem; font-weight:700;
+    text-transform:uppercase; letter-spacing:.07em; padding:6px 12px;
+    border:1.5px solid #047857; border-radius:5px; background:#D1FAE5; color:#047857;
+    cursor:pointer; transition:all .12s; white-space:nowrap;
+  }
+  .export-all-btn:hover { background:#A7F3D0; }
+
+  .signout-btn {
+    font-family:'DM Mono',monospace; font-size:.66rem; font-weight:700;
+    text-transform:uppercase; letter-spacing:.07em; padding:6px 12px;
+    border:1.5px solid #D1D5DB; border-radius:5px; background:#fff; color:#6B7280;
+    cursor:pointer; transition:all .12s;
+  }
+  .signout-btn:hover { border-color:#374151; color:var(--ink); }
+
+  /* sessions grid */
+  .sessions-area { flex:1; overflow-y:auto; padding:16px; }
+  .no-sessions {
+    display:flex; align-items:center; justify-content:center;
+    height:100%; flex-direction:column; gap:10px; color:var(--muted);
+  }
+  .no-sessions .icon { font-size:2.5rem; }
+  .no-sessions p { font-size:.9rem; }
+
+  .sessions-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(300px, 1fr)); gap:14px; }
+
+  /* session card */
+  .session-card {
+    background:#fff; border:1.5px solid var(--border); border-radius:10px;
+    overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,.06);
+    display:flex; flex-direction:column;
+  }
+  .session-card-header {
+    padding:10px 14px 8px; border-bottom:1.5px solid var(--border);
+    display:flex; align-items:center; gap:8px;
+  }
+  .session-operator { font-weight:700; font-size:.92rem; color:var(--ink); }
+  .session-meta { font-size:.7rem; color:var(--muted); }
+  .session-loc-badges { display:flex; gap:4px; margin-left:auto; }
+  .loc-badge {
+    font-family:'DM Mono',monospace; font-size:.58rem; font-weight:700;
+    padding:1px 6px; border-radius:3px; color:#fff;
+    text-transform:uppercase; letter-spacing:.06em;
+  }
+  .loc-badge.a { background:#1D4ED8; }
+  .loc-badge.b { background:#047857; }
+
+  .session-total-row {
+    padding:6px 14px; background:var(--gold-bg); border-bottom:1px solid #E5E7EB;
+    display:flex; align-items:baseline; gap:6px;
+  }
+  .session-total-val { font-family:'DM Mono',monospace; font-size:1.2rem; font-weight:700; color:var(--gold); }
+  .session-total-sub { font-size:.7rem; color:var(--muted); }
+
+  .session-levels { padding:6px 10px 8px; flex:1; }
+  .sess-level-row {
+    display:flex; align-items:flex-start; gap:6px;
+    padding:4px 0; border-bottom:1px solid #F3F0EC;
+    font-size:.78rem;
+  }
+  .sess-level-row:last-child { border-bottom:none; }
+  .sess-level-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; margin-top:3px; }
+  .sess-level-name { font-weight:700; min-width:58px; }
+  .sess-level-amt { font-family:'DM Mono',monospace; font-size:.76rem; margin-left:auto; flex-shrink:0; font-weight:600; }
+  .sess-chips { display:flex; flex-wrap:wrap; gap:2px; flex:1; }
+  .sess-chip {
+    font-family:'DM Mono',monospace; font-size:.66rem; font-weight:600;
+    padding:1px 5px; border-radius:3px; line-height:1.5;
+    border:1px solid transparent;
+  }
+  .sess-chip.voided { opacity:.4; text-decoration:line-through; }
+
+  .chip-l1{background:var(--l1-bg);color:var(--l1);border-color:var(--l1-bd);}
+  .chip-l2{background:var(--l2-bg);color:var(--l2);border-color:var(--l2-bd);}
+  .chip-l3{background:var(--l3-bg);color:var(--l3);border-color:var(--l3-bd);}
+  .chip-l4{background:var(--l4-bg);color:var(--l4);border-color:var(--l4-bd);}
+  .chip-l5{background:var(--l5-bg);color:var(--l5);border-color:var(--l5-bd);}
+  .chip-l6{background:var(--l6-bg);color:var(--l6);border-color:var(--l6-bd);}
+
+  .session-card-footer {
+    padding:6px 14px; border-top:1px solid var(--border);
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .session-started { font-size:.68rem; color:var(--muted); }
+  .export-session-btn {
+    font-family:'DM Mono',monospace; font-size:.62rem; font-weight:700;
+    text-transform:uppercase; letter-spacing:.06em; padding:3px 9px;
+    border:1px solid #047857; border-radius:4px; background:#D1FAE5; color:#047857;
+    cursor:pointer; transition:all .1s;
+  }
+  .export-session-btn:hover { background:#A7F3D0; }
+
+  /* toast */
+  .toast {
+    position:fixed; bottom:14px; left:50%; transform:translateX(-50%) translateY(70px);
+    background:var(--ink); color:#fff; border-radius:6px; padding:8px 16px;
+    font-size:.82rem; font-weight:500;
+    box-shadow:0 6px 24px rgba(0,0,0,.22); z-index:999; transition:transform .22s ease;
+    white-space:nowrap;
+  }
+  .toast.show { transform:translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-overlay" id="login-overlay">
+  <div class="login-card">
+    <h1>🔐 Admin Login</h1>
+    <p>Sign in with your owner account to view live sessions.</p>
+    <label class="login-label">Email</label>
+    <input class="login-input" id="login-email" type="email" placeholder="you@example.com">
+    <label class="login-label">Password</label>
+    <input class="login-input" id="login-password" type="password" placeholder="••••••••">
+    <button class="login-btn" onclick="doLogin()">Sign In</button>
+    <div class="login-err" id="login-err"></div>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboard">
+  <div class="dash-header">
+    <h1>🏆 Paddle Raise — Live Dashboard</h1>
+    <div class="live-dot"></div>
+    <span class="live-label">Live</span>
+    <span class="session-count" id="session-count">0 active sessions</span>
+    <div class="grand-total-box">
+      <small>Combined Total</small>
+      <span id="grand-total">$0</span>
+    </div>
+    <button class="export-all-btn" onclick="exportAll()">⬇ Export All CSV</button>
+    <button class="signout-btn" onclick="doSignOut()">Sign Out</button>
+  </div>
+  <div class="sessions-area" id="sessions-area">
+    <div class="no-sessions" id="no-sessions">
+      <div class="icon">📋</div>
+      <p>No active sessions yet. Share the tracker link with your team.</p>
+    </div>
+    <div class="sessions-grid" id="sessions-grid" style="display:none"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><span id="toast-msg"></span></div>
+
+<script type="module">
+// ─────────────────────────────────────────
+// PASTE YOUR firebaseConfig HERE
+// ─────────────────────────────────────────
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getDatabase, ref, onValue }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "PASTE_YOUR_API_KEY",
+  authDomain: "PASTE_YOUR_AUTH_DOMAIN",
+  databaseURL: "PASTE_YOUR_DATABASE_URL",
+  projectId: "PASTE_YOUR_PROJECT_ID",
+  storageBucket: "PASTE_YOUR_STORAGE_BUCKET",
+  messagingSenderId: "PASTE_YOUR_MESSAGING_SENDER_ID",
+  appId: "PASTE_YOUR_APP_ID"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getDatabase(app);
+
+// ─────────────────────────────────────────
+// CONSTANTS
+// ─────────────────────────────────────────
+const LEVELS = [
+  { id:'l1', label:'$10,000', value:10000 },
+  { id:'l2', label:'$5,000',  value:5000  },
+  { id:'l3', label:'$2,500',  value:2500  },
+  { id:'l4', label:'$1,000',  value:1000  },
+  { id:'l5', label:'$500',    value:500   },
+  { id:'l6', label:'$250',    value:250   },
+];
+const HEX = {
+  l1:{ c:'#B45309', bg:'#FEF3C7', bd:'#FCD34D' },
+  l2:{ c:'#1D4ED8', bg:'#DBEAFE', bd:'#93C5FD' },
+  l3:{ c:'#B91C1C', bg:'#FEE2E2', bd:'#FCA5A5' },
+  l4:{ c:'#047857', bg:'#D1FAE5', bd:'#6EE7B7' },
+  l5:{ c:'#6D28D9', bg:'#EDE9FE', bd:'#C4B5FD' },
+  l6:{ c:'#0F766E', bg:'#CCFBF1', bd:'#5EEAD4' },
+};
+
+// ─────────────────────────────────────────
+// AUTH
+// ─────────────────────────────────────────
+onAuthStateChanged(auth, user => {
+  if (user) {
+    document.getElementById('login-overlay').classList.add('hidden');
+    document.getElementById('dashboard').style.display = 'flex';
+    document.getElementById('dashboard').style.flexDirection = 'column';
+    startListening();
+  } else {
+    document.getElementById('login-overlay').classList.remove('hidden');
+    document.getElementById('dashboard').style.display = 'none';
+  }
+});
+
+window.doLogin = async function() {
+  const email = document.getElementById('login-email').value.trim();
+  const pass = document.getElementById('login-password').value;
+  const err = document.getElementById('login-err');
+  try {
+    await signInWithEmailAndPassword(auth, email, pass);
+    err.textContent = '';
+  } catch(e) {
+    err.textContent = 'Invalid email or password.';
+  }
+};
+
+window.doSignOut = () => signOut(auth);
+
+document.getElementById('login-password').addEventListener('keydown', e => {
+  if (e.key === 'Enter') window.doLogin();
+});
+
+// ─────────────────────────────────────────
+// LIVE DATA
+// ─────────────────────────────────────────
+let allSessions = {};
+
+function startListening() {
+  const sessionsRef = ref(db, 'sessions');
+  onValue(sessionsRef, snapshot => {
+    allSessions = snapshot.val() || {};
+    renderDashboard();
+  });
+}
+
+function renderDashboard() {
+  const sessionIds = Object.keys(allSessions);
+  const grid = document.getElementById('sessions-grid');
+  const none = document.getElementById('no-sessions');
+  const countEl = document.getElementById('session-count');
+
+  countEl.textContent = `${sessionIds.length} active session${sessionIds.length!==1?'s':''}`;
+
+  if (sessionIds.length === 0) {
+    none.style.display = 'flex';
+    grid.style.display = 'none';
+    document.getElementById('grand-total').textContent = '$0';
+    return;
+  }
+
+  none.style.display = 'none';
+  grid.style.display = 'grid';
+  grid.innerHTML = '';
+
+  let grandTotal = 0;
+
+  sessionIds.forEach(sid => {
+    const session = allSessions[sid];
+    const meta = session.meta || {};
+    const log = session.log ? Object.values(session.log) : [];
+
+    // Rehydrate timestamps
+    log.forEach(e => { if(e.ts) e.ts = new Date(e.ts); });
+
+    const activeLog = log.filter(e => !e.voided);
+    let sessionTotal = 0;
+    LEVELS.forEach(lvl => {
+      sessionTotal += activeLog.filter(e => e.levelId===lvl.id).length * lvl.value;
+    });
+    grandTotal += sessionTotal;
+
+    const card = buildSessionCard(sid, meta, log, sessionTotal);
+    grid.appendChild(card);
+  });
+
+  document.getElementById('grand-total').textContent = '$' + grandTotal.toLocaleString();
+}
+
+function buildSessionCard(sid, meta, log, total) {
+  const card = document.createElement('div');
+  card.className = 'session-card';
+
+  const startedAt = meta.startedAt ? new Date(meta.startedAt).toLocaleString('en-US', {
+    month:'short', day:'numeric', hour:'2-digit', minute:'2-digit', hour12:true
+  }) : '—';
+
+  const locs = meta.locations || [];
+  const locBadges = locs.map(l =>
+    `<span class="loc-badge ${l}">Loc ${l.toUpperCase()}</span>`
+  ).join('');
+
+  // Level rows
+  const levelRowsHtml = LEVELS.map(lvl => {
+    const h = HEX[lvl.id];
+    const entries = log.filter(e => e.levelId===lvl.id);
+    const activeCount = entries.filter(e=>!e.voided).length;
+    const subtotal = activeCount * lvl.value;
+    const chips = entries.map(e =>
+      `<span class="sess-chip chip-${lvl.id}${e.voided?' voided':''}">${e.num}</span>`
+    ).join('');
+    return `
+      <div class="sess-level-row">
+        <div class="sess-level-dot" style="background:${h.c}"></div>
+        <div class="sess-level-name" style="color:${h.c}">${lvl.label}</div>
+        <div class="sess-chips">${chips || '<span style="color:#9CA3AF;font-style:italic;font-size:.7rem">—</span>'}</div>
+        <div class="sess-level-amt" style="color:${h.c}">${subtotal>0?'$'+subtotal.toLocaleString():''}</div>
+      </div>`;
+  }).join('');
+
+  card.innerHTML = `
+    <div class="session-card-header">
+      <div>
+        <div class="session-operator">${escHtml(meta.operator || 'Unknown')}</div>
+        <div class="session-meta">Session ${sid.slice(-6)}</div>
+      </div>
+      <div class="session-loc-badges">${locBadges}</div>
+    </div>
+    <div class="session-total-row">
+      <div class="session-total-val">$${total.toLocaleString()}</div>
+      <div class="session-total-sub">raised this session</div>
+    </div>
+    <div class="session-levels">${levelRowsHtml}</div>
+    <div class="session-card-footer">
+      <span class="session-started">Started ${startedAt}</span>
+      <button class="export-session-btn" onclick="exportSession('${sid}')">⬇ CSV</button>
+    </div>`;
+  return card;
+}
+
+function escHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ─────────────────────────────────────────
+// EXPORT
+// ─────────────────────────────────────────
+window.exportSession = function(sid) {
+  const session = allSessions[sid];
+  if (!session) return;
+  const meta = session.meta || {};
+  const log = session.log ? Object.values(session.log) : [];
+  downloadCSV(meta.operator || 'unknown', log, sid);
+};
+
+window.exportAll = function() {
+  const rows = [['Session ID','Operator','Paddle Number','Level','Amount','Timestamp','Status']];
+  Object.entries(allSessions).forEach(([sid, session]) => {
+    const meta = session.meta || {};
+    const log = session.log ? Object.values(session.log) : [];
+    log.forEach(e => {
+      const lvl = LEVELS.find(l=>l.id===e.levelId);
+      const ts = e.ts ? new Date(e.ts).toLocaleString() : '';
+      rows.push([sid, meta.operator||'', e.num, lvl?.label||'', lvl?.value||'', ts, e.voided?'Removed':'Active']);
+    });
+  });
+  if (rows.length===1) { showToast('No data to export.'); return; }
+  triggerCSVDownload(rows, `paddle_raise_all_${datestamp()}.csv`);
+  showToast('All sessions exported!');
+};
+
+function downloadCSV(operator, log, sid) {
+  const rows = [['Operator','Paddle Number','Level','Amount','Timestamp','Status']];
+  log.forEach(e => {
+    const lvl = LEVELS.find(l=>l.id===e.levelId);
+    const ts = e.ts ? new Date(e.ts).toLocaleString() : '';
+    rows.push([operator, e.num, lvl?.label||'', lvl?.value||'', ts, e.voided?'Removed':'Active']);
+  });
+  triggerCSVDownload(rows, `paddle_raise_${(operator||'session').replace(/\s+/g,'_')}_${datestamp()}.csv`);
+  showToast('CSV exported!');
+}
+
+function triggerCSVDownload(rows, filename) {
+  const csv = rows.map(r => r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv], {type:'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href=url; a.download=filename; a.click();
+  URL.revokeObjectURL(url);
+}
+
+function datestamp() {
+  const n=new Date();
+  return `${n.getFullYear()}${String(n.getMonth()+1).padStart(2,'0')}${String(n.getDate()).padStart(2,'0')}`;
+}
+
+// ─────────────────────────────────────────
+// TOAST
+// ─────────────────────────────────────────
+let toastTimer=null;
+window.showToast = function(msg) {
+  document.getElementById('toast-msg').textContent=msg;
+  document.getElementById('toast').classList.add('show');
+  if(toastTimer)clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>document.getElementById('toast').classList.remove('show'),3500);
+};
+</script>
+</body>
+</html>
