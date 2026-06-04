@@ -5,130 +5,223 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Paddle Raise — Admin</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Mono:wght@400;500;600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-
-<!-- Firebase compat SDK — plain script tags, no modules needed -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 
 <style>
-  :root {
-    --gold:#8B5E0A; --gold-bg:#FDF3DC;
-    --ink:#111111; --bg:#F4F2EE; --border:#D6D0C4; --muted:#6B6355;
-    --l1:#B45309; --l1-bg:#FEF3C7; --l1-bd:#FCD34D;
-    --l2:#1D4ED8; --l2-bg:#DBEAFE; --l2-bd:#93C5FD;
-    --l3:#B91C1C; --l3-bg:#FEE2E2; --l3-bd:#FCA5A5;
-    --l4:#047857; --l4-bg:#D1FAE5; --l4-bd:#6EE7B7;
-    --l5:#6D28D9; --l5-bg:#EDE9FE; --l5-bd:#C4B5FD;
-    --l6:#0F766E; --l6-bg:#CCFBF1; --l6-bd:#5EEAD4;
-  }
-  *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
-  html, body { height:100%; font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--ink); }
+:root {
+  --gold:#8B5E0A; --gold-bg:#FDF3DC; --gold-border:#D97706;
+  --ink:#111111; --bg:#F4F2EE; --border:#D6D0C4; --muted:#6B6355;
+  --white:#ffffff;
+  --l1:#B45309; --l1-bg:#FEF3C7; --l1-bd:#FCD34D;
+  --l2:#1D4ED8; --l2-bg:#DBEAFE; --l2-bd:#93C5FD;
+  --l3:#B91C1C; --l3-bg:#FEE2E2; --l3-bd:#FCA5A5;
+  --l4:#047857; --l4-bg:#D1FAE5; --l4-bd:#6EE7B7;
+  --l5:#6D28D9; --l5-bg:#EDE9FE; --l5-bd:#C4B5FD;
+  --l6:#0F766E; --l6-bg:#CCFBF1; --l6-bd:#5EEAD4;
+  --loc-a:#1D4ED8; --loc-b:#047857;
+}
 
-  .login-overlay {
-    position:fixed; inset:0; background:var(--bg);
-    display:flex; align-items:center; justify-content:center; z-index:500;
-  }
-  .login-overlay.hidden { display:none; }
-  .login-card {
-    background:#fff; border:2px solid var(--border); border-radius:14px;
-    padding:36px 40px; width:380px; max-width:95vw;
-    box-shadow:0 12px 48px rgba(0,0,0,.12);
-  }
-  .login-card h1 { font-family:'Playfair Display',serif; font-size:1.5rem; font-weight:900; color:var(--gold); margin-bottom:4px; }
-  .login-card p { font-size:.85rem; color:var(--muted); margin-bottom:24px; }
-  .login-label { font-size:.68rem; text-transform:uppercase; letter-spacing:.13em; font-weight:700; color:var(--muted); margin-bottom:5px; display:block; }
-  .login-input {
-    width:100%; padding:9px 13px; border:1.5px solid var(--border);
-    border-radius:7px; font-family:'DM Sans',sans-serif; font-size:.95rem;
-    color:var(--ink); margin-bottom:14px; transition:border-color .15s;
-  }
-  .login-input:focus { outline:none; border-color:#6B7280; }
-  .login-btn {
-    width:100%; padding:11px; background:var(--ink); color:#fff;
-    border:none; border-radius:8px; font-family:'DM Sans',sans-serif;
-    font-size:1rem; font-weight:700; cursor:pointer; transition:background .15s;
-  }
-  .login-btn:hover { background:#374151; }
-  .login-btn:disabled { background:#9CA3AF; cursor:not-allowed; }
-  .login-err { font-size:.82rem; margin-top:10px; text-align:center; min-height:18px; }
+*, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+html, body { min-height:100%; font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--ink); }
 
-  #dashboard { display:none; flex-direction:column; height:100%; }
+/* ── LOGIN ── */
+.login-overlay {
+  position:fixed; inset:0; background:var(--bg);
+  display:flex; align-items:center; justify-content:center; z-index:500; padding:16px;
+}
+.login-overlay.hidden { display:none; }
+.login-card {
+  background:var(--white); border:2px solid var(--border); border-radius:16px;
+  padding:32px 28px; width:100%; max-width:380px;
+  box-shadow:0 12px 48px rgba(0,0,0,.12);
+}
+.login-card h1 { font-family:'Playfair Display',serif; font-size:1.5rem; font-weight:900; color:var(--gold); margin-bottom:4px; }
+.login-card p { font-size:.875rem; color:var(--muted); margin-bottom:24px; }
+.login-label { font-size:.65rem; text-transform:uppercase; letter-spacing:.13em; font-weight:700; color:var(--muted); margin-bottom:5px; display:block; }
+.login-input {
+  width:100%; padding:10px 14px; border:1.5px solid var(--border);
+  border-radius:8px; font-family:'DM Sans',sans-serif; font-size:1rem;
+  color:var(--ink); margin-bottom:14px; -webkit-appearance:none;
+}
+.login-input:focus { outline:none; border-color:#6B7280; }
+.login-btn {
+  width:100%; padding:13px; background:var(--ink); color:#fff;
+  border:none; border-radius:10px; font-family:'DM Sans',sans-serif;
+  font-size:1rem; font-weight:700; cursor:pointer; -webkit-appearance:none;
+}
+.login-btn:disabled { background:#9CA3AF; }
+.login-err { font-size:.82rem; margin-top:10px; text-align:center; min-height:18px; line-height:1.4; }
 
-  .dash-header {
-    height:50px; background:#fff; border-bottom:2px solid var(--border);
-    padding:0 20px; display:flex; align-items:center; gap:14px;
-    box-shadow:0 1px 6px rgba(0,0,0,.07); flex-shrink:0;
-  }
-  .dash-header h1 { font-family:'Playfair Display',serif; font-size:1.1rem; font-weight:900; color:var(--gold); }
-  .live-dot { width:9px; height:9px; border-radius:50%; background:#047857; animation:pulse 1.5s infinite; }
-  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(.8)} }
-  .live-label { font-size:.75rem; color:#047857; font-weight:600; }
-  .session-count { font-size:.78rem; color:var(--muted); margin-left:auto; }
-  .grand-total-box {
-    font-family:'DM Mono',monospace; font-size:1rem; font-weight:700;
-    color:var(--gold); background:var(--gold-bg); border:1.5px solid #D97706;
-    padding:4px 14px; border-radius:5px; white-space:nowrap; text-align:center;
-  }
-  .grand-total-box small { font-size:.55rem; text-transform:uppercase; letter-spacing:.1em; color:var(--muted); display:block; font-weight:500; }
-  .export-all-btn {
-    font-family:'DM Mono',monospace; font-size:.66rem; font-weight:700;
-    text-transform:uppercase; letter-spacing:.07em; padding:6px 12px;
-    border:1.5px solid #047857; border-radius:5px; background:#D1FAE5; color:#047857;
-    cursor:pointer; transition:all .12s; white-space:nowrap;
-  }
-  .export-all-btn:hover { background:#A7F3D0; }
-  .signout-btn {
-    font-family:'DM Mono',monospace; font-size:.66rem; font-weight:700;
-    text-transform:uppercase; letter-spacing:.07em; padding:6px 12px;
-    border:1.5px solid #D1D5DB; border-radius:5px; background:#fff; color:#6B7280;
-    cursor:pointer; transition:all .12s;
-  }
-  .signout-btn:hover { border-color:#374151; color:var(--ink); }
+/* ── DASHBOARD ── */
+#dashboard { display:none; flex-direction:column; min-height:100vh; }
 
-  .sessions-area { flex:1; overflow-y:auto; padding:16px; }
-  .no-sessions { display:flex; align-items:center; justify-content:center; height:100%; flex-direction:column; gap:10px; color:var(--muted); }
-  .no-sessions .icon { font-size:2.5rem; }
-  .no-sessions p { font-size:.9rem; }
-  .sessions-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(300px, 1fr)); gap:14px; }
+/* ── TOP BAR ── */
+.top-bar {
+  background:var(--white); border-bottom:2px solid var(--border);
+  padding:12px 16px; display:flex; flex-direction:column; gap:10px;
+  box-shadow:0 1px 6px rgba(0,0,0,.07); flex-shrink:0; position:sticky; top:0; z-index:100;
+}
+.top-bar-row1 { display:flex; align-items:center; gap:10px; }
+.top-bar-title { font-family:'Playfair Display',serif; font-size:1.1rem; font-weight:900; color:var(--gold); flex:1; min-width:0; }
+.live-badge {
+  display:flex; align-items:center; gap:5px;
+  background:#ECFDF5; border:1px solid #6EE7B7; border-radius:20px;
+  padding:3px 10px; flex-shrink:0;
+}
+.live-dot { width:7px; height:7px; border-radius:50%; background:#047857; animation:pulse 1.5s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+.live-label { font-size:.7rem; color:#047857; font-weight:700; }
+.signout-btn {
+  font-family:'DM Mono',monospace; font-size:.65rem; font-weight:700;
+  text-transform:uppercase; letter-spacing:.06em; padding:6px 12px;
+  border:1.5px solid var(--border); border-radius:7px; background:var(--white); color:var(--muted);
+  cursor:pointer; flex-shrink:0; -webkit-appearance:none;
+}
 
-  .session-card { background:#fff; border:1.5px solid var(--border); border-radius:10px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,.06); display:flex; flex-direction:column; }
-  .session-card-header { padding:10px 14px 8px; border-bottom:1.5px solid var(--border); display:flex; align-items:center; gap:8px; }
-  .session-operator { font-weight:700; font-size:.92rem; color:var(--ink); }
-  .session-meta { font-size:.7rem; color:var(--muted); }
-  .session-loc-badges { display:flex; gap:4px; margin-left:auto; }
-  .loc-badge { font-family:'DM Mono',monospace; font-size:.58rem; font-weight:700; padding:1px 6px; border-radius:3px; color:#fff; text-transform:uppercase; }
-  .loc-badge.a { background:#1D4ED8; }
-  .loc-badge.b { background:#047857; }
-  .session-total-row { padding:6px 14px; background:var(--gold-bg); border-bottom:1px solid #E5E7EB; display:flex; align-items:baseline; gap:6px; }
-  .session-total-val { font-family:'DM Mono',monospace; font-size:1.2rem; font-weight:700; color:var(--gold); }
-  .session-total-sub { font-size:.7rem; color:var(--muted); }
-  .session-levels { padding:6px 10px 8px; flex:1; }
-  .sess-level-row { display:flex; align-items:flex-start; gap:6px; padding:4px 0; border-bottom:1px solid #F3F0EC; font-size:.78rem; }
-  .sess-level-row:last-child { border-bottom:none; }
-  .sess-level-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; margin-top:3px; }
-  .sess-level-name { font-weight:700; min-width:58px; }
-  .sess-level-amt { font-family:'DM Mono',monospace; font-size:.76rem; margin-left:auto; flex-shrink:0; font-weight:600; }
-  .sess-chips { display:flex; flex-wrap:wrap; gap:2px; flex:1; }
-  .sess-chip { font-family:'DM Mono',monospace; font-size:.66rem; font-weight:600; padding:1px 5px; border-radius:3px; line-height:1.5; border:1px solid transparent; }
-  .sess-chip.voided { opacity:.4; text-decoration:line-through; }
-  .chip-l1{background:var(--l1-bg);color:var(--l1);border-color:var(--l1-bd);}
-  .chip-l2{background:var(--l2-bg);color:var(--l2);border-color:var(--l2-bd);}
-  .chip-l3{background:var(--l3-bg);color:var(--l3);border-color:var(--l3-bd);}
-  .chip-l4{background:var(--l4-bg);color:var(--l4);border-color:var(--l4-bd);}
-  .chip-l5{background:var(--l5-bg);color:var(--l5);border-color:var(--l5-bd);}
-  .chip-l6{background:var(--l6-bg);color:var(--l6);border-color:var(--l6-bd);}
-  .session-card-footer { padding:6px 14px; border-top:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
-  .session-started { font-size:.68rem; color:var(--muted); }
-  .export-session-btn { font-family:'DM Mono',monospace; font-size:.62rem; font-weight:700; text-transform:uppercase; letter-spacing:.06em; padding:3px 9px; border:1px solid #047857; border-radius:4px; background:#D1FAE5; color:#047857; cursor:pointer; }
-  .export-session-btn:hover { background:#A7F3D0; }
+.top-bar-row2 { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
 
-  .toast { position:fixed; bottom:14px; left:50%; transform:translateX(-50%) translateY(70px); background:var(--ink); color:#fff; border-radius:6px; padding:8px 16px; font-size:.82rem; font-weight:500; box-shadow:0 6px 24px rgba(0,0,0,.22); z-index:999; transition:transform .22s ease; white-space:nowrap; }
-  .toast.show { transform:translateX(-50%) translateY(0); }
+/* Grand total box */
+.grand-total-box {
+  background:var(--gold-bg); border:2px solid var(--gold-border); border-radius:9px;
+  padding:6px 14px; text-align:center; flex-shrink:0;
+}
+.grand-total-box small { font-size:.55rem; text-transform:uppercase; letter-spacing:.12em; color:var(--gold); font-weight:700; display:block; }
+.grand-total-box span { font-family:'DM Mono',monospace; font-size:1.3rem; font-weight:700; color:var(--gold); }
+
+/* Export all — prominent */
+.export-all-btn {
+  font-family:'DM Sans',sans-serif; font-size:.88rem; font-weight:700;
+  padding:9px 18px; border:2px solid #047857; border-radius:9px;
+  background:#047857; color:#fff; cursor:pointer; flex-shrink:0;
+  display:flex; align-items:center; gap:6px; -webkit-appearance:none;
+}
+.export-all-btn:active { background:#065f46; }
+
+.session-count { font-size:.78rem; color:var(--muted); margin-left:auto; }
+
+/* ── LOCATION FILTER TABS ── */
+.loc-tabs {
+  display:flex; gap:8px; padding:12px 16px 0;
+}
+.loc-tab {
+  flex:1; padding:9px 10px; border-radius:9px; border:2px solid var(--border);
+  background:var(--white); font-family:'DM Mono',monospace; font-size:.78rem;
+  font-weight:700; cursor:pointer; text-align:center; color:var(--muted);
+  transition:all .15s; -webkit-appearance:none;
+}
+.loc-tab.active-all  { background:var(--ink); border-color:var(--ink); color:#fff; }
+.loc-tab.active-a    { background:var(--loc-a); border-color:var(--loc-a); color:#fff; }
+.loc-tab.active-b    { background:var(--loc-b); border-color:var(--loc-b); color:#fff; }
+
+/* ── SESSION LIST ── */
+.sessions-area { flex:1; padding:12px 16px 32px; display:flex; flex-direction:column; gap:8px; }
+
+.no-sessions { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:60px 20px; gap:10px; color:var(--muted); text-align:center; }
+.no-sessions .icon { font-size:2.5rem; }
+.no-sessions p { font-size:.9rem; }
+
+/* ── SESSION ROW (accordion) ── */
+.session-row {
+  background:var(--white); border:1.5px solid var(--border); border-radius:12px;
+  overflow:hidden; box-shadow:0 1px 4px rgba(0,0,0,.05);
+  transition:box-shadow .15s;
+}
+.session-row.open { box-shadow:0 4px 16px rgba(0,0,0,.1); }
+
+/* Collapsed header — always visible, tap to expand */
+.session-row-header {
+  display:flex; align-items:center; gap:10px;
+  padding:13px 14px; cursor:pointer; user-select:none;
+  -webkit-tap-highlight-color:transparent;
+}
+.session-row-header:active { background:#F9FAFB; }
+
+.session-chevron {
+  font-size:.75rem; color:var(--muted); flex-shrink:0;
+  transition:transform .2s; display:flex; align-items:center;
+}
+.session-row.open .session-chevron { transform:rotate(90deg); }
+
+.session-name { font-weight:700; font-size:1rem; color:var(--ink); flex:1; min-width:0; }
+.session-loc-badges { display:flex; gap:4px; flex-shrink:0; }
+.loc-badge { font-family:'DM Mono',monospace; font-size:.58rem; font-weight:700; padding:2px 7px; border-radius:4px; color:#fff; }
+.loc-badge.a { background:var(--loc-a); }
+.loc-badge.b { background:var(--loc-b); }
+
+.session-header-total {
+  font-family:'DM Mono',monospace; font-size:.95rem; font-weight:700;
+  color:var(--gold); background:var(--gold-bg); border:1px solid var(--gold-border);
+  padding:3px 10px; border-radius:6px; flex-shrink:0; white-space:nowrap;
+}
+
+/* Expanded body */
+.session-body { display:none; border-top:1.5px solid var(--border); }
+.session-row.open .session-body { display:block; }
+
+.session-meta-row {
+  padding:8px 14px; background:#FAFAF8; border-bottom:1px solid #F0EDE8;
+  display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap;
+}
+.session-started { font-size:.72rem; color:var(--muted); }
+.export-session-btn {
+  font-family:'DM Mono',monospace; font-size:.7rem; font-weight:700;
+  text-transform:uppercase; letter-spacing:.06em; padding:6px 14px;
+  border:1.5px solid #047857; border-radius:7px; background:#D1FAE5; color:#047857;
+  cursor:pointer; -webkit-appearance:none;
+}
+.export-session-btn:active { background:#A7F3D0; }
+
+/* Level rows inside expanded body */
+.session-levels { padding:4px 0 8px; }
+.sess-level-row {
+  display:flex; align-items:flex-start; gap:8px;
+  padding:7px 14px; border-bottom:1px solid #F3F0EC;
+}
+.sess-level-row:last-child { border-bottom:none; }
+.sess-level-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; margin-top:4px; }
+.sess-level-name { font-weight:700; font-size:.85rem; min-width:64px; flex-shrink:0; }
+.sess-chips { display:flex; flex-wrap:wrap; gap:3px; flex:1; }
+.sess-chip {
+  font-family:'DM Mono',monospace; font-size:.72rem; font-weight:600;
+  padding:2px 6px; border-radius:4px; line-height:1.5; border:1px solid transparent;
+}
+.sess-chip.voided { opacity:.4; text-decoration:line-through; }
+.sess-level-amt { font-family:'DM Mono',monospace; font-size:.82rem; font-weight:700; margin-left:auto; flex-shrink:0; }
+
+.chip-l1{background:var(--l1-bg);color:var(--l1);border-color:var(--l1-bd);}
+.chip-l2{background:var(--l2-bg);color:var(--l2);border-color:var(--l2-bd);}
+.chip-l3{background:var(--l3-bg);color:var(--l3);border-color:var(--l3-bd);}
+.chip-l4{background:var(--l4-bg);color:var(--l4);border-color:var(--l4-bd);}
+.chip-l5{background:var(--l5-bg);color:var(--l5);border-color:var(--l5-bd);}
+.chip-l6{background:var(--l6-bg);color:var(--l6);border-color:var(--l6-bd);}
+
+/* ── TOAST ── */
+.toast {
+  position:fixed; bottom:20px; left:50%;
+  transform:translateX(-50%) translateY(80px);
+  background:var(--ink); color:#fff; border-radius:8px;
+  padding:10px 18px; font-size:.85rem; font-weight:500;
+  box-shadow:0 6px 24px rgba(0,0,0,.22); z-index:999;
+  transition:transform .22s ease; white-space:nowrap;
+}
+.toast.show { transform:translateX(-50%) translateY(0); }
+
+/* ── DESKTOP TWEAKS ── */
+@media (min-width:640px) {
+  .top-bar { flex-direction:row; align-items:center; flex-wrap:wrap; gap:12px; padding:0 20px; height:auto; min-height:56px; }
+  .top-bar-row1, .top-bar-row2 { display:contents; }
+  .top-bar-title { font-size:1.15rem; }
+  .loc-tabs { padding:16px 20px 0; gap:10px; }
+  .loc-tab { flex:0 0 auto; padding:8px 20px; }
+  .sessions-area { padding:16px 20px 32px; }
+}
 </style>
 </head>
 <body>
 
+<!-- LOGIN -->
 <div class="login-overlay" id="login-overlay">
   <div class="login-card">
     <h1>🔐 Admin Login</h1>
@@ -142,26 +235,46 @@
   </div>
 </div>
 
+<!-- DASHBOARD -->
 <div id="dashboard">
-  <div class="dash-header">
-    <h1>🏆 Paddle Raise — Live Dashboard</h1>
-    <div class="live-dot"></div>
-    <span class="live-label">Live</span>
-    <span class="session-count" id="session-count">0 active sessions</span>
-    <div class="grand-total-box">
-      <small>Combined Total</small>
-      <span id="grand-total">$0</span>
+
+  <!-- Sticky top bar -->
+  <div class="top-bar">
+    <div class="top-bar-row1">
+      <div class="top-bar-title">🏆 Paddle Raise</div>
+      <div class="live-badge">
+        <div class="live-dot"></div>
+        <span class="live-label">Live</span>
+      </div>
+      <button class="signout-btn" onclick="doSignOut()">Sign Out</button>
     </div>
-    <button class="export-all-btn" onclick="exportAll()">⬇ Export All CSV</button>
-    <button class="signout-btn" onclick="doSignOut()">Sign Out</button>
+    <div class="top-bar-row2">
+      <div class="grand-total-box">
+        <small>Combined Total</small>
+        <span id="grand-total">$0</span>
+      </div>
+      <button class="export-all-btn" onclick="exportAll()">
+        <span>⬇</span> Export All CSV
+      </button>
+      <span class="session-count" id="session-count">0 sessions</span>
+    </div>
   </div>
-  <div class="sessions-area">
+
+  <!-- Location filter tabs -->
+  <div class="loc-tabs">
+    <button class="loc-tab active-all" id="tab-all"   onclick="setLocFilter('all')">All</button>
+    <button class="loc-tab"            id="tab-a"     onclick="setLocFilter('a')">Loc A · 101–375</button>
+    <button class="loc-tab"            id="tab-b"     onclick="setLocFilter('b')">Loc B · 376–450</button>
+  </div>
+
+  <!-- Session accordion list -->
+  <div class="sessions-area" id="sessions-area">
     <div class="no-sessions" id="no-sessions">
       <div class="icon">📋</div>
-      <p>No active sessions yet. Share the tracker link with your team.</p>
+      <p>No active sessions yet.<br>Share the tracker link with your team.</p>
     </div>
-    <div class="sessions-grid" id="sessions-grid" style="display:none"></div>
   </div>
+
 </div>
 
 <div class="toast" id="toast"><span id="toast-msg"></span></div>
@@ -171,15 +284,14 @@
 // PASTE YOUR FIREBASE CONFIG HERE
 // ═══════════════════════════════════════════
 var firebaseConfig = {
-    apiKey: "AIzaSyC3-7fk-G7mSA9DSdfR217uVdDsWuk-2n4",
-    authDomain: "paddle-raise-tracker.firebaseapp.com",
-    databaseURL: "https://paddle-raise-tracker-default-rtdb.firebaseio.com",
-    projectId: "paddle-raise-tracker",
-    storageBucket: "paddle-raise-tracker.firebasestorage.app",
-    messagingSenderId: "238911011317",
-    appId: "1:238911011317:web:4f5b306447b5abb28dc8bc"
+  apiKey:            "AIzaSyC3-7fk-G7mSA9DSdfR217uVdDsWuk-2n4",
+  authDomain:        "paddle-raise-tracker.firebaseapp.com",
+  databaseURL:       "https://paddle-raise-tracker-default-rtdb.firebaseio.com",
+  projectId:         "paddle-raise-tracker",
+  storageBucket:     "paddle-raise-tracker.firebasestorage.app",
+  messagingSenderId: "238911011317",
+  appId:             "1:238911011317:web:4f5b306447b5abb28dc8bc"
 };
-
 
 firebase.initializeApp(firebaseConfig);
 var auth = firebase.auth();
@@ -205,6 +317,10 @@ var HEX = {
   l6:{ c:'#0F766E', bg:'#CCFBF1', bd:'#5EEAD4' },
 };
 
+var allSessions = {};
+var locFilter   = 'all';
+var openSids    = {}; // track which accordion rows are open
+
 // ═══════════════════════════════════════════
 // AUTH
 // ═══════════════════════════════════════════
@@ -214,7 +330,6 @@ auth.onAuthStateChanged(function(user) {
     var dash = document.getElementById('dashboard');
     dash.style.display = 'flex';
     dash.style.flexDirection = 'column';
-    dash.style.height = '100%';
     startListening();
   } else {
     document.getElementById('login-overlay').classList.remove('hidden');
@@ -230,58 +345,33 @@ function doLogin() {
   var pass  = document.getElementById('login-password').value;
   var err   = document.getElementById('login-err');
   var btn   = document.getElementById('login-btn');
-
-  if (!email || !pass) {
-    err.style.color = '#B91C1C';
-    err.textContent = 'Please enter your email and password.';
-    return;
-  }
-
-  err.style.color = '#047857';
-  err.textContent = '⏳ Signing in…';
-  btn.textContent = 'Signing in…';
-  btn.disabled = true;
-
+  if (!email || !pass) { err.style.color='#B91C1C'; err.textContent='Please enter your email and password.'; return; }
+  err.style.color='#047857'; err.textContent='⏳ Signing in…';
+  btn.textContent='Signing in…'; btn.disabled=true;
   auth.signInWithEmailAndPassword(email, pass)
-    .then(function() {
-      err.textContent = '';
-    })
+    .then(function() { err.textContent=''; })
     .catch(function(e) {
-      btn.textContent = 'Sign In';
-      btn.disabled = false;
+      btn.textContent='Sign In'; btn.disabled=false;
       var codes = {
-        'auth/invalid-email':           'Invalid email address.',
-        'auth/user-not-found':          'No account found with that email.',
-        'auth/wrong-password':          'Incorrect password.',
-        'auth/invalid-credential':      'Incorrect email or password.',
-        'auth/too-many-requests':       'Too many attempts — try again later.',
-        'auth/network-request-failed':  'Network error — check your connection.',
-        'auth/operation-not-allowed':   '⚠ Email/Password sign-in is not enabled. Go to Firebase Console → Authentication → Sign-in method → Email/Password → Enable.',
-        'auth/configuration-not-found': '⚠ Firebase Auth not configured. Check your authDomain value.',
-        'auth/api-key-not-valid.-please-pass-a-valid-api-key.': '⚠ Invalid API key in firebaseConfig.',
+        'auth/invalid-email':'Invalid email address.',
+        'auth/user-not-found':'No account with that email.',
+        'auth/wrong-password':'Incorrect password.',
+        'auth/invalid-credential':'Incorrect email or password.',
+        'auth/too-many-requests':'Too many attempts — try again later.',
+        'auth/network-request-failed':'Network error — check your connection.',
+        'auth/operation-not-allowed':'Email/Password sign-in not enabled in Firebase.',
       };
-      err.style.color = '#B91C1C';
-      err.textContent = codes[e.code] || ('Error [' + e.code + ']: ' + e.message);
+      err.style.color='#B91C1C';
+      err.textContent = codes[e.code] || ('Error ['+e.code+']: '+e.message);
     });
 }
-
-function doSignOut() {
-  auth.signOut();
-}
-
-// Enter key support
-document.getElementById('login-password').addEventListener('keydown', function(e) {
-  if (e.key === 'Enter') doLogin();
-});
-document.getElementById('login-email').addEventListener('keydown', function(e) {
-  if (e.key === 'Enter') doLogin();
-});
+function doSignOut() { auth.signOut(); }
+document.getElementById('login-password').addEventListener('keydown', function(e){ if(e.key==='Enter') doLogin(); });
+document.getElementById('login-email').addEventListener('keydown', function(e){ if(e.key==='Enter') doLogin(); });
 
 // ═══════════════════════════════════════════
 // LIVE DATA
 // ═══════════════════════════════════════════
-var allSessions = {};
-
 function startListening() {
   db.ref('sessions').on('value', function(snapshot) {
     allSessions = snapshot.val() || {};
@@ -295,90 +385,142 @@ function toArray(val) {
   return Object.keys(val).sort(function(a,b){ return Number(a)-Number(b); }).map(function(k){ return val[k]; });
 }
 
+// ═══════════════════════════════════════════
+// LOCATION FILTER
+// ═══════════════════════════════════════════
+function setLocFilter(loc) {
+  locFilter = loc;
+  ['all','a','b'].forEach(function(l) {
+    var tab = document.getElementById('tab-'+l);
+    tab.className = 'loc-tab' + (l === loc ? ' active-'+loc : '');
+  });
+  renderDashboard();
+}
+
+function sessionMatchesFilter(meta) {
+  if (locFilter === 'all') return true;
+  var locs = meta.locations || [];
+  return locs.indexOf(locFilter) !== -1;
+}
+
+// ═══════════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════════
 function renderDashboard() {
-  var sessionIds = Object.keys(allSessions);
-  var grid = document.getElementById('sessions-grid');
+  var allSids = Object.keys(allSessions);
+  var visibleSids = allSids.filter(function(sid) {
+    return sessionMatchesFilter(allSessions[sid].meta || {});
+  });
+
+  var area = document.getElementById('sessions-area');
   var none = document.getElementById('no-sessions');
 
   document.getElementById('session-count').textContent =
-    sessionIds.length + ' active session' + (sessionIds.length !== 1 ? 's' : '');
+    visibleSids.length + ' session' + (visibleSids.length !== 1 ? 's' : '');
 
-  if (sessionIds.length === 0) {
+  // Grand total across ALL sessions (not filtered)
+  var grandTotal = 0;
+  allSids.forEach(function(sid) {
+    var log = toArray(allSessions[sid].log);
+    LEVELS.forEach(function(lvl) {
+      grandTotal += log.filter(function(e){ return e.levelId===lvl.id && !e.voided; }).length * lvl.value;
+    });
+  });
+  document.getElementById('grand-total').textContent = '$' + grandTotal.toLocaleString();
+
+  // Clear existing rows (keep no-sessions node)
+  var existing = area.querySelectorAll('.session-row');
+  existing.forEach(function(el){ el.parentNode.removeChild(el); });
+
+  if (visibleSids.length === 0) {
     none.style.display = 'flex';
-    grid.style.display = 'none';
-    document.getElementById('grand-total').textContent = '$0';
     return;
   }
-
   none.style.display = 'none';
-  grid.style.display = 'grid';
-  grid.innerHTML = '';
 
-  var grandTotal = 0;
-  sessionIds.forEach(function(sid) {
-    var session = allSessions[sid];
-    var meta = session.meta || {};
-    var log = toArray(session.log);
-    log.forEach(function(e) { if (e.ts) e.ts = new Date(e.ts); });
-
-    var activeLog = log.filter(function(e){ return !e.voided; });
-    var sessionTotal = 0;
-    LEVELS.forEach(function(lvl) {
-      sessionTotal += activeLog.filter(function(e){ return e.levelId === lvl.id; }).length * lvl.value;
-    });
-    grandTotal += sessionTotal;
-    grid.appendChild(buildSessionCard(sid, meta, log, sessionTotal));
+  // Sort: open sessions first, then by total descending
+  visibleSids.sort(function(a, b) {
+    var aOpen = openSids[a] ? 1 : 0;
+    var bOpen = openSids[b] ? 1 : 0;
+    if (aOpen !== bOpen) return bOpen - aOpen;
+    return calcTotal(allSessions[b]) - calcTotal(allSessions[a]);
   });
 
-  document.getElementById('grand-total').textContent = '$' + grandTotal.toLocaleString();
+  visibleSids.forEach(function(sid) {
+    area.appendChild(buildSessionRow(sid, allSessions[sid]));
+  });
 }
 
-function buildSessionCard(sid, meta, log, total) {
-  var card = document.createElement('div');
-  card.className = 'session-card';
+function calcTotal(session) {
+  var log = toArray(session.log);
+  var t = 0;
+  LEVELS.forEach(function(lvl) {
+    t += log.filter(function(e){ return e.levelId===lvl.id && !e.voided; }).length * lvl.value;
+  });
+  return t;
+}
 
-  var startedAt = meta.startedAt ? new Date(meta.startedAt).toLocaleString('en-US', {
+function buildSessionRow(sid, session) {
+  var meta     = session.meta || {};
+  var log      = toArray(session.log);
+  log.forEach(function(e){ if(e.ts) e.ts = new Date(e.ts); });
+  var total    = calcTotal(session);
+  var isOpen   = !!openSids[sid];
+
+  var locs     = meta.locations || [];
+  var locBadges = locs.map(function(l){
+    return '<span class="loc-badge '+l+'">'+l.toUpperCase()+'</span>';
+  }).join('');
+
+  var startedAt = meta.startedAt ? new Date(meta.startedAt).toLocaleString('en-US',{
     month:'short', day:'numeric', hour:'2-digit', minute:'2-digit', hour12:true
   }) : '—';
 
-  var locs = meta.locations || [];
-  var locBadges = locs.map(function(l) {
-    return '<span class="loc-badge ' + l + '">Loc ' + l.toUpperCase() + '</span>';
-  }).join('');
-
   var levelRowsHtml = LEVELS.map(function(lvl) {
-    var h = HEX[lvl.id];
-    var entries = log.filter(function(e){ return e.levelId === lvl.id; });
-    var activeCount = entries.filter(function(e){ return !e.voided; }).length;
-    var subtotal = activeCount * lvl.value;
-    var chips = entries.map(function(e) {
-      return '<span class="sess-chip chip-' + lvl.id + (e.voided ? ' voided' : '') + '">' + e.num + '</span>';
+    var h       = HEX[lvl.id];
+    var entries = log.filter(function(e){ return e.levelId===lvl.id; });
+    var active  = entries.filter(function(e){ return !e.voided; }).length;
+    var subtotal = active * lvl.value;
+    var chips   = entries.map(function(e){
+      return '<span class="sess-chip chip-'+lvl.id+(e.voided?' voided':'')+'">'+e.num+'</span>';
     }).join('');
     return '<div class="sess-level-row">' +
-      '<div class="sess-level-dot" style="background:' + h.c + '"></div>' +
-      '<div class="sess-level-name" style="color:' + h.c + '">' + lvl.label + '</div>' +
-      '<div class="sess-chips">' + (chips || '<span style="color:#9CA3AF;font-style:italic;font-size:.7rem">—</span>') + '</div>' +
-      '<div class="sess-level-amt" style="color:' + h.c + '">' + (subtotal > 0 ? '$' + subtotal.toLocaleString() : '') + '</div>' +
+      '<div class="sess-level-dot" style="background:'+h.c+'"></div>' +
+      '<div class="sess-level-name" style="color:'+h.c+'">'+lvl.label+'</div>' +
+      '<div class="sess-chips">'+(chips||'<span style="color:#9CA3AF;font-style:italic;font-size:.72rem">—</span>')+'</div>' +
+      '<div class="sess-level-amt" style="color:'+h.c+'">'+(subtotal>0?'$'+subtotal.toLocaleString():'')+'</div>' +
       '</div>';
   }).join('');
 
-  card.innerHTML =
-    '<div class="session-card-header">' +
-      '<div><div class="session-operator">' + escHtml(meta.operator || 'Unknown') + '</div>' +
-      '<div class="session-meta">Session …' + sid.slice(-6) + '</div></div>' +
-      '<div class="session-loc-badges">' + locBadges + '</div>' +
+  var row = document.createElement('div');
+  row.className = 'session-row' + (isOpen ? ' open' : '');
+  row.id = 'row-' + sid;
+
+  row.innerHTML =
+    '<div class="session-row-header" onclick="toggleRow(\''+sid+'\')">' +
+      '<span class="session-chevron">▶</span>' +
+      '<div class="session-name">'+escHtml(meta.operator||'Unknown')+'</div>' +
+      '<div class="session-loc-badges">'+locBadges+'</div>' +
+      '<div class="session-header-total">$'+total.toLocaleString()+'</div>' +
     '</div>' +
-    '<div class="session-total-row">' +
-      '<div class="session-total-val">$' + total.toLocaleString() + '</div>' +
-      '<div class="session-total-sub">raised this session</div>' +
-    '</div>' +
-    '<div class="session-levels">' + levelRowsHtml + '</div>' +
-    '<div class="session-card-footer">' +
-      '<span class="session-started">Started ' + startedAt + '</span>' +
-      '<button class="export-session-btn" onclick="exportSession(\'' + sid + '\')">⬇ CSV</button>' +
+    '<div class="session-body">' +
+      '<div class="session-meta-row">' +
+        '<span class="session-started">Started '+startedAt+'</span>' +
+        '<button class="export-session-btn" onclick="exportSession(\''+sid+'\')">⬇ Export CSV</button>' +
+      '</div>' +
+      '<div class="session-levels">'+levelRowsHtml+'</div>' +
     '</div>';
 
-  return card;
+  return row;
+}
+
+function toggleRow(sid) {
+  openSids[sid] = !openSids[sid];
+  var row = document.getElementById('row-'+sid);
+  if (row) {
+    if (openSids[sid]) row.classList.add('open');
+    else row.classList.remove('open');
+  }
 }
 
 function escHtml(str) {
@@ -392,63 +534,57 @@ function exportSession(sid) {
   var session = allSessions[sid];
   if (!session) return;
   var meta = session.meta || {};
-  var log = toArray(session.log);
-  downloadCSV(meta.operator || 'session', log);
+  var log  = toArray(session.log);
+  var rows = [['Operator','Paddle Number','Level','Amount','Timestamp','Status']];
+  log.forEach(function(e) {
+    var lvl = LEVELS.find(function(l){ return l.id===e.levelId; });
+    var ts  = e.ts ? new Date(e.ts).toLocaleString() : '';
+    rows.push([meta.operator||'', e.num, lvl?lvl.label:'', lvl?lvl.value:'', ts, e.voided?'Removed':'Active']);
+  });
+  triggerCSVDownload(rows, 'paddle_raise_'+(meta.operator||'session').replace(/\s+/g,'_')+'_'+datestamp()+'.csv');
+  showToast('CSV exported!');
 }
 
 function exportAll() {
   var rows = [['Session ID','Operator','Paddle Number','Level','Amount','Timestamp','Status']];
   Object.keys(allSessions).forEach(function(sid) {
     var session = allSessions[sid];
-    var meta = session.meta || {};
-    var log = toArray(session.log);
+    var meta    = session.meta || {};
+    var log     = toArray(session.log);
     log.forEach(function(e) {
-      var lvl = LEVELS.find(function(l){ return l.id === e.levelId; });
-      var ts = e.ts ? new Date(e.ts).toLocaleString() : '';
-      rows.push([sid, meta.operator||'', e.num, lvl ? lvl.label : '', lvl ? lvl.value : '', ts, e.voided ? 'Removed' : 'Active']);
+      var lvl = LEVELS.find(function(l){ return l.id===e.levelId; });
+      var ts  = e.ts ? new Date(e.ts).toLocaleString() : '';
+      rows.push([sid, meta.operator||'', e.num, lvl?lvl.label:'', lvl?lvl.value:'', ts, e.voided?'Removed':'Active']);
     });
   });
-  if (rows.length === 1) { showToast('No data to export.'); return; }
-  triggerCSVDownload(rows, 'paddle_raise_all_' + datestamp() + '.csv');
+  if (rows.length===1) { showToast('No data to export yet.'); return; }
+  triggerCSVDownload(rows, 'paddle_raise_all_'+datestamp()+'.csv');
   showToast('All sessions exported!');
 }
 
-function downloadCSV(operator, log) {
-  var rows = [['Operator','Paddle Number','Level','Amount','Timestamp','Status']];
-  log.forEach(function(e) {
-    var lvl = LEVELS.find(function(l){ return l.id === e.levelId; });
-    var ts = e.ts ? new Date(e.ts).toLocaleString() : '';
-    rows.push([operator, e.num, lvl ? lvl.label : '', lvl ? lvl.value : '', ts, e.voided ? 'Removed' : 'Active']);
-  });
-  triggerCSVDownload(rows, 'paddle_raise_' + operator.replace(/\s+/g,'_') + '_' + datestamp() + '.csv');
-  showToast('CSV exported!');
-}
-
 function triggerCSVDownload(rows, filename) {
-  var csv = rows.map(function(r) {
-    return r.map(function(v){ return '"' + String(v).replace(/"/g,'""') + '"'; }).join(',');
-  }).join('\n');
+  var csv  = rows.map(function(r){ return r.map(function(v){ return '"'+String(v).replace(/"/g,'""')+'"'; }).join(','); }).join('\n');
   var blob = new Blob([csv], {type:'text/csv'});
-  var url = URL.createObjectURL(blob);
-  var a = document.createElement('a');
-  a.href = url; a.download = filename; a.click();
+  var url  = URL.createObjectURL(blob);
+  var a    = document.createElement('a');
+  a.href=url; a.download=filename; a.click();
   URL.revokeObjectURL(url);
 }
 
 function datestamp() {
-  var n = new Date();
-  return n.getFullYear() + String(n.getMonth()+1).padStart(2,'0') + String(n.getDate()).padStart(2,'0');
+  var n=new Date();
+  return n.getFullYear()+String(n.getMonth()+1).padStart(2,'0')+String(n.getDate()).padStart(2,'0');
 }
 
 // ═══════════════════════════════════════════
 // TOAST
 // ═══════════════════════════════════════════
-var toastTimer = null;
+var toastTimer=null;
 function showToast(msg) {
-  document.getElementById('toast-msg').textContent = msg;
+  document.getElementById('toast-msg').textContent=msg;
   document.getElementById('toast').classList.add('show');
-  if (toastTimer) clearTimeout(toastTimer);
-  toastTimer = setTimeout(function(){ document.getElementById('toast').classList.remove('show'); }, 3500);
+  if(toastTimer) clearTimeout(toastTimer);
+  toastTimer=setTimeout(function(){ document.getElementById('toast').classList.remove('show'); },3500);
 }
 </script>
 </body>
