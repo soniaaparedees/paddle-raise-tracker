@@ -91,6 +91,16 @@
   .sidebar-top-row { display:flex; align-items:flex-start; justify-content:space-between; gap:6px; margin-bottom:6px; }
   .sidebar-top h2 { font-family:'Playfair Display',serif; font-size:1.05rem; font-weight:900; color:var(--gold); }
   .operator-name { font-size:.75rem; color:var(--muted); font-weight:500; margin-top:1px; }
+  .fb-status { font-size:.63rem; font-weight:600; display:flex; align-items:center; gap:4px; margin-top:3px; }
+  .fb-dot { width:6px; height:6px; border-radius:50%; background:#D1D5DB; flex-shrink:0; }
+  .fb-label { color:#9CA3AF; }
+  .fb-status.syncing .fb-dot { background:#D97706; }
+  .fb-status.syncing .fb-label { color:#D97706; }
+  .fb-status.connected .fb-dot { background:#047857; animation:pulse 2s infinite; }
+  .fb-status.connected .fb-label { color:#047857; }
+  .fb-status.error .fb-dot { background:#B91C1C; }
+  .fb-status.error .fb-label { color:#B91C1C; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
   .export-btn {
     font-family:'DM Mono',monospace; font-size:.62rem; font-weight:700;
     text-transform:uppercase; letter-spacing:.07em; padding:4px 9px;
@@ -292,6 +302,10 @@
         <div>
           <h2>🏆 Paddle Raise</h2>
           <div class="operator-name" id="operator-display"></div>
+          <div class="fb-status" id="fb-status">
+            <div class="fb-dot"></div>
+            <span class="fb-label" id="fb-label">Not connected</span>
+          </div>
         </div>
         <button class="export-btn" onclick="exportCSV()">⬇ Export CSV</button>
       </div>
@@ -785,31 +799,56 @@ function syncToFirebase() {
 -->
 <script>
 var firebaseConfig = {
-    apiKey: "AIzaSyC3-7fk-G7mSA9DSdfR217uVdDsWuk-2n4",
-    authDomain: "paddle-raise-tracker.firebaseapp.com",
-    databaseURL: "https://paddle-raise-tracker-default-rtdb.firebaseio.com",
-    projectId: "paddle-raise-tracker",
-    storageBucket: "paddle-raise-tracker.firebasestorage.app",
-    messagingSenderId: "238911011317",
-    appId: "1:238911011317:web:4f5b306447b5abb28dc8bc"
+  apiKey:            "AIzaSyC3-7fk-G7mSA9DSdfR217uVdDsWuk-2n4",
+  authDomain:        "paddle-raise-tracker.firebaseapp.com",
+  databaseURL:       "https://paddle-raise-tracker-default-rtdb.firebaseio.com",
+  projectId:         "paddle-raise-tracker",
+  storageBucket:     "paddle-raise-tracker.firebasestorage.app",
+  messagingSenderId: "238911011317",
+  appId:             "1:238911011317:web:4f5b306447b5abb28dc8bc"
 };
 
 firebase.initializeApp(firebaseConfig);
 var _db = firebase.database();
 var _sessionId = _db.ref('sessions').push().key;
 
+function setFbStatus(state, label) {
+  var el = document.getElementById('fb-status');
+  var lb = document.getElementById('fb-label');
+  if (!el) return;
+  el.className = 'fb-status ' + state;
+  lb.textContent = label;
+}
+
+// Monitor real-time connection state
+_db.ref('.info/connected').on('value', function(snap) {
+  if (snap.val() === true) {
+    setFbStatus('connected', '● Live sync');
+  } else {
+    setFbStatus('syncing', '○ Reconnecting…');
+  }
+});
+
 window._fbReady = true;
 
 window._fbInitSession = function(operator, locations) {
+  setFbStatus('syncing', '↑ Saving session…');
   _db.ref('sessions/' + _sessionId + '/meta').set({
     operator: operator,
     locations: locations,
     startedAt: new Date().toISOString()
+  }).then(function() {
+    setFbStatus('connected', '● Live sync');
+  }).catch(function(err) {
+    setFbStatus('error', '✕ ' + err.code);
   });
 };
 
 window._fbSyncLog = function(logData) {
-  _db.ref('sessions/' + _sessionId + '/log').set(logData);
+  _db.ref('sessions/' + _sessionId + '/log').set(logData)
+    .catch(function(err) {
+      setFbStatus('error', '✕ Write failed: ' + err.code);
+    });
 };
 </script>
 
