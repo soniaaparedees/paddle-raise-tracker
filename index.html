@@ -412,6 +412,14 @@ function startApp() {
   document.getElementById('app').style.display = 'flex';
 
   initApp();
+
+  // Save session metadata to Firebase
+  set(window._dbRef('meta'), {
+    operator: operatorName,
+    locations: activeLocs,
+    startedAt: new Date().toISOString()
+  });
+  
 }
 
 // Allow Enter key in name field
@@ -586,6 +594,13 @@ function togglePaddle(num) {
     showToast(`Paddle ${num} raised at ${lvl.label}!`);
   }
   renderPaddle(num); renderSidebar(); renderTotals(); renderLevelCounts();
+
+  // Sync log to Firebase
+set(window._dbRef('log'), log.map(e => ({
+    ...e,
+    ts: e.ts ? e.ts.toISOString() : null
+  })));
+  
 }
 
 /* ════════════════════════════════
