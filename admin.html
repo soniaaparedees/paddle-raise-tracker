@@ -284,10 +284,6 @@ html, body { min-height:100%; font-family:'DM Sans',sans-serif; background:var(-
       <button class="signout-btn" onclick="doSignOut()">Sign Out</button>
     </div>
     <div class="top-bar-row2">
-      <div class="grand-total-box">
-        <small>Combined Total</small>
-        <span id="grand-total">$0</span>
-      </div>
       <button class="export-all-btn" onclick="exportAll()">
         <span>⬇</span> Export All CSV
       </button>
@@ -465,16 +461,6 @@ function renderDashboard() {
   document.getElementById('session-count').textContent =
     visibleSids.length + ' session' + (visibleSids.length !== 1 ? 's' : '');
 
-  // Grand total across ALL sessions (not filtered)
-  var grandTotal = 0;
-  allSids.forEach(function(sid) {
-    var log = toArray(allSessions[sid].log);
-    LEVELS.forEach(function(lvl) {
-      grandTotal += log.filter(function(e){ return e.levelId===lvl.id && !e.voided; }).length * lvl.value;
-    });
-  });
-  document.getElementById('grand-total').textContent = '$' + grandTotal.toLocaleString();
-
   // Clear existing rows (keep no-sessions node)
   var existing = area.querySelectorAll('.session-row');
   existing.forEach(function(el){ el.parentNode.removeChild(el); });
@@ -500,9 +486,12 @@ function renderDashboard() {
 
 function calcTotal(session) {
   var log = toArray(session.log);
+  var locFilterFn = locFilter === 'all' ? function(){ return true; } :
+                    locFilter === 'a'   ? function(e){ return e.num>=101&&e.num<=375; } :
+                                          function(e){ return e.num>=376&&e.num<=450; };
   var t = 0;
   LEVELS.forEach(function(lvl) {
-    t += log.filter(function(e){ return e.levelId===lvl.id && !e.voided; }).length * lvl.value;
+    t += log.filter(function(e){ return e.levelId===lvl.id && !e.voided && locFilterFn(e); }).length * lvl.value;
   });
   return t;
 }
@@ -525,7 +514,11 @@ function buildSessionRow(sid, session) {
 
   var levelRowsHtml = LEVELS.map(function(lvl) {
     var h       = HEX[lvl.id];
-    var entries = log.filter(function(e){ return e.levelId===lvl.id; });
+    // Filter entries to those matching the current location filter
+    var locFilterFn = locFilter === 'all' ? function(){ return true; } :
+                      locFilter === 'a'   ? function(e){ return e.num>=101&&e.num<=375; } :
+                                            function(e){ return e.num>=376&&e.num<=450; };
+    var entries = log.filter(function(e){ return e.levelId===lvl.id && locFilterFn(e); });
     var active  = entries.filter(function(e){ return !e.voided; }).length;
     var subtotal = active * lvl.value;
     var chips   = entries.map(function(e){
