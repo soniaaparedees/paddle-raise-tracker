@@ -215,6 +215,10 @@
 <div class="toast" id="toast"><span id="toast-msg"></span></div>
 
 <script type="module">
+
+Firebase services:
+
+<script type="module">
 // ─────────────────────────────────────────
 // PASTE YOUR firebaseConfig HERE
 // ─────────────────────────────────────────
@@ -223,21 +227,23 @@ import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getDatabase, ref, onValue }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-analytics.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyC3-7fk-G7mSA9DSdfR217uVdDsWuk-2n4",
-  authDomain: "paddle-raise-tracker.firebaseapp.com",
-  databaseURL: "https://paddle-raise-tracker-default-rtdb.firebaseio.com",
-  projectId: "paddle-raise-tracker",
-  storageBucket: "paddle-raise-tracker.firebasestorage.app",
-  messagingSenderId: "238911011317",
-  appId: "1:238911011317:web:4f5b306447b5abb28dc8bc",
-  measurementId: "G-60N20XETTG"
-};
+  const firebaseConfig = {
+    apiKey: "AIzaSyC3-7fk-G7mSA9DSdfR217uVdDsWuk-2n4",
+    authDomain: "paddle-raise-tracker.firebaseapp.com",
+    databaseURL: "https://paddle-raise-tracker-default-rtdb.firebaseio.com",
+    projectId: "paddle-raise-tracker",
+    storageBucket: "paddle-raise-tracker.firebasestorage.app",
+    messagingSenderId: "238911011317",
+    appId: "1:238911011317:web:4f5b306447b5abb28dc8bc",
+    measurementId: "G-60N20XETTG"
+  };
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getDatabase(app);
+const analytics = getAnalytics(app);
 
 // ─────────────────────────────────────────
 // CONSTANTS
@@ -305,6 +311,14 @@ function startListening() {
   });
 }
 
+// Firebase stores JS arrays as objects {"0":{...},"1":{...}}
+// This converts either format to a plain array
+function toArray(val) {
+  if (!val) return [];
+  if (Array.isArray(val)) return val;
+  return Object.keys(val).sort((a,b)=>Number(a)-Number(b)).map(k=>val[k]);
+}
+
 function renderDashboard() {
   const sessionIds = Object.keys(allSessions);
   const grid = document.getElementById('sessions-grid');
@@ -329,7 +343,7 @@ function renderDashboard() {
   sessionIds.forEach(sid => {
     const session = allSessions[sid];
     const meta = session.meta || {};
-    const log = session.log ? Object.values(session.log) : [];
+    const log = toArray(session.log);
 
     // Rehydrate timestamps
     log.forEach(e => { if(e.ts) e.ts = new Date(e.ts); });
@@ -410,7 +424,7 @@ window.exportSession = function(sid) {
   const session = allSessions[sid];
   if (!session) return;
   const meta = session.meta || {};
-  const log = session.log ? Object.values(session.log) : [];
+  const log = toArray(session.log);
   downloadCSV(meta.operator || 'unknown', log, sid);
 };
 
@@ -418,7 +432,7 @@ window.exportAll = function() {
   const rows = [['Session ID','Operator','Paddle Number','Level','Amount','Timestamp','Status']];
   Object.entries(allSessions).forEach(([sid, session]) => {
     const meta = session.meta || {};
-    const log = session.log ? Object.values(session.log) : [];
+    const log = toArray(session.log);
     log.forEach(e => {
       const lvl = LEVELS.find(l=>l.id===e.levelId);
       const ts = e.ts ? new Date(e.ts).toLocaleString() : '';
