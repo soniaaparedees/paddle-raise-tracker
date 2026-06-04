@@ -184,7 +184,7 @@
     <input class="login-input" id="login-email" type="email" placeholder="you@example.com">
     <label class="login-label">Password</label>
     <input class="login-input" id="login-password" type="password" placeholder="••••••••">
-    <button class="login-btn" onclick="doLogin()">Sign In</button>
+    <button class="login-btn" id="login-btn">Sign In</button>
     <div class="login-err" id="login-err"></div>
   </div>
 </div>
@@ -200,8 +200,8 @@
       <small>Combined Total</small>
       <span id="grand-total">$0</span>
     </div>
-    <button class="export-all-btn" onclick="exportAll()">⬇ Export All CSV</button>
-    <button class="signout-btn" onclick="doSignOut()">Sign Out</button>
+    <button class="export-all-btn" id="export-all-btn">⬇ Export All CSV</button>
+    <button class="signout-btn" id="signout-btn">Sign Out</button>
   </div>
   <div class="sessions-area" id="sessions-area">
     <div class="no-sessions" id="no-sessions">
@@ -213,10 +213,6 @@
 </div>
 
 <div class="toast" id="toast"><span id="toast-msg"></span></div>
-
-<script type="module">
-
-Firebase services:
 
 <script type="module">
 // ─────────────────────────────────────────
@@ -271,8 +267,7 @@ const HEX = {
 onAuthStateChanged(auth, user => {
   if (user) {
     document.getElementById('login-overlay').classList.add('hidden');
-    document.getElementById('dashboard').style.display = 'flex';
-    document.getElementById('dashboard').style.flexDirection = 'column';
+    document.getElementById('dashboard').style.cssText = 'display:flex;flex-direction:column;height:100%';
     startListening();
   } else {
     document.getElementById('login-overlay').classList.remove('hidden');
@@ -280,23 +275,25 @@ onAuthStateChanged(auth, user => {
   }
 });
 
-window.doLogin = async function() {
+async function doLogin() {
   const email = document.getElementById('login-email').value.trim();
-  const pass = document.getElementById('login-password').value;
-  const err = document.getElementById('login-err');
+  const pass  = document.getElementById('login-password').value;
+  const err   = document.getElementById('login-err');
+  err.textContent = '';
   try {
     await signInWithEmailAndPassword(auth, email, pass);
-    err.textContent = '';
   } catch(e) {
-    err.textContent = 'Invalid email or password.';
+    err.textContent = e.code === 'auth/invalid-credential' || e.code === 'auth/wrong-password' || e.code === 'auth/user-not-found'
+      ? 'Invalid email or password.'
+      : `Error: ${e.message}`;
   }
-};
+}
 
-window.doSignOut = () => signOut(auth);
-
-document.getElementById('login-password').addEventListener('keydown', e => {
-  if (e.key === 'Enter') window.doLogin();
-});
+document.getElementById('login-btn').addEventListener('click', doLogin);
+document.getElementById('login-password').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+document.getElementById('login-email').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+document.getElementById('signout-btn').addEventListener('click', () => signOut(auth));
+document.getElementById('export-all-btn').addEventListener('click', exportAll);
 
 // ─────────────────────────────────────────
 // LIVE DATA
@@ -420,15 +417,17 @@ function escHtml(str) {
 // ─────────────────────────────────────────
 // EXPORT
 // ─────────────────────────────────────────
+
+// Stays on window — called from onclick in dynamically-built card HTML
 window.exportSession = function(sid) {
   const session = allSessions[sid];
   if (!session) return;
   const meta = session.meta || {};
   const log = toArray(session.log);
-  downloadCSV(meta.operator || 'unknown', log, sid);
+  downloadCSV(meta.operator || 'unknown', log);
 };
 
-window.exportAll = function() {
+function exportAll() {
   const rows = [['Session ID','Operator','Paddle Number','Level','Amount','Timestamp','Status']];
   Object.entries(allSessions).forEach(([sid, session]) => {
     const meta = session.meta || {};
@@ -442,7 +441,7 @@ window.exportAll = function() {
   if (rows.length===1) { showToast('No data to export.'); return; }
   triggerCSVDownload(rows, `paddle_raise_all_${datestamp()}.csv`);
   showToast('All sessions exported!');
-};
+}
 
 function downloadCSV(operator, log, sid) {
   const rows = [['Operator','Paddle Number','Level','Amount','Timestamp','Status']];
@@ -472,13 +471,13 @@ function datestamp() {
 // ─────────────────────────────────────────
 // TOAST
 // ─────────────────────────────────────────
-let toastTimer=null;
-window.showToast = function(msg) {
-  document.getElementById('toast-msg').textContent=msg;
+let toastTimer = null;
+function showToast(msg) {
+  document.getElementById('toast-msg').textContent = msg;
   document.getElementById('toast').classList.add('show');
-  if(toastTimer)clearTimeout(toastTimer);
-  toastTimer=setTimeout(()=>document.getElementById('toast').classList.remove('show'),3500);
-};
+  if(toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>document.getElementById('toast').classList.remove('show'), 3500);
+}
 </script>
 </body>
 </html>
