@@ -413,13 +413,14 @@ function startApp() {
 
   initApp();
 
+  if (window._fbInitSession) window._fbInitSession(operatorName, activeLocs);
+
   // Save session metadata to Firebase
   set(window._dbRef('meta'), {
     operator: operatorName,
     locations: activeLocs,
     startedAt: new Date().toISOString()
   });
-  
 }
 
 // Allow Enter key in name field
@@ -600,6 +601,8 @@ set(window._dbRef('log'), log.map(e => ({
     ...e,
     ts: e.ts ? e.ts.toISOString() : null
   })));
+
+syncToFirebase();
   
 }
 
@@ -689,6 +692,8 @@ function toggleVoidFromSidebar(logIdx) {
   const lvl = LEVELS.find(l=>l.id===e.levelId);
   showToast(e.voided ? `Paddle ${e.num} removed from ${lvl.label}` : `Paddle ${e.num} restored to ${lvl.label}`);
   renderPaddle(e.num); renderSidebar(); renderTotals(); renderLevelCounts();
+
+  syncToFirebase();
 }
 
 function undoLast() {
@@ -699,6 +704,8 @@ function undoLast() {
   else if(lastAction.type==='unvoid') e.voided=true;
   lastAction = null;
   renderPaddle(e.num); renderSidebar(); renderTotals(); renderLevelCounts();
+  
+  syncToFirebase();
 }
 
 /* ════════════════════════════════
@@ -769,14 +776,22 @@ function confirmReset() {
   allNums.forEach(n => renderPaddle(n));
   activeLevel = null; selectLevel(null);
   renderSidebar(); renderTotals(); renderLevelCounts(); closeReset();
+  
   syncToFirebase();
 }
 
-/* ════════════════════════════════
-   FIREBASE SYNC
-   Uncomment and paste your config
-   to enable live saving.
-════════════════════════════════ */
+
+const firebaseConfig = {
+  apiKey: "AIzaSyC3-7fk-G7mSA9DSdfR217uVdDsWuk-2n4",
+  authDomain: "paddle-raise-tracker.firebaseapp.com",
+  databaseURL: "https://paddle-raise-tracker-default-rtdb.firebaseio.com",
+  projectId: "paddle-raise-tracker",
+  storageBucket: "paddle-raise-tracker.firebasestorage.app",
+  messagingSenderId: "238911011317",
+  appId: "1:238911011317:web:4f5b306447b5abb28dc8bc",
+  measurementId: "G-60N20XETTG"
+};
+
 function syncToFirebase() {
   if (!window._fbSet || !window._fbSessionRef) return;
   window._fbSet(window._fbSessionRef('log'),
@@ -785,19 +800,22 @@ function syncToFirebase() {
 }
 </script>
 
-<!--
-  ═══════════════════════════════════════════════════
-  FIREBASE ACTIVATION — paste this block just before
-  the closing </body> tag once you have your config.
-  ═══════════════════════════════════════════════════
-
 <!-- Firebase SDK -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getDatabase, ref, push, onValue, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
   // Paste your firebaseConfig here
-  const firebaseConfig = { /* ... */ };
+  const firebaseConfig = {
+  apiKey: "AIzaSyC3-7fk-G7mSA9DSdfR217uVdDsWuk-2n4",
+  authDomain: "paddle-raise-tracker.firebaseapp.com",
+  databaseURL: "https://paddle-raise-tracker-default-rtdb.firebaseio.com",
+  projectId: "paddle-raise-tracker",
+  storageBucket: "paddle-raise-tracker.firebasestorage.app",
+  messagingSenderId: "238911011317",
+  appId: "1:238911011317:web:4f5b306447b5abb28dc8bc",
+  measurementId: "G-60N20XETTG"
+};
 
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
@@ -808,14 +826,8 @@ function syncToFirebase() {
   window._sessionId = sessionId;
   window._dbRef = (path) => ref(db, `sessions/${sessionId}/${path}`);
   window._set = set;
+  
 </script>
 
-Then in your startApp() function, add this line right after initApp():
-  if (window._fbInitSession) window._fbInitSession(operatorName, activeLocs);
-
-And in togglePaddle() and toggleVoidFromSidebar() and undoLast(),
-add this line at the end:
-  syncToFirebase();
--->
 </body>
 </html>
