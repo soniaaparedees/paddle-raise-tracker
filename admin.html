@@ -164,7 +164,8 @@ html, body { min-height:100%; font-family:'DM Sans',sans-serif; background:var(-
   padding:8px 14px; background:#FAFAF8; border-bottom:1px solid #F0EDE8;
   display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap;
 }
-.session-started { font-size:.72rem; color:var(--muted); }
+.session-meta-row .session-started { font-size:.72rem; color:var(--muted); flex:1 1 100%; }
+@media (min-width:400px) { .session-meta-row .session-started { flex:1 1 auto; } }
 .export-session-btn {
   font-family:'DM Mono',monospace; font-size:.7rem; font-weight:700;
   text-transform:uppercase; letter-spacing:.06em; padding:6px 14px;
@@ -172,6 +173,14 @@ html, body { min-height:100%; font-family:'DM Sans',sans-serif; background:var(-
   cursor:pointer; -webkit-appearance:none;
 }
 .export-session-btn:active { background:#A7F3D0; }
+
+.delete-session-btn {
+  font-family:'DM Mono',monospace; font-size:.7rem; font-weight:700;
+  text-transform:uppercase; letter-spacing:.06em; padding:6px 14px;
+  border:1.5px solid #FCA5A5; border-radius:7px; background:#FEF2F2; color:#B91C1C;
+  cursor:pointer; -webkit-appearance:none;
+}
+.delete-session-btn:active { background:#FEE2E2; }
 
 /* Level rows inside expanded body */
 .session-levels { padding:4px 0 8px; }
@@ -196,6 +205,32 @@ html, body { min-height:100%; font-family:'DM Sans',sans-serif; background:var(-
 .chip-l4{background:var(--l4-bg);color:var(--l4);border-color:var(--l4-bd);}
 .chip-l5{background:var(--l5-bg);color:var(--l5);border-color:var(--l5-bd);}
 .chip-l6{background:var(--l6-bg);color:var(--l6);border-color:var(--l6-bd);}
+
+/* ── CONFIRM MODAL ── */
+.modal-overlay {
+  display:none; position:fixed; inset:0;
+  background:rgba(0,0,0,.45); z-index:400;
+  align-items:center; justify-content:center; padding:20px;
+}
+.modal-overlay.show { display:flex; }
+.modal-card {
+  background:#fff; border:1.5px solid var(--border); border-radius:14px;
+  padding:28px 24px; width:100%; max-width:340px;
+  box-shadow:0 16px 48px rgba(0,0,0,.18); text-align:center;
+}
+.modal-card h3 { font-family:'Playfair Display',serif; font-size:1.1rem; color:var(--ink); margin-bottom:8px; }
+.modal-card p { font-size:.88rem; color:var(--muted); margin-bottom:24px; line-height:1.5; }
+.modal-name { font-weight:700; color:var(--ink); }
+.modal-btns { display:flex; gap:10px; }
+.modal-btns button {
+  flex:1; padding:11px; border-radius:9px; font-family:'DM Sans',sans-serif;
+  font-size:.92rem; font-weight:700; cursor:pointer; border:1.5px solid var(--border);
+  -webkit-appearance:none;
+}
+.modal-cancel { background:#fff; color:var(--ink); }
+.modal-cancel:active { background:#F9FAFB; }
+.modal-confirm { background:#FEF2F2; border-color:#FCA5A5; color:#B91C1C; }
+.modal-confirm:active { background:#FEE2E2; }
 
 /* ── TOAST ── */
 .toast {
@@ -275,6 +310,18 @@ html, body { min-height:100%; font-family:'DM Sans',sans-serif; background:var(-
     </div>
   </div>
 
+</div>
+
+<!-- Confirm delete modal -->
+<div class="modal-overlay" id="delete-modal">
+  <div class="modal-card">
+    <h3>Delete Session?</h3>
+    <p>This will permanently remove <span class="modal-name" id="delete-modal-name"></span>'s session from Firebase. This cannot be undone.</p>
+    <div class="modal-btns">
+      <button class="modal-cancel" onclick="closeDeleteModal()">Cancel</button>
+      <button class="modal-confirm" onclick="confirmDelete()">Delete</button>
+    </div>
+  </div>
 </div>
 
 <div class="toast" id="toast"><span id="toast-msg"></span></div>
@@ -507,6 +554,7 @@ function buildSessionRow(sid, session) {
       '<div class="session-meta-row">' +
         '<span class="session-started">Started '+startedAt+'</span>' +
         '<button class="export-session-btn" onclick="exportSession(\''+sid+'\')">⬇ Export CSV</button>' +
+        '<button class="delete-session-btn" onclick="openDeleteModal(\''+sid+'\')">🗑 Delete</button>' +
       '</div>' +
       '<div class="session-levels">'+levelRowsHtml+'</div>' +
     '</div>';
@@ -525,6 +573,44 @@ function toggleRow(sid) {
 
 function escHtml(str) {
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ═══════════════════════════════════════════
+// DELETE SESSION
+// ═══════════════════════════════════════════
+var pendingDeleteSid = null;
+
+function openDeleteModal(sid) {
+  pendingDeleteSid = sid;
+  var session = allSessions[sid];
+  var name = session && session.meta ? (session.meta.operator || 'Unknown') : 'Unknown';
+  document.getElementById('delete-modal-name').textContent = name;
+  document.getElementById('delete-modal').classList.add('show');
+}
+
+function closeDeleteModal() {
+  pendingDeleteSid = null;
+  document.getElementById('delete-modal').classList.remove('show');
+}
+
+// Tap outside modal to close
+document.getElementById('delete-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeDeleteModal();
+});
+
+function confirmDelete() {
+  if (!pendingDeleteSid) return;
+  var sid = pendingDeleteSid;
+  var session = allSessions[sid];
+  var name = session && session.meta ? (session.meta.operator || 'session') : 'session';
+  closeDeleteModal();
+  db.ref('sessions/' + sid).remove()
+    .then(function() {
+      showToast(name + ''s session deleted.');
+    })
+    .catch(function(err) {
+      showToast('Delete failed: ' + err.message);
+    });
 }
 
 // ═══════════════════════════════════════════
