@@ -19,71 +19,48 @@
   --loc-a:#1D4ED8; --loc-b:#047857;
 }
 *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
-html { height:100%; }
-body { height:100%; font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--ink); overflow:hidden; -webkit-tap-highlight-color:transparent; }
+html, body { height:100%; font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--ink); -webkit-tap-highlight-color:transparent; }
 
-/* ══ SETUP ══ */
-.setup-overlay { position:fixed; inset:0; background:var(--bg); display:flex; align-items:center; justify-content:center; z-index:500; padding:16px; }
+/* ══════════════════════════════════════════
+   SETUP SCREEN
+══════════════════════════════════════════ */
+.setup-overlay { position:fixed; inset:0; background:var(--bg); display:flex; align-items:center; justify-content:center; z-index:500; padding:16px; overflow-y:auto; }
 .setup-overlay.hidden { display:none; }
-.setup-card { background:var(--white); border:2px solid var(--border); border-radius:16px; padding:28px 24px; width:100%; max-width:420px; box-shadow:0 12px 48px rgba(0,0,0,.12); }
+.setup-card { background:var(--white); border:2px solid var(--border); border-radius:16px; padding:28px 24px; width:100%; max-width:440px; box-shadow:0 12px 48px rgba(0,0,0,.12); }
 .setup-card h1 { font-family:'Playfair Display',serif; font-size:1.5rem; font-weight:900; color:var(--gold); margin-bottom:4px; }
 .setup-card p.sub { font-size:.88rem; color:var(--muted); margin-bottom:24px; }
-.setup-label { font-size:.65rem; text-transform:uppercase; letter-spacing:.13em; font-weight:700; color:var(--muted); margin-bottom:5px; display:block; }
+.setup-label { font-size:.65rem; text-transform:uppercase; letter-spacing:.13em; font-weight:700; color:var(--muted); margin-bottom:6px; display:block; }
 .setup-input { width:100%; padding:11px 14px; border:1.5px solid var(--border); border-radius:9px; font-family:'DM Sans',sans-serif; font-size:1rem; color:var(--ink); background:var(--white); margin-bottom:20px; -webkit-appearance:none; }
 .setup-input:focus { outline:none; border-color:#6B7280; }
-.loc-options { display:flex; gap:10px; margin-bottom:24px; }
-.loc-option { flex:1; padding:14px 8px; border:2px solid var(--border); border-radius:11px; cursor:pointer; text-align:center; background:var(--white); user-select:none; -webkit-tap-highlight-color:transparent; }
+
+/* Location options */
+.loc-options { display:flex; gap:10px; margin-bottom:20px; }
+.loc-option { flex:1; padding:14px 8px; border:2px solid var(--border); border-radius:11px; cursor:pointer; text-align:center; background:var(--white); user-select:none; }
 .loc-option .loc-icon { font-size:1.4rem; margin-bottom:4px; }
 .loc-option .loc-name { font-weight:700; font-size:.88rem; }
 .loc-option .loc-range { font-family:'DM Mono',monospace; font-size:.68rem; color:var(--muted); }
 .loc-option.selected-a { border-color:var(--loc-a); background:#EFF6FF; }
 .loc-option.selected-b { border-color:var(--loc-b); background:#ECFDF5; }
 .loc-option.selected-both { border-color:var(--gold); background:var(--gold-bg); }
+
+/* Device options */
+.device-options { display:flex; gap:10px; margin-bottom:24px; }
+.device-option { flex:1; padding:14px 10px; border:2px solid var(--border); border-radius:11px; cursor:pointer; text-align:center; background:var(--white); user-select:none; }
+.device-option .dev-icon { font-size:1.5rem; margin-bottom:4px; }
+.device-option .dev-name { font-weight:700; font-size:.88rem; }
+.device-option .dev-desc { font-size:.7rem; color:var(--muted); margin-top:2px; line-height:1.3; }
+.device-option.selected { border-color:var(--ink); background:#F3F4F6; }
+
 .setup-btn { width:100%; padding:13px; background:var(--ink); color:#fff; border:none; border-radius:10px; font-family:'DM Sans',sans-serif; font-size:1rem; font-weight:700; cursor:pointer; -webkit-appearance:none; }
 .setup-btn:disabled { background:#D1D5DB; }
 .setup-err { color:#B91C1C; font-size:.8rem; margin-top:8px; text-align:center; min-height:18px; }
 
-/* ══ APP SHELL ══ */
-.app { display:none; flex-direction:column; height:100%; }
-
-/* ── TOP BAR ── */
-.top-bar {
-  background:var(--white); border-bottom:2px solid var(--border);
-  padding:10px 14px; display:flex; flex-direction:column; gap:8px;
-  flex-shrink:0; position:sticky; top:0; z-index:50;
-  box-shadow:0 1px 6px rgba(0,0,0,.07);
-}
-.top-bar-row1 { display:flex; align-items:center; gap:8px; }
-.top-bar-title { font-family:'Playfair Display',serif; font-size:1rem; font-weight:900; color:var(--gold); flex:1; }
-.operator-tag { font-size:.72rem; color:var(--muted); font-weight:500; }
-.fb-status { display:flex; align-items:center; gap:3px; }
-.fb-dot { width:6px; height:6px; border-radius:50%; background:#D1D5DB; flex-shrink:0; }
-.fb-label { font-size:.6rem; font-weight:600; color:#9CA3AF; }
-.fb-status.connected .fb-dot { background:#047857; animation:fbpulse 2s infinite; }
-.fb-status.connected .fb-label { color:#047857; }
-.fb-status.syncing .fb-dot { background:#D97706; }
-.fb-status.syncing .fb-label { color:#D97706; }
-.fb-status.error .fb-dot { background:#B91C1C; }
-.fb-status.error .fb-label { color:#B91C1C; }
-@keyframes fbpulse { 0%,100%{opacity:1} 50%{opacity:.3} }
-
-/* Total box */
-.total-pill {
-  background:var(--gold-bg); border:1.5px solid var(--gold-bd);
-  border-radius:8px; padding:4px 12px; text-align:center; flex-shrink:0;
-}
-.total-pill-label { font-size:.52rem; text-transform:uppercase; letter-spacing:.12em; color:var(--gold); font-weight:700; display:block; }
-.total-pill-val { font-family:'DM Mono',monospace; font-size:1.05rem; font-weight:700; color:var(--gold); }
-
-/* ── LEVEL BUTTONS ROW ── */
-.level-row {
-  display:flex; gap:5px; overflow-x:auto; padding-bottom:2px;
-  -webkit-overflow-scrolling:touch; scrollbar-width:none;
-}
-.level-row::-webkit-scrollbar { display:none; }
+/* ══════════════════════════════════════════
+   SHARED LEVEL BUTTONS + ACTIVE STATUS
+══════════════════════════════════════════ */
 .level-btn {
-  font-family:'DM Mono',monospace; font-size:.82rem; font-weight:700;
-  padding:8px 14px; border:2px solid #E5E7EB; border-left-width:4px;
+  font-family:'DM Mono',monospace; font-weight:700;
+  border:2px solid #E5E7EB; border-left-width:4px;
   border-radius:8px; cursor:pointer; background:var(--white); color:var(--ink);
   white-space:nowrap; flex-shrink:0; position:relative;
   box-shadow:0 1px 3px rgba(0,0,0,.08); -webkit-appearance:none;
@@ -103,153 +80,13 @@ body { height:100%; font-family:'DM Sans',sans-serif; background:var(--bg); colo
 .level-btn.active.lvl-l5{background:var(--l5-bg);border-color:var(--l5);color:var(--l5);}
 .level-btn.active.lvl-l6{background:var(--l6-bg);border-color:var(--l6);color:var(--l6);}
 
-/* ── ACTIVE STATUS BAR ── */
-.active-bar {
-  padding:5px 10px; border-radius:7px; border:1.5px solid var(--border);
-  font-size:.8rem; font-weight:500; background:var(--white);
-  display:flex; align-items:center; gap:7px; min-height:34px;
-  flex-shrink:0;
-}
-.active-bar.empty { color:var(--muted); font-style:italic; font-size:.78rem; justify-content:center; }
-.active-bar strong { font-family:'DM Mono',monospace; font-size:.85rem; }
-.active-bar .hint { margin-left:auto; font-size:.68rem; color:var(--muted); }
-
-/* ── ACTION BTNS ROW ── */
-.action-row { display:flex; gap:6px; flex-shrink:0; }
-.undo-btn {
-  flex:1; font-family:'DM Mono',monospace; font-size:.72rem; font-weight:700;
-  text-transform:uppercase; letter-spacing:.07em; padding:9px 12px;
-  border:1.5px solid var(--ink); border-radius:8px; background:var(--ink); color:#fff;
-  cursor:pointer; -webkit-appearance:none;
-}
-.reset-btn {
-  flex:1; font-family:'DM Mono',monospace; font-size:.72rem; font-weight:700;
-  text-transform:uppercase; letter-spacing:.07em; padding:9px 12px;
-  border:1.5px solid #FCA5A5; border-radius:8px; background:#FEF2F2; color:#B91C1C;
-  cursor:pointer; -webkit-appearance:none;
-}
-.export-btn {
-  flex:1; font-family:'DM Mono',monospace; font-size:.72rem; font-weight:700;
-  text-transform:uppercase; letter-spacing:.07em; padding:9px 12px;
-  border:1.5px solid #047857; border-radius:8px; background:#D1FAE5; color:#047857;
-  cursor:pointer; -webkit-appearance:none;
-}
-
-/* ── MODE TOGGLE ── */
-.mode-toggle {
-  display:flex; align-items:center; gap:8px; flex-shrink:0;
-}
-.mode-toggle-label { font-size:.68rem; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:.08em; white-space:nowrap; }
-.toggle-track {
-  width:42px; height:24px; background:#D1D5DB; border-radius:12px;
-  position:relative; cursor:pointer; transition:background .2s; flex-shrink:0;
-  border:none; padding:0; -webkit-appearance:none;
-}
-.toggle-track.on { background:var(--ink); }
-.toggle-thumb {
-  position:absolute; top:3px; left:3px;
-  width:18px; height:18px; border-radius:50%; background:#fff;
-  box-shadow:0 1px 4px rgba(0,0,0,.3); transition:transform .2s;
-  pointer-events:none;
-}
-.toggle-track.on .toggle-thumb { transform:translateX(18px); }
-
-/* ── NUMPAD MODE ── */
-.numpad-area {
-  flex:1; display:none; flex-direction:column; align-items:center;
-  justify-content:center; padding:12px 16px 80px; gap:10px;
-  overflow-y:auto; -webkit-overflow-scrolling:touch;
-}
-.numpad-area.active { display:flex; }
-
-.numpad-display {
-  width:100%; max-width:340px;
-  background:var(--white); border:2px solid var(--border); border-radius:12px;
-  padding:12px 16px; display:flex; flex-direction:column; gap:4px;
-}
-.numpad-display-label { font-size:.6rem; text-transform:uppercase; letter-spacing:.12em; color:var(--muted); font-weight:700; }
-.numpad-display-num {
-  font-family:'DM Mono',monospace; font-size:2.2rem; font-weight:700;
-  color:var(--ink); letter-spacing:.08em; min-height:48px;
-  display:flex; align-items:center;
-}
-.numpad-display-num.has-value { color:var(--ink); }
-.numpad-display-num.placeholder { color:#D1D5DB; }
-.numpad-status {
-  font-size:.75rem; font-weight:600; min-height:20px;
-  display:flex; align-items:center; gap:5px;
-}
-
-.numpad-grid {
-  display:grid; grid-template-columns:repeat(3, 1fr);
-  gap:8px; width:100%; max-width:340px;
-}
-.numpad-key {
-  font-family:'DM Mono',monospace; font-size:1.4rem; font-weight:600;
-  padding:0; height:68px; border:1.5px solid var(--border); border-radius:12px;
-  background:var(--white); color:var(--ink); cursor:pointer;
-  display:flex; align-items:center; justify-content:center;
-  -webkit-appearance:none; transition:background .1s;
-  box-shadow:0 1px 3px rgba(0,0,0,.08);
-}
-.numpad-key:active { background:#F3F4F6; transform:scale(.97); }
-.numpad-key.key-back { font-size:1.2rem; color:var(--muted); }
-.numpad-key.key-clear { font-size:.78rem; font-weight:700; letter-spacing:.04em; color:#B91C1C; background:#FEF2F2; border-color:#FCA5A5; }
-.numpad-key.key-raise {
-  grid-column:span 3; height:58px; font-size:1rem; font-weight:800;
-  letter-spacing:.06em; background:var(--ink); color:#fff; border-color:var(--ink);
-  border-radius:14px; text-transform:uppercase;
-}
-.numpad-key.key-raise:active { background:#374151; }
-.numpad-key.key-raise.disabled { background:#D1D5DB; border-color:#D1D5DB; color:#fff; cursor:not-allowed; }
-.numpad-key.key-raise.already-raised { background:#047857; border-color:#047857; }
-.numpad-key.key-raise.already-raised:active { background:#065f46; }
-
-.numpad-recent {
-  width:100%; max-width:340px;
-  font-size:.72rem; color:var(--muted); text-align:center;
-  min-height:20px;
-}
-
-  display:flex; gap:0; border-bottom:2px solid var(--border);
-  flex-shrink:0; background:var(--bg);
-}
-.loc-tab {
-  flex:1; padding:10px 8px; font-family:'DM Mono',monospace; font-size:.78rem; font-weight:700;
-  text-align:center; cursor:pointer; color:var(--muted); border-bottom:3px solid transparent;
-  margin-bottom:-2px; background:none; border-top:none; border-left:none; border-right:none;
-  transition:all .15s; -webkit-appearance:none;
-}
-.loc-tab.active-a { color:var(--loc-a); border-bottom-color:var(--loc-a); background:var(--white); }
-.loc-tab.active-b { color:var(--loc-b); border-bottom-color:var(--loc-b); background:var(--white); }
-
-/* ── PADDLE AREA ── */
-.paddle-area { flex:1; overflow:hidden; display:flex; min-height:0; }
-.loc-pane { display:none; flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:8px 10px 16px; }
-.loc-pane.active { display:block; }
-
-/* Three col layout for loc A (many paddles), two col for B */
-.loc-cols { display:flex; gap:0; height:100%; }
-.hundreds-col { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; border-right:1px solid var(--border); padding:6px 6px 16px; }
-.hundreds-col:last-child { border-right:none; }
-
-.col-header-row { display:flex; align-items:center; gap:5px; margin-bottom:4px; }
-.col-header { font-family:'DM Mono',monospace; font-size:.6rem; font-weight:700; text-transform:uppercase; letter-spacing:.1em; color:#fff; padding:2px 6px; border-radius:3px; white-space:nowrap; flex-shrink:0; }
-.col-header.loc-a { background:var(--loc-a); }
-.col-header.loc-b { background:var(--loc-b); }
-.col-header-line { flex:1; height:1px; background:var(--border); }
-
-.digit-group { margin-bottom:4px; }
-.digit-group-line { width:100%; height:1px; background:var(--border); margin-bottom:3px; }
-
-.paddle-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(40px,1fr)); gap:3px; }
+/* Shared paddle button styles */
 .paddle-btn {
-  font-family:'DM Mono',monospace; font-size:.75rem; font-weight:700;
+  font-family:'DM Mono',monospace; font-weight:700;
   aspect-ratio:1/1; border:1.5px solid #D1D5DB; border-radius:5px;
   background:var(--white); color:#374151; cursor:pointer;
   display:flex; flex-direction:column; align-items:center; justify-content:center;
   line-height:1; padding:0; -webkit-appearance:none; transition:all .1s;
-  -webkit-tap-highlight-color:transparent;
 }
 .paddle-btn:active:not(.raised-any) { background:#F3F4F6; }
 .paddle-btn.raised-any { cursor:default; }
@@ -262,29 +99,8 @@ body { height:100%; font-family:'DM Sans',sans-serif; background:var(--bg); colo
 .pip-row { display:flex; justify-content:center; gap:2px; margin-top:2px; height:4px; }
 .pip { width:4px; height:4px; border-radius:50%; flex-shrink:0; }
 
-/* ── SUMMARY SHEET (bottom drawer) ── */
-.summary-backdrop { display:none; position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:200; }
-.summary-backdrop.show { display:block; }
-.summary-sheet {
-  position:fixed; bottom:0; left:0; right:0; z-index:201;
-  background:var(--white); border-radius:18px 18px 0 0;
-  box-shadow:0 -8px 32px rgba(0,0,0,.15);
-  transform:translateY(100%); transition:transform .3s ease;
-  max-height:80vh; display:flex; flex-direction:column;
-}
-.summary-sheet.show { transform:translateY(0); }
-.sheet-handle { width:40px; height:4px; background:#D1D5DB; border-radius:2px; margin:12px auto 8px; flex-shrink:0; }
-.sheet-header { padding:0 16px 10px; border-bottom:1.5px solid var(--border); flex-shrink:0; display:flex; align-items:center; justify-content:space-between; }
-.sheet-title { font-family:'Playfair Display',serif; font-size:1rem; font-weight:900; color:var(--ink); }
-.sheet-close { font-size:1.1rem; color:var(--muted); cursor:pointer; padding:4px; }
-.sheet-body { overflow-y:auto; -webkit-overflow-scrolling:touch; flex:1; padding:8px 0 24px; }
-.sheet-level { padding:8px 16px; border-bottom:1px solid #F0EDE8; border-left:3px solid transparent; }
-.sheet-level-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:5px; }
-.sheet-level-label { display:flex; align-items:center; gap:6px; font-size:.92rem; font-weight:700; }
-.sheet-level-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
-.sheet-level-sub { font-family:'DM Mono',monospace; font-size:.9rem; font-weight:700; }
-.sheet-chips { display:flex; flex-wrap:wrap; gap:4px; }
-.chip { font-family:'DM Mono',monospace; font-size:.78rem; font-weight:600; padding:2px 7px; border-radius:4px; cursor:pointer; border:1px solid transparent; line-height:1.5; -webkit-tap-highlight-color:transparent; }
+/* Shared chip styles */
+.chip { font-family:'DM Mono',monospace; font-weight:600; padding:2px 7px; border-radius:4px; cursor:pointer; border:1px solid transparent; line-height:1.5; }
 .chip:active { filter:brightness(.85); }
 .chip.empty-chip { color:#9CA3AF; font-style:italic; background:none!important; border:none!important; cursor:default; }
 .chip.voided { opacity:.45; text-decoration:line-through; }
@@ -295,37 +111,47 @@ body { height:100%; font-family:'DM Sans',sans-serif; background:var(--bg); colo
 .chip-l5{background:var(--l5-bg);color:var(--l5);border-color:var(--l5-bd);}
 .chip-l6{background:var(--l6-bg);color:var(--l6);border-color:var(--l6-bd);}
 
-/* ── SUMMARY TABS (inside sheet) ── */
-.sheet-tabs { display:flex; border-bottom:1.5px solid var(--border); flex-shrink:0; background:var(--bg); }
-.sheet-tab {
-  flex:1; padding:7px 0; font-size:.78rem; font-weight:600; text-align:center;
-  cursor:pointer; color:var(--muted); border-bottom:2px solid transparent;
-  margin-bottom:-1.5px; background:none; border-top:none; border-left:none; border-right:none;
-  -webkit-appearance:none;
-}
-.sheet-tab.active-tab { color:var(--ink); border-bottom-color:var(--gold); background:var(--white); }
+/* Shared mode toggle */
+.mode-toggle { display:flex; align-items:center; gap:6px; flex-shrink:0; }
+.mode-toggle-label { font-size:.65rem; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.08em; white-space:nowrap; }
+.toggle-track { width:40px; height:22px; background:#D1D5DB; border-radius:11px; position:relative; cursor:pointer; transition:background .2s; flex-shrink:0; border:none; padding:0; -webkit-appearance:none; }
+.toggle-track.on { background:var(--ink); }
+.toggle-thumb { position:absolute; top:3px; left:3px; width:16px; height:16px; border-radius:50%; background:#fff; box-shadow:0 1px 4px rgba(0,0,0,.3); transition:transform .2s; pointer-events:none; }
+.toggle-track.on .toggle-thumb { transform:translateX(18px); }
 
-/* Summary button (FAB) */
-.summary-fab {
-  position:fixed; bottom:20px; right:16px; z-index:100;
-  background:var(--ink); color:#fff;
-  font-family:'DM Mono',monospace; font-size:.72rem; font-weight:700;
-  text-transform:uppercase; letter-spacing:.07em;
-  padding:11px 16px; border-radius:30px; border:none; cursor:pointer;
-  box-shadow:0 4px 16px rgba(0,0,0,.3); -webkit-appearance:none;
-  display:flex; align-items:center; gap:6px;
-}
-.fab-badge {
-  background:var(--gold); color:var(--ink); font-size:.62rem; font-weight:800;
-  padding:1px 6px; border-radius:10px; min-width:18px; text-align:center;
-}
+/* Shared fb-status */
+.fb-status { display:flex; align-items:center; gap:3px; }
+.fb-dot { width:6px; height:6px; border-radius:50%; background:#D1D5DB; flex-shrink:0; }
+.fb-label { font-size:.6rem; font-weight:600; color:#9CA3AF; }
+.fb-status.connected .fb-dot { background:#047857; animation:fbpulse 2s infinite; }
+.fb-status.connected .fb-label { color:#047857; }
+.fb-status.syncing .fb-dot { background:#D97706; }
+.fb-status.syncing .fb-label { color:#D97706; }
+.fb-status.error .fb-dot { background:#B91C1C; }
+.fb-status.error .fb-label { color:#B91C1C; }
+@keyframes fbpulse { 0%,100%{opacity:1} 50%{opacity:.3} }
 
-/* ── TOAST ── */
-.toast { position:fixed; bottom:80px; left:50%; transform:translateX(-50%) translateY(60px); background:var(--ink); color:#fff; border-radius:8px; padding:9px 16px; font-size:.82rem; font-weight:500; box-shadow:0 6px 20px rgba(0,0,0,.25); z-index:999; transition:transform .22s ease; white-space:nowrap; }
-.toast.show { transform:translateX(-50%) translateY(0); }
+/* Shared numpad */
+.numpad-pane { display:none; flex-direction:column; align-items:center; justify-content:center; gap:10px; padding:16px 16px 24px; overflow-y:auto; -webkit-overflow-scrolling:touch; }
+.numpad-pane.active { display:flex; }
+.numpad-display { width:100%; max-width:340px; background:var(--white); border:2px solid var(--border); border-radius:12px; padding:12px 16px; display:flex; flex-direction:column; gap:4px; }
+.numpad-display-label { font-size:.6rem; text-transform:uppercase; letter-spacing:.12em; color:var(--muted); font-weight:700; }
+.numpad-display-num { font-family:'DM Mono',monospace; font-size:2.2rem; font-weight:700; letter-spacing:.08em; min-height:48px; display:flex; align-items:center; }
+.numpad-display-num.placeholder { color:#D1D5DB; }
+.numpad-status { font-size:.75rem; font-weight:600; min-height:20px; display:flex; align-items:center; gap:5px; }
+.numpad-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; width:100%; max-width:340px; }
+.numpad-key { font-family:'DM Mono',monospace; font-size:1.4rem; font-weight:600; height:64px; border:1.5px solid var(--border); border-radius:12px; background:var(--white); color:var(--ink); cursor:pointer; display:flex; align-items:center; justify-content:center; -webkit-appearance:none; box-shadow:0 1px 3px rgba(0,0,0,.08); }
+.numpad-key:active { background:#F3F4F6; transform:scale(.97); }
+.numpad-key.key-back { font-size:1.1rem; color:var(--muted); }
+.numpad-key.key-clear { font-size:.76rem; font-weight:700; letter-spacing:.04em; color:#B91C1C; background:#FEF2F2; border-color:#FCA5A5; }
+.numpad-key.key-raise { grid-column:span 3; height:56px; font-size:.95rem; font-weight:800; letter-spacing:.05em; background:var(--ink); color:#fff; border-color:var(--ink); border-radius:12px; text-transform:uppercase; }
+.numpad-key.key-raise:active { background:#374151; }
+.numpad-key.key-raise.disabled { background:#D1D5DB; border-color:#D1D5DB; cursor:not-allowed; }
+.numpad-key.key-raise.already-raised { background:#047857; border-color:#047857; }
+.numpad-recent { width:100%; max-width:340px; font-size:.72rem; color:var(--muted); text-align:center; min-height:20px; }
 
-/* ── MODAL ── */
-.modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:300; align-items:flex-end; justify-content:center; padding:0; }
+/* Shared modal */
+.modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:400; align-items:flex-end; justify-content:center; }
 .modal-overlay.show { display:flex; }
 .modal-card { background:var(--white); border-radius:18px 18px 0 0; padding:28px 24px 36px; width:100%; max-width:480px; box-shadow:0 -8px 32px rgba(0,0,0,.15); }
 .modal-card h3 { font-family:'Playfair Display',serif; font-size:1.1rem; color:var(--ink); margin-bottom:8px; }
@@ -334,27 +160,140 @@ body { height:100%; font-family:'DM Sans',sans-serif; background:var(--bg); colo
 .modal-btns button { flex:1; padding:13px; border-radius:10px; font-family:'DM Sans',sans-serif; font-size:.95rem; font-weight:700; cursor:pointer; border:1.5px solid var(--border); background:var(--white); color:var(--ink); -webkit-appearance:none; }
 .modal-confirm { background:#FEF2F2!important; border-color:#FCA5A5!important; color:#B91C1C!important; }
 
-/* ── DESKTOP ENHANCEMENT ── */
-@media (min-width:768px) {
-  .top-bar { flex-direction:row; align-items:center; padding:0 16px; height:56px; flex-wrap:wrap; gap:10px; }
-  .top-bar > * { flex-shrink:0; }
-  .level-row { flex-wrap:wrap; overflow:visible; }
-  .active-bar { flex:1; min-width:200px; }
-  .action-row { flex-wrap:nowrap; }
-  .summary-fab { display:none; }
-  /* On desktop show summary inline instead of FAB */
-}
+/* Shared toast */
+.toast { position:fixed; left:50%; transform:translateX(-50%) translateY(70px); background:var(--ink); color:#fff; border-radius:8px; padding:9px 16px; font-size:.82rem; font-weight:500; box-shadow:0 6px 20px rgba(0,0,0,.25); z-index:999; transition:transform .22s ease; white-space:nowrap; bottom:24px; }
+.toast.show { transform:translateX(-50%) translateY(0); }
+
+/* ══════════════════════════════════════════
+   DESKTOP LAYOUT
+══════════════════════════════════════════ */
+.app-desktop { display:none; flex-direction:column; height:100%; overflow:hidden; }
+.desktop-body { display:flex; flex:1; overflow:hidden; min-height:0; }
+
+/* Sidebar */
+.sidebar { width:272px; min-width:220px; background:var(--white); border-right:2px solid var(--border); display:flex; flex-direction:column; overflow:hidden; flex-shrink:0; }
+.sidebar-top { padding:8px 13px 6px; border-bottom:2px solid var(--border); background:var(--white); flex-shrink:0; }
+.sidebar-top-row { display:flex; align-items:flex-start; justify-content:space-between; gap:6px; margin-bottom:6px; }
+.sidebar-top h2 { font-family:'Playfair Display',serif; font-size:1.05rem; font-weight:900; color:var(--gold); }
+.operator-name-sm { font-size:.72rem; color:var(--muted); font-weight:500; margin-top:1px; }
+.export-btn-sm { font-family:'DM Mono',monospace; font-size:.62rem; font-weight:700; text-transform:uppercase; letter-spacing:.07em; padding:4px 9px; border:1.5px solid #047857; border-radius:5px; background:#D1FAE5; color:#047857; cursor:pointer; flex-shrink:0; white-space:nowrap; }
+.total-box { background:var(--gold-bg); border:2px solid var(--gold-bd); border-radius:7px; padding:6px 12px; margin-bottom:4px; }
+.sidebar-total-label { font-size:.58rem; text-transform:uppercase; letter-spacing:.13em; color:var(--gold); font-weight:700; display:block; margin-bottom:1px; }
+.sidebar-total-value { font-family:'DM Mono',monospace; font-size:1.75rem; font-weight:700; color:var(--gold); line-height:1.1; display:block; }
+.paddle-count-label { font-size:.72rem; color:var(--muted); font-weight:500; margin-top:1px; }
+.sidebar-tabs { display:flex; border-bottom:1.5px solid var(--border); background:var(--bg); flex-shrink:0; }
+.sidebar-tab { flex:1; padding:6px 0; font-size:.78rem; font-weight:600; text-align:center; cursor:pointer; color:var(--muted); border-bottom:2px solid transparent; margin-bottom:-1.5px; background:none; border-top:none; border-left:none; border-right:none; transition:all .12s; }
+.sidebar-tab:hover { color:var(--ink); }
+.sidebar-tab.active-tab { color:var(--ink); border-bottom-color:var(--gold); background:var(--white); }
+.sidebar-pane { display:none; flex-direction:column; overflow-y:auto; flex:1; }
+.sidebar-pane.active { display:flex; flex-direction:column; }
+.level-summary { padding:6px 10px; border-bottom:1px solid #F0EDE8; border-left:3px solid transparent; }
+.level-summary-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:4px; }
+.level-label-row { display:flex; align-items:center; gap:6px; font-size:.9rem; font-weight:700; }
+.level-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+.level-sub { font-family:'DM Mono',monospace; font-size:.9rem; font-weight:700; }
+.paddle-chips { display:flex; flex-wrap:wrap; gap:3px; }
+
+/* Desktop main */
+.desktop-main { flex:1; display:flex; flex-direction:column; overflow:hidden; padding:6px 10px 4px; gap:0; min-width:0; }
+.controls-row { display:flex; align-items:center; gap:6px; margin-bottom:5px; flex-shrink:0; flex-wrap:nowrap; }
+.d-level-buttons { display:flex; flex-wrap:wrap; gap:6px; flex-shrink:0; }
+.d-level-btn { font-size:1.05rem; padding:9px 22px; }
+.active-status { flex:1; min-width:0; display:flex; align-items:center; gap:8px; padding:5px 12px; border-radius:7px; border:1.5px solid var(--border); font-size:.85rem; font-weight:500; background:var(--white); overflow:hidden; white-space:nowrap; }
+.active-status.empty { color:var(--muted); font-style:italic; font-size:.8rem; justify-content:center; }
+.active-status strong { font-family:'DM Mono',monospace; font-size:.88rem; }
+.active-status .hint { margin-left:auto; font-size:.72rem; color:var(--muted); }
+.d-undo-btn { font-family:'DM Mono',monospace; font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.08em; padding:8px 13px; border:1.5px solid var(--ink); border-radius:7px; background:var(--ink); color:#fff; cursor:pointer; flex-shrink:0; }
+.d-reset-btn { font-family:'DM Mono',monospace; font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.08em; padding:8px 13px; border:1.5px solid #FCA5A5; border-radius:7px; background:#FEF2F2; color:#B91C1C; cursor:pointer; flex-shrink:0; }
+.loc-tab-bar-d { display:flex; border-bottom:2px solid var(--border); flex-shrink:0; margin-bottom:5px; }
+.loc-tab-d { font-size:.72rem; font-weight:700; padding:5px 16px; cursor:pointer; color:var(--muted); border-bottom:3px solid transparent; margin-bottom:-2px; background:none; border-top:none; border-left:none; border-right:none; transition:all .12s; display:flex; align-items:center; gap:5px; }
+.loc-tab-d.active-a { color:var(--loc-a); border-bottom-color:var(--loc-a); }
+.loc-tab-d.active-b { color:var(--loc-b); border-bottom-color:var(--loc-b); }
+.loc-dot { width:6px; height:6px; border-radius:50%; flex-shrink:0; }
+.desktop-paddle-area { flex:1; overflow:hidden; min-height:0; }
+.loc-pane-d { display:none; height:100%; }
+.loc-pane-d.active { display:flex; gap:0; }
+.hundreds-col { flex:1; overflow-y:auto; border-right:1px solid var(--border); padding:4px 5px 16px; }
+.hundreds-col:last-child { border-right:none; }
+.col-header-row { display:flex; align-items:center; gap:6px; margin-bottom:3px; }
+.col-header { font-family:'DM Mono',monospace; font-size:.62rem; font-weight:700; text-transform:uppercase; letter-spacing:.1em; color:#fff; padding:2px 7px; border-radius:3px; white-space:nowrap; flex-shrink:0; }
+.col-header.loc-a { background:var(--loc-a); }
+.col-header.loc-b { background:var(--loc-b); }
+.col-header-line { flex:1; height:1px; background:var(--border); }
+.digit-group { margin-bottom:3px; }
+.digit-group-line { width:100%; height:1px; background:var(--border); margin-bottom:2px; }
+.paddle-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(38px,1fr)); gap:2px; }
+.d-paddle-btn { font-size:.72rem; }
+.desktop-numpad-pane { flex:1; min-height:0; overflow-y:auto; }
+
+/* ══════════════════════════════════════════
+   MOBILE LAYOUT
+══════════════════════════════════════════ */
+.app-mobile { display:none; flex-direction:column; height:100%; overflow:hidden; }
+.mobile-topbar { background:var(--white); border-bottom:2px solid var(--border); padding:10px 14px; display:flex; flex-direction:column; gap:7px; flex-shrink:0; box-shadow:0 1px 6px rgba(0,0,0,.07); }
+.mobile-topbar-row1 { display:flex; align-items:center; gap:8px; }
+.mobile-title { font-family:'Playfair Display',serif; font-size:1rem; font-weight:900; color:var(--gold); flex:1; }
+.operator-tag { font-size:.72rem; color:var(--muted); font-weight:500; }
+.total-pill { background:var(--gold-bg); border:1.5px solid var(--gold-bd); border-radius:8px; padding:4px 12px; text-align:center; flex-shrink:0; }
+.total-pill-label { font-size:.52rem; text-transform:uppercase; letter-spacing:.12em; color:var(--gold); font-weight:700; display:block; }
+.total-pill-val { font-family:'DM Mono',monospace; font-size:1.05rem; font-weight:700; color:var(--gold); }
+.m-level-row { display:flex; gap:5px; overflow-x:auto; padding-bottom:2px; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
+.m-level-row::-webkit-scrollbar { display:none; }
+.m-level-btn { font-size:.82rem; padding:8px 14px; }
+.m-active-bar { padding:5px 10px; border-radius:7px; border:1.5px solid var(--border); font-size:.8rem; font-weight:500; background:var(--white); display:flex; align-items:center; gap:7px; min-height:34px; flex-shrink:0; }
+.m-active-bar.empty { color:var(--muted); font-style:italic; font-size:.78rem; justify-content:center; }
+.m-active-bar strong { font-family:'DM Mono',monospace; font-size:.85rem; }
+.m-active-bar .hint { margin-left:auto; font-size:.68rem; color:var(--muted); }
+.m-action-row { display:flex; gap:6px; flex-shrink:0; }
+.m-btn { flex:1; font-family:'DM Mono',monospace; font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.07em; padding:9px 10px; border-radius:8px; cursor:pointer; -webkit-appearance:none; border:1.5px solid; }
+.m-btn-undo { background:var(--ink); color:#fff; border-color:var(--ink); }
+.m-btn-reset { background:#FEF2F2; color:#B91C1C; border-color:#FCA5A5; }
+.m-btn-export { background:#D1FAE5; color:#047857; border-color:#047857; }
+.m-btn-summary { background:var(--white); color:var(--ink); border-color:var(--border); }
+.loc-tab-bar-m { display:flex; border-bottom:2px solid var(--border); flex-shrink:0; background:var(--bg); }
+.loc-tab-m { flex:1; padding:10px 8px; font-family:'DM Mono',monospace; font-size:.78rem; font-weight:700; text-align:center; cursor:pointer; color:var(--muted); border-bottom:3px solid transparent; margin-bottom:-2px; background:none; border-top:none; border-left:none; border-right:none; transition:all .15s; }
+.loc-tab-m.active-a { color:var(--loc-a); border-bottom-color:var(--loc-a); background:var(--white); }
+.loc-tab-m.active-b { color:var(--loc-b); border-bottom-color:var(--loc-b); background:var(--white); }
+.mobile-paddle-area { flex:1; overflow:hidden; display:flex; min-height:0; }
+.loc-pane-m { display:none; flex:1; }
+.loc-pane-m.active { display:flex; gap:0; }
+.m-hundreds-col { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; border-right:1px solid var(--border); padding:5px 5px 16px; }
+.m-hundreds-col:last-child { border-right:none; }
+.m-paddle-btn { font-size:.75rem; }
+.mobile-numpad-pane { flex:1; min-height:0; overflow-y:auto; }
+
+/* Summary sheet (mobile) */
+.summary-backdrop { display:none; position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:200; }
+.summary-backdrop.show { display:block; }
+.summary-sheet { position:fixed; bottom:0; left:0; right:0; z-index:201; background:var(--white); border-radius:18px 18px 0 0; box-shadow:0 -8px 32px rgba(0,0,0,.15); transform:translateY(100%); transition:transform .3s ease; max-height:82vh; display:flex; flex-direction:column; }
+.summary-sheet.show { transform:translateY(0); }
+.sheet-handle { width:40px; height:4px; background:#D1D5DB; border-radius:2px; margin:12px auto 8px; flex-shrink:0; }
+.sheet-header { padding:0 16px 10px; border-bottom:1.5px solid var(--border); flex-shrink:0; display:flex; align-items:center; justify-content:space-between; }
+.sheet-title { font-family:'Playfair Display',serif; font-size:1rem; font-weight:900; color:var(--ink); }
+.sheet-close { font-size:1.1rem; color:var(--muted); cursor:pointer; padding:4px; }
+.sheet-tabs { display:flex; border-bottom:1.5px solid var(--border); flex-shrink:0; background:var(--bg); }
+.sheet-tab { flex:1; padding:7px 0; font-size:.78rem; font-weight:600; text-align:center; cursor:pointer; color:var(--muted); border-bottom:2px solid transparent; margin-bottom:-1.5px; background:none; border-top:none; border-left:none; border-right:none; }
+.sheet-tab.active-tab { color:var(--ink); border-bottom-color:var(--gold); background:var(--white); }
+.sheet-body { overflow-y:auto; -webkit-overflow-scrolling:touch; flex:1; padding:8px 0 24px; }
+.sheet-level { padding:8px 16px; border-bottom:1px solid #F0EDE8; border-left:3px solid transparent; }
+.sheet-level-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:5px; }
+.sheet-level-label { display:flex; align-items:center; gap:6px; font-size:.92rem; font-weight:700; }
+.sheet-level-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+.sheet-level-sub { font-family:'DM Mono',monospace; font-size:.9rem; font-weight:700; }
+.sheet-chips { display:flex; flex-wrap:wrap; gap:4px; }
 </style>
 </head>
 <body>
 
-<!-- SETUP -->
+<!-- ══ SETUP SCREEN ══ -->
 <div class="setup-overlay" id="setup-overlay">
   <div class="setup-card">
     <h1>🏆 Paddle Raise</h1>
-    <p class="sub">Enter your name and select your location(s).</p>
+    <p class="sub">Set up your tracking session.</p>
+
     <label class="setup-label">Your Name</label>
     <input class="setup-input" id="operator-input" type="text" placeholder="e.g. Sarah Johnson" autocomplete="off">
+
     <label class="setup-label">Location(s)</label>
     <div class="loc-options">
       <div class="loc-option" id="opt-a" onclick="toggleLocOption('a')">
@@ -373,81 +312,164 @@ body { height:100%; font-family:'DM Sans',sans-serif; background:var(--bg); colo
         <div class="loc-range">101–450</div>
       </div>
     </div>
+
+    <label class="setup-label">Device</label>
+    <div class="device-options">
+      <div class="device-option" id="dev-desktop" onclick="selectDevice('desktop')">
+        <div class="dev-icon">🖥️</div>
+        <div class="dev-name">Desktop</div>
+        <div class="dev-desc">Sidebar summary, full grid</div>
+      </div>
+      <div class="device-option" id="dev-mobile" onclick="selectDevice('mobile')">
+        <div class="dev-icon">📱</div>
+        <div class="dev-name">Mobile</div>
+        <div class="dev-desc">Location tabs, bottom summary</div>
+      </div>
+    </div>
+
     <button class="setup-btn" onclick="startApp()">Start Tracking</button>
     <div class="setup-err" id="setup-err"></div>
   </div>
 </div>
 
-<!-- APP -->
-<div class="app" id="app">
+<!-- ══ DESKTOP APP ══ -->
+<div class="app-desktop" id="app-desktop">
+  <div class="desktop-body">
 
-  <!-- Top bar -->
-  <div class="top-bar">
-    <div class="top-bar-row1">
-      <span class="top-bar-title">🏆 Paddle Raise</span>
-      <span class="operator-tag" id="operator-tag"></span>
-      <div class="fb-status" id="fb-status"><div class="fb-dot"></div><span class="fb-label" id="fb-label">–</span></div>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-top">
+        <div class="sidebar-top-row">
+          <div>
+            <h2>🏆 Paddle Raise</h2>
+            <div class="operator-name-sm" id="d-operator-name"></div>
+            <div class="fb-status" id="fb-status-d"><div class="fb-dot"></div><span class="fb-label" id="fb-label-d">–</span></div>
+          </div>
+          <button class="export-btn-sm" onclick="exportCSV()">⬇ CSV</button>
+        </div>
+        <div class="total-box">
+          <span class="sidebar-total-label">Total Raised</span>
+          <span class="sidebar-total-value" id="d-total">$0</span>
+        </div>
+        <div class="paddle-count-label" id="d-count">0 paddles raised</div>
+      </div>
+      <div class="sidebar-tabs" id="d-sidebar-tabs"></div>
+      <div class="sidebar-pane active" id="d-sb-all"></div>
+      <div class="sidebar-pane" id="d-sb-a"></div>
+      <div class="sidebar-pane" id="d-sb-b"></div>
+    </aside>
+
+    <!-- Main -->
+    <main class="desktop-main">
+      <div class="controls-row">
+        <div class="d-level-buttons" id="d-level-buttons"></div>
+        <div class="active-status empty" id="d-active-status">Select a giving level above</div>
+        <div class="mode-toggle">
+          <span class="mode-toggle-label" id="d-mode-label">Grid</span>
+          <button class="toggle-track" id="d-mode-toggle" onclick="toggleMode('d')" aria-label="Switch mode"><div class="toggle-thumb"></div></button>
+        </div>
+        <button class="d-undo-btn" onclick="undoLast()">↩ Undo</button>
+        <button class="d-reset-btn" onclick="openReset()">Reset</button>
+      </div>
+
+      <!-- Location tabs (desktop) -->
+      <div class="loc-tab-bar-d" id="d-loc-tabs"></div>
+
+      <!-- Grid paddle area (desktop) -->
+      <div class="desktop-paddle-area" id="d-paddle-area" style="display:flex;flex-direction:column;overflow:hidden;">
+        <div style="flex:1;overflow:hidden;" id="d-loc-panes"></div>
+      </div>
+
+      <!-- Numpad (desktop) -->
+      <div class="desktop-numpad-pane numpad-pane" id="d-numpad-pane">
+        <div class="numpad-display">
+          <span class="numpad-display-label">Paddle Number</span>
+          <div class="numpad-display-num placeholder" id="d-numpad-display">_ _ _</div>
+          <div class="numpad-status" id="d-numpad-status"></div>
+        </div>
+        <div class="numpad-grid">
+          <button class="numpad-key" onclick="numpadKey('d','1')">1</button>
+          <button class="numpad-key" onclick="numpadKey('d','2')">2</button>
+          <button class="numpad-key" onclick="numpadKey('d','3')">3</button>
+          <button class="numpad-key" onclick="numpadKey('d','4')">4</button>
+          <button class="numpad-key" onclick="numpadKey('d','5')">5</button>
+          <button class="numpad-key" onclick="numpadKey('d','6')">6</button>
+          <button class="numpad-key" onclick="numpadKey('d','7')">7</button>
+          <button class="numpad-key" onclick="numpadKey('d','8')">8</button>
+          <button class="numpad-key" onclick="numpadKey('d','9')">9</button>
+          <button class="numpad-key key-clear" onclick="numpadClear('d')">CLR</button>
+          <button class="numpad-key" onclick="numpadKey('d','0')">0</button>
+          <button class="numpad-key key-back" onclick="numpadBack('d')">⌫</button>
+          <button class="numpad-key key-raise disabled" id="d-numpad-raise" onclick="numpadRaise('d')">Raise</button>
+        </div>
+        <div class="numpad-recent" id="d-numpad-recent"></div>
+      </div>
+    </main>
+
+  </div>
+</div>
+
+<!-- ══ MOBILE APP ══ -->
+<div class="app-mobile" id="app-mobile">
+
+  <div class="mobile-topbar">
+    <div class="mobile-topbar-row1">
+      <span class="mobile-title">🏆 Paddle Raise</span>
+      <span class="operator-tag" id="m-operator-tag"></span>
+      <div class="fb-status" id="fb-status-m"><div class="fb-dot"></div><span class="fb-label" id="fb-label-m">–</span></div>
       <div class="total-pill">
         <span class="total-pill-label">Total</span>
-        <span class="total-pill-val" id="total-val">$0</span>
+        <span class="total-pill-val" id="m-total">$0</span>
       </div>
       <div class="mode-toggle">
-        <span class="mode-toggle-label" id="mode-label">Grid</span>
-        <button class="toggle-track" id="mode-toggle-btn" onclick="toggleMode()" aria-label="Switch input mode">
-          <div class="toggle-thumb"></div>
-        </button>
+        <span class="mode-toggle-label" id="m-mode-label">Grid</span>
+        <button class="toggle-track" id="m-mode-toggle" onclick="toggleMode('m')" aria-label="Switch mode"><div class="toggle-thumb"></div></button>
       </div>
     </div>
-    <!-- Level buttons -->
-    <div class="level-row" id="level-buttons"></div>
-    <!-- Active status + actions -->
-    <div class="active-bar empty" id="active-bar">Select a giving level</div>
-    <div class="action-row">
-      <button class="undo-btn" onclick="undoLast()">↩ Undo</button>
-      <button class="reset-btn" onclick="openReset()">Reset</button>
-      <button class="export-btn" onclick="exportCSV()">⬇ CSV</button>
+    <div class="m-level-row" id="m-level-buttons"></div>
+    <div class="m-active-bar empty" id="m-active-bar">Select a giving level</div>
+    <div class="m-action-row">
+      <button class="m-btn m-btn-undo" onclick="undoLast()">↩ Undo</button>
+      <button class="m-btn m-btn-reset" onclick="openReset()">Reset</button>
+      <button class="m-btn m-btn-export" onclick="exportCSV()">⬇ CSV</button>
+      <button class="m-btn m-btn-summary" onclick="openSummary()">📋 <span id="m-count-badge">0</span></button>
     </div>
   </div>
 
-  <!-- Location tabs -->
-  <div class="loc-tab-bar" id="loc-tab-bar"></div>
+  <!-- Location tabs (mobile) -->
+  <div class="loc-tab-bar-m" id="m-loc-tabs"></div>
 
-  <!-- Grid mode paddle area -->
-  <div class="paddle-area" id="paddle-area"></div>
+  <!-- Grid paddle area (mobile) -->
+  <div class="mobile-paddle-area" id="m-paddle-area"></div>
 
-  <!-- Numpad mode -->
-  <div class="numpad-area" id="numpad-area">
+  <!-- Numpad (mobile) -->
+  <div class="mobile-numpad-pane numpad-pane" id="m-numpad-pane">
     <div class="numpad-display">
       <span class="numpad-display-label">Paddle Number</span>
-      <div class="numpad-display-num placeholder" id="numpad-display">_ _ _</div>
-      <div class="numpad-status" id="numpad-status"></div>
+      <div class="numpad-display-num placeholder" id="m-numpad-display">_ _ _</div>
+      <div class="numpad-status" id="m-numpad-status"></div>
     </div>
     <div class="numpad-grid">
-      <button class="numpad-key" onclick="numpadKey('1')">1</button>
-      <button class="numpad-key" onclick="numpadKey('2')">2</button>
-      <button class="numpad-key" onclick="numpadKey('3')">3</button>
-      <button class="numpad-key" onclick="numpadKey('4')">4</button>
-      <button class="numpad-key" onclick="numpadKey('5')">5</button>
-      <button class="numpad-key" onclick="numpadKey('6')">6</button>
-      <button class="numpad-key" onclick="numpadKey('7')">7</button>
-      <button class="numpad-key" onclick="numpadKey('8')">8</button>
-      <button class="numpad-key" onclick="numpadKey('9')">9</button>
-      <button class="numpad-key key-clear" onclick="numpadClear()">CLR</button>
-      <button class="numpad-key" onclick="numpadKey('0')">0</button>
-      <button class="numpad-key key-back" onclick="numpadBack()">⌫</button>
-      <button class="numpad-key key-raise disabled" id="numpad-raise-btn" onclick="numpadRaise()">Raise</button>
+      <button class="numpad-key" onclick="numpadKey('m','1')">1</button>
+      <button class="numpad-key" onclick="numpadKey('m','2')">2</button>
+      <button class="numpad-key" onclick="numpadKey('m','3')">3</button>
+      <button class="numpad-key" onclick="numpadKey('m','4')">4</button>
+      <button class="numpad-key" onclick="numpadKey('m','5')">5</button>
+      <button class="numpad-key" onclick="numpadKey('m','6')">6</button>
+      <button class="numpad-key" onclick="numpadKey('m','7')">7</button>
+      <button class="numpad-key" onclick="numpadKey('m','8')">8</button>
+      <button class="numpad-key" onclick="numpadKey('m','9')">9</button>
+      <button class="numpad-key key-clear" onclick="numpadClear('m')">CLR</button>
+      <button class="numpad-key" onclick="numpadKey('m','0')">0</button>
+      <button class="numpad-key key-back" onclick="numpadBack('m')">⌫</button>
+      <button class="numpad-key key-raise disabled" id="m-numpad-raise" onclick="numpadRaise('m')">Raise</button>
     </div>
-    <div class="numpad-recent" id="numpad-recent"></div>
+    <div class="numpad-recent" id="m-numpad-recent"></div>
   </div>
 
 </div>
 
-<!-- Summary FAB -->
-<button class="summary-fab" id="summary-fab" onclick="openSummary()">
-  📋 Summary <span class="fab-badge" id="fab-badge">0</span>
-</button>
-
-<!-- Summary sheet -->
+<!-- Summary sheet (mobile only) -->
 <div class="summary-backdrop" id="summary-backdrop" onclick="closeSummary()"></div>
 <div class="summary-sheet" id="summary-sheet">
   <div class="sheet-handle"></div>
@@ -455,11 +477,11 @@ body { height:100%; font-family:'DM Sans',sans-serif; background:var(--bg); colo
     <span class="sheet-title">Live Summary</span>
     <span class="sheet-close" onclick="closeSummary()">✕</span>
   </div>
-  <div class="sheet-tabs" id="sheet-tabs"></div>
-  <div class="sheet-body" id="sheet-body"></div>
+  <div class="sheet-tabs" id="m-sheet-tabs"></div>
+  <div class="sheet-body" id="m-sheet-body"></div>
 </div>
 
-<!-- Reset modal -->
+<!-- Shared Reset Modal -->
 <div class="modal-overlay" id="modal">
   <div class="modal-card">
     <h3>Reset Everything?</h3>
@@ -471,11 +493,10 @@ body { height:100%; font-family:'DM Sans',sans-serif; background:var(--bg); colo
   </div>
 </div>
 
-<!-- Toast -->
 <div class="toast" id="toast"><span id="toast-msg"></span></div>
 
 <script>
-/* ════════ CONSTANTS ════════ */
+/* ════ CONSTANTS ════ */
 const LEVELS = [
   { id:'l1', label:'$10,000', value:10000 },
   { id:'l2', label:'$5,000',  value:5000  },
@@ -498,275 +519,411 @@ function buildGroups(start, end) {
   while(i<=end){const p=Math.floor(i/10),e=Math.min(p*10+9,end);g.push({prefix:p,start:i,end:e});i=e+1;}
   return g;
 }
-
 const LOC_CONFIG = {
-  a: {
-    cols: [
-      { id:'a-1', label:'100s', groups:buildGroups(101,199) },
-      { id:'a-2', label:'200s', groups:buildGroups(200,299) },
-      { id:'a-3', label:'300s', groups:buildGroups(300,375) },
-    ]
-  },
-  b: {
-    cols: [
-      { id:'b-1', label:'376–399', groups:buildGroups(376,399) },
-      { id:'b-2', label:'400–424', groups:buildGroups(400,424) },
-      { id:'b-3', label:'425–450', groups:buildGroups(425,450) },
-    ]
-  }
+  a:{ cols:[
+    {label:'100s',groups:buildGroups(101,199)},
+    {label:'200s',groups:buildGroups(200,299)},
+    {label:'300s',groups:buildGroups(300,375)},
+  ]},
+  b:{ cols:[
+    {label:'376–399',groups:buildGroups(376,399)},
+    {label:'400–424',groups:buildGroups(400,424)},
+    {label:'425–450',groups:buildGroups(425,450)},
+  ]},
 };
 
-/* ════════ STATE ════════ */
+/* ════ STATE ════ */
 let log = [];
 let activeLevel = null;
 let lastAction = null;
 let toastTimer = null;
 let operatorName = '';
 let activeLocs = [];
-let activeLocTab = null;
-let activeSummaryTab = 'all';
+let deviceMode = null; // 'desktop' | 'mobile'
 let selectedLoc = null;
+let selectedDevice = null;
+let activeLocTabD = null;
+let activeLocTabM = null;
+let activeSummaryTab = 'all';
+let numpadValues = { d:'', m:'' };
+let numpadModes = { d:false, m:false };
 
-/* ════════ SETUP ════════ */
+/* ════ SETUP ════ */
 function toggleLocOption(loc) {
-  selectedLoc = (selectedLoc === loc) ? null : loc;
-  ['a','b','both'].forEach(l => {
-    document.getElementById('opt-'+l).className = 'loc-option' + (l===selectedLoc ? ' selected-'+l : '');
+  selectedLoc = (selectedLoc===loc) ? null : loc;
+  ['a','b','both'].forEach(l=>{
+    document.getElementById('opt-'+l).className='loc-option'+(l===selectedLoc?' selected-'+l:'');
   });
 }
+function selectDevice(dev) {
+  selectedDevice = dev;
+  ['desktop','mobile'].forEach(d=>{
+    document.getElementById('dev-'+d).className='device-option'+(d===dev?' selected':'');
+  });
+}
+document.getElementById('operator-input').addEventListener('keydown', e=>{ if(e.key==='Enter') startApp(); });
 
 function startApp() {
   const name = document.getElementById('operator-input').value.trim();
   const err  = document.getElementById('setup-err');
   if (!name) { err.textContent='Please enter your name.'; return; }
   if (!selectedLoc) { err.textContent='Please select a location.'; return; }
+  if (!selectedDevice) { err.textContent='Please select desktop or mobile.'; return; }
   err.textContent='';
   operatorName = name;
-  activeLocs = selectedLoc === 'both' ? ['a','b'] : [selectedLoc];
+  activeLocs = selectedLoc==='both' ? ['a','b'] : [selectedLoc];
+  deviceMode = selectedDevice;
   document.getElementById('setup-overlay').classList.add('hidden');
-  document.getElementById('app').style.display = 'flex';
-  document.getElementById('app').style.flexDirection = 'column';
-  document.getElementById('app').style.height = '100%';
-  initApp();
+  if (deviceMode === 'desktop') {
+    document.body.style.overflow = 'hidden';
+    document.getElementById('app-desktop').style.cssText = 'display:flex;flex-direction:column;height:100%;overflow:hidden;';
+    initDesktop();
+  } else {
+    document.body.style.overflow = 'hidden';
+    document.getElementById('app-mobile').style.cssText = 'display:flex;flex-direction:column;height:100%;overflow:hidden;';
+    initMobile();
+  }
   if (window._fbInitSession) window._fbInitSession(operatorName, activeLocs);
 }
-document.getElementById('operator-input').addEventListener('keydown', e => { if(e.key==='Enter') startApp(); });
 
-/* ════════ INIT ════════ */
-function initApp() {
-  document.getElementById('operator-tag').textContent = operatorName;
+/* ════ DESKTOP INIT ════ */
+function initDesktop() {
+  document.getElementById('d-operator-name').textContent = operatorName;
 
   // Level buttons
-  const levelBtnsEl = document.getElementById('level-buttons');
-  LEVELS.forEach(lvl => {
-    const h = HEX[lvl.id];
-    const btn = document.createElement('button');
-    btn.className = 'level-btn lvl-'+lvl.id;
-    btn.id = 'lvl-btn-'+lvl.id;
-    btn.dataset.count = '0';
-    btn.style.borderLeftColor = h.c;
-    btn.textContent = lvl.label;
-    btn.addEventListener('click', () => selectLevel(lvl.id));
-    levelBtnsEl.appendChild(btn);
+  const el = document.getElementById('d-level-buttons');
+  LEVELS.forEach(lvl=>{
+    const h=HEX[lvl.id];
+    const btn=document.createElement('button');
+    btn.className='level-btn d-level-btn lvl-'+lvl.id;
+    btn.id='d-lvl-'+lvl.id; btn.dataset.count='0';
+    btn.style.borderLeftColor=h.c; btn.textContent=lvl.label;
+    btn.addEventListener('click',()=>selectLevel(lvl.id));
+    el.appendChild(btn);
+  });
+
+  // Sidebar tabs
+  const tabsEl = document.getElementById('d-sidebar-tabs');
+  const defs = [{id:'all',label:'All'}];
+  if(activeLocs.includes('a')) defs.push({id:'a',label:'Loc A'});
+  if(activeLocs.includes('b')) defs.push({id:'b',label:'Loc B'});
+  defs.forEach((t,i)=>{
+    const btn=document.createElement('button');
+    btn.className='sidebar-tab'+(i===0?' active-tab':'');
+    btn.textContent=t.label;
+    btn.addEventListener('click',()=>{
+      document.querySelectorAll('.sidebar-tab').forEach(b=>b.classList.remove('active-tab'));
+      btn.classList.add('active-tab');
+      ['all','a','b'].forEach(id=>{
+        const p=document.getElementById('d-sb-'+id);
+        if(p) p.className='sidebar-pane'+(id===t.id?' active':'');
+      });
+    });
+    tabsEl.appendChild(btn);
+  });
+
+  // Location tabs + paddle area
+  const locTabBar = document.getElementById('d-loc-tabs');
+  const locPanesWrap = document.getElementById('d-loc-panes');
+  locPanesWrap.style.cssText = 'display:flex;flex-direction:column;flex:1;overflow:hidden;height:100%;';
+  if (activeLocs.length === 1) locTabBar.style.display = 'none';
+
+  activeLocs.forEach((loc,i)=>{
+    if(activeLocs.length > 1) {
+      const tab=document.createElement('button');
+      tab.className='loc-tab-d'+(i===0?' active-'+loc:'');
+      tab.id='d-ltab-'+loc;
+      tab.innerHTML='<div class="loc-dot" style="background:var(--loc-'+loc+')"></div>'+(loc==='a'?'Location A · 101–375':'Location B · 376–450');
+      tab.addEventListener('click',()=>switchLocTabD(loc));
+      locTabBar.appendChild(tab);
+    }
+
+    const pane=document.createElement('div');
+    pane.className='loc-pane-d'+(i===0?' active':'');
+    pane.id='d-lpane-'+loc;
+    pane.style.cssText='flex:1;overflow:hidden;min-height:0;';
+    LOC_CONFIG[loc].cols.forEach(colDef=>{
+      const col=document.createElement('div');
+      col.className='hundreds-col';
+      col.style.overflowY='auto';
+      const hdrRow=document.createElement('div');
+      hdrRow.className='col-header-row';
+      hdrRow.innerHTML='<span class="col-header loc-'+loc+'">'+colDef.label+'</span><div class="col-header-line"></div>';
+      col.appendChild(hdrRow);
+      colDef.groups.forEach(g=>{
+        const wrap=document.createElement('div');
+        wrap.className='digit-group';
+        wrap.innerHTML='<div class="digit-group-line"></div>';
+        const grid=document.createElement('div');
+        grid.className='paddle-grid';
+        for(let n=g.start;n<=g.end;n++){
+          const btn=document.createElement('button');
+          btn.className='paddle-btn d-paddle-btn'; btn.id='p'+n;
+          btn.innerHTML=n+'<div class="pip-row" id="pips-'+n+'"></div>';
+          btn.addEventListener('click',()=>togglePaddle(n));
+          grid.appendChild(btn);
+        }
+        wrap.appendChild(grid); col.appendChild(wrap);
+      });
+      pane.appendChild(col);
+    });
+    locPanesWrap.appendChild(pane);
+    if(i===0) activeLocTabD=loc;
+  });
+
+  renderSidebar(); renderTotals(); renderLevelCounts();
+}
+
+function switchLocTabD(loc) {
+  activeLocTabD=loc;
+  activeLocs.forEach(l=>{
+    const t=document.getElementById('d-ltab-'+l);
+    if(t) t.className='loc-tab-d'+(l===loc?' active-'+l:'');
+    const p=document.getElementById('d-lpane-'+l);
+    if(p) p.className='loc-pane-d'+(l===loc?' active':'');
+  });
+}
+
+/* ════ MOBILE INIT ════ */
+function initMobile() {
+  document.getElementById('m-operator-tag').textContent = operatorName;
+
+  // Level buttons
+  const el = document.getElementById('m-level-buttons');
+  LEVELS.forEach(lvl=>{
+    const h=HEX[lvl.id];
+    const btn=document.createElement('button');
+    btn.className='level-btn m-level-btn lvl-'+lvl.id;
+    btn.id='m-lvl-'+lvl.id; btn.dataset.count='0';
+    btn.style.borderLeftColor=h.c; btn.textContent=lvl.label;
+    btn.addEventListener('click',()=>selectLevel(lvl.id));
+    el.appendChild(btn);
   });
 
   // Location tabs
-  buildLocTabs();
-
-  // Summary sheet tabs
-  buildSheetTabs();
-}
-
-function buildLocTabs() {
-  const bar = document.getElementById('loc-tab-bar');
-  bar.innerHTML = '';
-  activeLocs.forEach((loc, i) => {
-    const btn = document.createElement('button');
-    btn.className = 'loc-tab';
-    btn.id = 'loc-tab-'+loc;
-    btn.textContent = loc === 'a' ? 'Location A · 101–375' : 'Location B · 376–450';
-    btn.addEventListener('click', () => switchLocTab(loc));
-    bar.appendChild(btn);
-    if (i === 0) { activeLocTab = loc; btn.classList.add('active-'+loc); }
-  });
-  if (activeLocs.length === 1) bar.style.display = 'none'; // hide tab bar if only one location
-  buildPaddleArea();
-}
-
-function buildPaddleArea() {
-  const area = document.getElementById('paddle-area');
-  area.innerHTML = '';
-  activeLocs.forEach((loc, i) => {
-    const pane = document.createElement('div');
-    pane.className = 'loc-pane' + (i===0 ? ' active' : '');
-    pane.id = 'loc-pane-'+loc;
-    const colsWrap = document.createElement('div');
-    colsWrap.className = 'loc-cols';
-    LOC_CONFIG[loc].cols.forEach(colDef => {
-      const col = document.createElement('div');
-      col.className = 'hundreds-col';
-      // Header row
-      const hdrRow = document.createElement('div');
-      hdrRow.className = 'col-header-row';
-      hdrRow.innerHTML = '<span class="col-header loc-'+loc+'">'+colDef.label+'</span><div class="col-header-line"></div>';
+  const locTabBar = document.getElementById('m-loc-tabs');
+  if(activeLocs.length===1) locTabBar.style.display='none';
+  activeLocs.forEach((loc,i)=>{
+    if(activeLocs.length>1){
+      const tab=document.createElement('button');
+      tab.className='loc-tab-m'+(i===0?' active-'+loc:'');
+      tab.id='m-ltab-'+loc; tab.textContent=loc==='a'?'Loc A · 101–375':'Loc B · 376–450';
+      tab.addEventListener('click',()=>switchLocTabM(loc));
+      locTabBar.appendChild(tab);
+    }
+    const pane=document.createElement('div');
+    pane.className='loc-pane-m'+(i===0?' active':'');
+    pane.id='m-lpane-'+loc;
+    LOC_CONFIG[loc].cols.forEach(colDef=>{
+      const col=document.createElement('div');
+      col.className='m-hundreds-col';
+      const hdrRow=document.createElement('div');
+      hdrRow.className='col-header-row';
+      hdrRow.innerHTML='<span class="col-header loc-'+loc+'">'+colDef.label+'</span><div class="col-header-line"></div>';
       col.appendChild(hdrRow);
-      // Digit groups
-      colDef.groups.forEach(g => {
-        const wrap = document.createElement('div');
-        wrap.className = 'digit-group';
-        wrap.innerHTML = '<div class="digit-group-line"></div>';
-        const grid = document.createElement('div');
-        grid.className = 'paddle-grid';
-        for (let n=g.start; n<=g.end; n++) {
-          const btn = document.createElement('button');
-          btn.className = 'paddle-btn';
-          btn.id = 'p'+n;
-          btn.innerHTML = n+'<div class="pip-row" id="pips-'+n+'"></div>';
-          btn.addEventListener('click', () => togglePaddle(n));
+      colDef.groups.forEach(g=>{
+        const wrap=document.createElement('div');
+        wrap.className='digit-group';
+        wrap.innerHTML='<div class="digit-group-line"></div>';
+        const grid=document.createElement('div');
+        grid.className='paddle-grid';
+        for(let n=g.start;n<=g.end;n++){
+          const btn=document.createElement('button');
+          btn.className='paddle-btn m-paddle-btn'; btn.id='mp'+n;
+          btn.innerHTML=n+'<div class="pip-row" id="mpips-'+n+'"></div>';
+          btn.addEventListener('click',()=>togglePaddle(n));
           grid.appendChild(btn);
         }
-        wrap.appendChild(grid);
-        col.appendChild(wrap);
+        wrap.appendChild(grid); col.appendChild(wrap);
       });
-      colsWrap.appendChild(col);
+      pane.appendChild(col);
     });
-    pane.appendChild(colsWrap);
-    area.appendChild(pane);
+    document.getElementById('m-paddle-area').appendChild(pane);
+    if(i===0) activeLocTabM=loc;
+  });
+
+  // Summary sheet tabs
+  const sheetTabs = document.getElementById('m-sheet-tabs');
+  const defs=[{id:'all',label:'All'}];
+  if(activeLocs.includes('a')) defs.push({id:'a',label:'Loc A'});
+  if(activeLocs.includes('b')) defs.push({id:'b',label:'Loc B'});
+  defs.forEach((t,i)=>{
+    const btn=document.createElement('button');
+    btn.className='sheet-tab'+(i===0?' active-tab':'');
+    btn.textContent=t.label;
+    btn.addEventListener('click',()=>{
+      activeSummaryTab=t.id;
+      document.querySelectorAll('.sheet-tab').forEach(b=>b.classList.remove('active-tab'));
+      btn.classList.add('active-tab');
+      renderSummarySheet();
+    });
+    sheetTabs.appendChild(btn);
+  });
+
+  renderTotals(); renderLevelCounts();
+}
+
+function switchLocTabM(loc) {
+  activeLocTabM=loc;
+  activeLocs.forEach(l=>{
+    const t=document.getElementById('m-ltab-'+l);
+    if(t) t.className='loc-tab-m'+(l===loc?' active-'+l:'');
+    const p=document.getElementById('m-lpane-'+l);
+    if(p) p.className='loc-pane-m'+(l===loc?' active':'');
   });
 }
 
-function buildSheetTabs() {
-  const tabs = document.getElementById('sheet-tabs');
-  tabs.innerHTML = '';
-  const defs = [{ id:'all', label:'All' }];
-  if (activeLocs.includes('a')) defs.push({ id:'a', label:'Loc A' });
-  if (activeLocs.includes('b')) defs.push({ id:'b', label:'Loc B' });
-  defs.forEach((t,i) => {
-    const btn = document.createElement('button');
-    btn.className = 'sheet-tab' + (i===0?' active-tab':'');
-    btn.textContent = t.label;
-    btn.addEventListener('click', () => switchSheetTab(t.id, btn));
-    tabs.appendChild(btn);
-  });
-}
-
-/* ════════ LOC TAB SWITCH ════════ */
-function switchLocTab(loc) {
-  activeLocTab = loc;
-  activeLocs.forEach(l => {
-    const t = document.getElementById('loc-tab-'+l);
-    if (t) t.className = 'loc-tab' + (l===loc?' active-'+l:'');
-    const p = document.getElementById('loc-pane-'+l);
-    if (p) p.className = 'loc-pane' + (l===loc?' active':'');
-  });
-}
-
-/* ════════ LEVEL SELECT ════════ */
+/* ════ LEVEL SELECT ════ */
 function selectLevel(id) {
-  activeLevel = (activeLevel===id) ? null : id;
-  document.querySelectorAll('.level-btn').forEach(b => b.classList.remove('active'));
-  const bar = document.getElementById('active-bar');
-  if (activeLevel) {
-    document.getElementById('lvl-btn-'+id).classList.add('active');
-    const h=HEX[id], lvl=LEVELS.find(l=>l.id===id);
-    bar.className='active-bar';
-    bar.style.borderColor=h.bd; bar.style.background=h.bg;
-    bar.innerHTML='<div class="level-dot" style="background:'+h.c+'"></div><strong style="color:'+h.c+'">'+lvl.label+'</strong><span class="hint">Tap paddle to raise · tap again to lower</span>';
-  } else {
-    bar.className='active-bar empty'; bar.style.borderColor=''; bar.style.background='';
-    bar.innerHTML='Select a giving level';
+  activeLevel=(activeLevel===id)?null:id;
+  // Clear both sets of buttons
+  document.querySelectorAll('.level-btn').forEach(b=>b.classList.remove('active'));
+  const h=id?HEX[id]:null;
+  const lvl=id?LEVELS.find(l=>l.id===id):null;
+
+  // Desktop status
+  const dStatus=document.getElementById('d-active-status');
+  if(dStatus){
+    if(activeLevel){
+      dStatus.className='active-status';
+      dStatus.style.borderColor=h.bd; dStatus.style.background=h.bg;
+      dStatus.innerHTML='<div class="level-dot" style="background:'+h.c+'"></div><strong style="color:'+h.c+'">'+lvl.label+'</strong><span class="hint">Click paddle to raise · again to lower</span>';
+    } else {
+      dStatus.className='active-status empty'; dStatus.style.borderColor=''; dStatus.style.background='';
+      dStatus.innerHTML='Select a giving level above';
+    }
   }
-  // Update numpad if in numpad mode
-  if (numpadMode) updateNumpadDisplay();
+  // Mobile status
+  const mBar=document.getElementById('m-active-bar');
+  if(mBar){
+    if(activeLevel){
+      mBar.className='m-active-bar';
+      mBar.style.borderColor=h.bd; mBar.style.background=h.bg;
+      mBar.innerHTML='<div class="level-dot" style="background:'+h.c+'"></div><strong style="color:'+h.c+'">'+lvl.label+'</strong><span class="hint">Tap paddle to raise · again to lower</span>';
+    } else {
+      mBar.className='m-active-bar empty'; mBar.style.borderColor=''; mBar.style.background='';
+      mBar.innerHTML='Select a giving level';
+    }
+  }
+
+  if(numpadModes.d) updateNumpadDisplay('d');
+  if(numpadModes.m) updateNumpadDisplay('m');
 }
 
-/* ════════ TOGGLE PADDLE ════════ */
+/* ════ TOGGLE PADDLE ════ */
 function togglePaddle(num) {
-  if (!activeLevel) { flashBar(); return; }
-  const lvl = LEVELS.find(l=>l.id===activeLevel);
-  if (isPaddleActive(num, activeLevel)) {
-    const idx = [...log].reverse().findIndex(e=>e.num===num&&e.levelId===activeLevel&&!e.voided);
-    const real = log.length-1-idx;
-    log[real].voided = true;
-    lastAction = { type:'void', logIdx:real };
+  if(!activeLevel){ flashBars(); return; }
+  const lvl=LEVELS.find(l=>l.id===activeLevel);
+  if(isPaddleActive(num,activeLevel)){
+    const idx=[...log].reverse().findIndex(e=>e.num===num&&e.levelId===activeLevel&&!e.voided);
+    const real=log.length-1-idx;
+    log[real].voided=true; lastAction={type:'void',logIdx:real};
     showToast('Paddle '+num+' removed from '+lvl.label);
   } else {
-    log.push({ num, levelId:activeLevel, voided:false, ts:new Date() });
-    lastAction = { type:'add', logIdx:log.length-1 };
+    log.push({num,levelId:activeLevel,voided:false,ts:new Date()});
+    lastAction={type:'add',logIdx:log.length-1};
     showToast('Paddle '+num+' raised at '+lvl.label+'!');
   }
-  renderPaddle(num); renderTotals(); renderLevelCounts(); renderSummary();
+  renderPaddle(num); renderTotals(); renderLevelCounts(); renderSidebar(); renderSummarySheet();
   syncToFirebase();
 }
 
-/* ════════ STATE HELPERS ════════ */
-function isPaddleActive(num, levelId) { return log.some(e=>e.num===num&&e.levelId===levelId&&!e.voided); }
-function activeLevelsForPaddle(num) {
-  const seen=new Set();
-  return log.filter(e=>e.num===num&&!e.voided&&!seen.has(e.levelId)&&seen.add(e.levelId));
-}
-function activeEntries() { return log.filter(e=>!e.voided); }
-
-/* ════════ RENDER PADDLE ════════ */
+/* ════ RENDER PADDLE ════ */
 function renderPaddle(num) {
-  const btn=document.getElementById('p'+num); if(!btn)return;
-  LEVELS.forEach(l=>btn.classList.remove('raised-'+l.id));
-  btn.classList.remove('raised-any');
-  const pips=document.getElementById('pips-'+num); pips.innerHTML='';
-  const lvls=activeLevelsForPaddle(num);
-  if(lvls.length>0){
-    btn.classList.add('raised-any');
-    const dom=LEVELS.find(l=>lvls.some(e=>e.levelId===l.id));
-    if(dom) btn.classList.add('raised-'+dom.id);
-    const seen=new Set();
-    lvls.forEach(e=>{
-      if(!seen.has(e.levelId)){seen.add(e.levelId);
-        const pip=document.createElement('div');
-        pip.className='pip'; pip.style.background=HEX[e.levelId].c;
-        pips.appendChild(pip);
-      }
-    });
-  }
-}
-
-/* ════════ TOTALS ════════ */
-function renderTotals() {
-  const active=activeEntries();
-  let total=0;
-  LEVELS.forEach(l=>{total+=active.filter(e=>e.levelId===l.id).length*l.value;});
-  document.getElementById('total-val').textContent='$'+total.toLocaleString();
-  const raised=new Set(active.map(e=>e.num));
-  document.getElementById('fab-badge').textContent=raised.size;
-}
-
-function renderLevelCounts() {
-  LEVELS.forEach(lvl=>{
-    const el=document.getElementById('lvl-btn-'+lvl.id);
-    if(el) el.dataset.count=log.filter(e=>e.levelId===lvl.id&&!e.voided).length;
+  // Render both desktop (id=p{num}) and mobile (id=mp{num}) buttons
+  ['p'+num, 'mp'+num].forEach(id=>{
+    const btn=document.getElementById(id); if(!btn)return;
+    LEVELS.forEach(l=>btn.classList.remove('raised-'+l.id));
+    btn.classList.remove('raised-any');
+    const pipId=id==='p'+num?'pips-'+num:'mpips-'+num;
+    const pips=document.getElementById(pipId); if(pips) pips.innerHTML='';
+    const lvls=activeLevelsForPaddle(num);
+    if(lvls.length>0){
+      btn.classList.add('raised-any');
+      const dom=LEVELS.find(l=>lvls.some(e=>e.levelId===l.id));
+      if(dom) btn.classList.add('raised-'+dom.id);
+      const seen=new Set();
+      lvls.forEach(e=>{
+        if(!seen.has(e.levelId)&&pips){seen.add(e.levelId);
+          const pip=document.createElement('div');
+          pip.className='pip'; pip.style.background=HEX[e.levelId].c;
+          pips.appendChild(pip);
+        }
+      });
+    }
   });
 }
 
-/* ════════ SUMMARY SHEET ════════ */
-function openSummary() {
-  document.getElementById('summary-backdrop').classList.add('show');
-  document.getElementById('summary-sheet').classList.add('show');
-  renderSummary();
+/* ════ STATE HELPERS ════ */
+function isPaddleActive(num,levelId){return log.some(e=>e.num===num&&e.levelId===levelId&&!e.voided);}
+function activeLevelsForPaddle(num){
+  const seen=new Set();
+  return log.filter(e=>e.num===num&&!e.voided&&!seen.has(e.levelId)&&seen.add(e.levelId));
 }
-function closeSummary() {
-  document.getElementById('summary-backdrop').classList.remove('show');
-  document.getElementById('summary-sheet').classList.remove('show');
-}
-function switchSheetTab(id, el) {
-  activeSummaryTab = id;
-  document.querySelectorAll('.sheet-tab').forEach(b=>b.classList.remove('active-tab'));
-  el.classList.add('active-tab');
-  renderSummary();
+function activeEntries(){return log.filter(e=>!e.voided);}
+
+/* ════ TOTALS ════ */
+function renderTotals(){
+  const active=activeEntries();
+  let total=0; LEVELS.forEach(l=>{total+=active.filter(e=>e.levelId===l.id).length*l.value;});
+  const raised=new Set(active.map(e=>e.num));
+  const fmt='$'+total.toLocaleString();
+  const dTot=document.getElementById('d-total');
+  const dCnt=document.getElementById('d-count');
+  if(dTot) dTot.textContent=fmt;
+  if(dCnt) dCnt.textContent=raised.size+' paddle'+(raised.size!==1?'s':'')+' raised';
+  const mTot=document.getElementById('m-total');
+  if(mTot) mTot.textContent=fmt;
+  const mBadge=document.getElementById('m-count-badge');
+  if(mBadge) mBadge.textContent=raised.size;
 }
 
-function renderSummary() {
-  const filterFn = activeSummaryTab==='all' ? ()=>true :
-    activeSummaryTab==='a' ? n=>n>=101&&n<=375 : n=>n>=376&&n<=450;
-  const body = document.getElementById('sheet-body');
+function renderLevelCounts(){
+  LEVELS.forEach(lvl=>{
+    const n=log.filter(e=>e.levelId===lvl.id&&!e.voided).length;
+    ['d-lvl-'+lvl.id,'m-lvl-'+lvl.id].forEach(id=>{
+      const el=document.getElementById(id); if(el) el.dataset.count=n;
+    });
+  });
+}
+
+/* ════ SIDEBAR (desktop) ════ */
+function renderSidebar(){
+  if(deviceMode!=='desktop') return;
+  [
+    {id:'d-sb-all', filterFn:()=>true},
+    {id:'d-sb-a',   filterFn:n=>n>=101&&n<=375},
+    {id:'d-sb-b',   filterFn:n=>n>=376&&n<=450},
+  ].forEach(({id,filterFn})=>{
+    const container=document.getElementById(id); if(!container)return;
+    container.innerHTML='';
+    LEVELS.forEach(lvl=>{
+      const h=HEX[lvl.id];
+      const entries=log.filter(e=>e.levelId===lvl.id&&filterFn(e.num));
+      const active=entries.filter(e=>!e.voided).length;
+      const subtotal=active*lvl.value;
+      const div=document.createElement('div');
+      div.className='level-summary'; div.style.borderLeftColor=h.c;
+      const chips=entries.length===0
+        ?'<span class="chip empty-chip">none yet</span>'
+        :entries.map(e=>{
+            const idx=log.indexOf(e);
+            return '<span class="chip chip-'+lvl.id+(e.voided?' voided':'')+'" onclick="toggleVoid('+idx+')" title="'+(e.voided?'Restore':'Remove')+'">'+e.num+'</span>';
+          }).join('');
+      div.innerHTML='<div class="level-summary-head"><div class="level-label-row"><div class="level-dot" style="background:'+h.c+'"></div><span style="color:'+h.c+'">'+lvl.label+'</span></div><div class="level-sub" style="color:'+h.c+'">'+(subtotal>0?'$'+subtotal.toLocaleString():'—')+'</div></div><div class="paddle-chips">'+chips+'</div>';
+      container.appendChild(div);
+    });
+  });
+}
+
+/* ════ SUMMARY SHEET (mobile) ════ */
+function openSummary(){ document.getElementById('summary-backdrop').classList.add('show'); document.getElementById('summary-sheet').classList.add('show'); renderSummarySheet(); }
+function closeSummary(){ document.getElementById('summary-backdrop').classList.remove('show'); document.getElementById('summary-sheet').classList.remove('show'); }
+
+function renderSummarySheet(){
+  if(deviceMode!=='mobile') return;
+  const filterFn=activeSummaryTab==='all'?()=>true:activeSummaryTab==='a'?n=>n>=101&&n<=375:n=>n>=376&&n<=450;
+  const body=document.getElementById('m-sheet-body'); if(!body)return;
   body.innerHTML='';
   LEVELS.forEach(lvl=>{
     const h=HEX[lvl.id];
@@ -777,38 +934,112 @@ function renderSummary() {
     div.className='sheet-level'; div.style.borderLeftColor=h.c;
     const chips=entries.length===0
       ?'<span class="chip empty-chip">none yet</span>'
-      :entries.map((e,_)=>{
+      :entries.map(e=>{
           const idx=log.indexOf(e);
-          return '<span class="chip chip-'+lvl.id+(e.voided?' voided':'')+'" onclick="toggleVoidFromSummary('+idx+')" title="'+(e.voided?'Restore':'Remove')+'">'+e.num+'</span>';
+          return '<span class="chip chip-'+lvl.id+(e.voided?' voided':'')+'" onclick="toggleVoid('+idx+')" title="'+(e.voided?'Restore':'Remove')+'">'+e.num+'</span>';
         }).join('');
     div.innerHTML='<div class="sheet-level-head"><div class="sheet-level-label"><div class="sheet-level-dot" style="background:'+h.c+'"></div><span style="color:'+h.c+'">'+lvl.label+'</span></div><div class="sheet-level-sub" style="color:'+h.c+'">'+(subtotal>0?'$'+subtotal.toLocaleString():'—')+'</div></div><div class="sheet-chips">'+chips+'</div>';
     body.appendChild(div);
   });
 }
 
-function toggleVoidFromSummary(idx) {
+/* ════ VOID / UNDO ════ */
+function toggleVoid(idx){
   const e=log[idx]; e.voided=!e.voided;
   lastAction={type:e.voided?'void':'unvoid',logIdx:idx};
   const lvl=LEVELS.find(l=>l.id===e.levelId);
   showToast(e.voided?'Paddle '+e.num+' removed from '+lvl.label:'Paddle '+e.num+' restored to '+lvl.label);
-  renderPaddle(e.num); renderTotals(); renderLevelCounts(); renderSummary();
+  renderPaddle(e.num); renderTotals(); renderLevelCounts(); renderSidebar(); renderSummarySheet();
   syncToFirebase();
 }
 
-/* ════════ UNDO ════════ */
-function undoLast() {
+function undoLast(){
   if(!lastAction)return;
   const e=log[lastAction.logIdx];
   if(lastAction.type==='add') e.voided=true;
   else if(lastAction.type==='void') e.voided=false;
   else if(lastAction.type==='unvoid') e.voided=true;
   lastAction=null;
-  renderPaddle(e.num); renderTotals(); renderLevelCounts(); renderSummary();
+  renderPaddle(e.num); renderTotals(); renderLevelCounts(); renderSidebar(); renderSummarySheet();
   syncToFirebase();
 }
 
-/* ════════ EXPORT ════════ */
-function exportCSV() {
+/* ════ MODE TOGGLE (grid ↔ numpad) ════ */
+function toggleMode(prefix) {
+  numpadModes[prefix] = !numpadModes[prefix];
+  const btn=document.getElementById(prefix+'-mode-toggle');
+  const label=document.getElementById(prefix+'-mode-label');
+  const isOn=numpadModes[prefix];
+  if(isOn){ btn.classList.add('on'); label.textContent='Numpad'; }
+  else { btn.classList.remove('on'); label.textContent='Grid'; }
+
+  if(prefix==='d'){
+    const pArea=document.getElementById('d-paddle-area');
+    const nPane=document.getElementById('d-numpad-pane');
+    const lTabs=document.getElementById('d-loc-tabs');
+    if(isOn){ pArea.style.display='none'; nPane.classList.add('active'); lTabs.style.display='none'; }
+    else { pArea.style.display='flex'; pArea.style.flexDirection='column'; pArea.style.overflow='hidden'; nPane.classList.remove('active'); if(activeLocs.length>1) lTabs.style.display=''; }
+  } else {
+    const pArea=document.getElementById('m-paddle-area');
+    const nPane=document.getElementById('m-numpad-pane');
+    const lTabs=document.getElementById('m-loc-tabs');
+    if(isOn){ pArea.style.display='none'; nPane.classList.add('active'); lTabs.style.display='none'; }
+    else { pArea.style.display=''; nPane.classList.remove('active'); if(activeLocs.length>1) lTabs.style.display=''; }
+  }
+  numpadValues[prefix]='';
+  updateNumpadDisplay(prefix);
+}
+
+/* ════ NUMPAD ════ */
+function numpadKey(prefix,digit){ if(numpadValues[prefix].length>=3)return; numpadValues[prefix]+=digit; updateNumpadDisplay(prefix); }
+function numpadBack(prefix){ numpadValues[prefix]=numpadValues[prefix].slice(0,-1); updateNumpadDisplay(prefix); }
+function numpadClear(prefix){ numpadValues[prefix]=''; updateNumpadDisplay(prefix); }
+
+function getValidPaddleNums(){
+  const s=new Set();
+  activeLocs.forEach(loc=>LOC_CONFIG[loc].cols.forEach(col=>col.groups.forEach(g=>{for(let n=g.start;n<=g.end;n++)s.add(n);})));
+  return s;
+}
+
+function updateNumpadDisplay(prefix){
+  const display=document.getElementById(prefix+'-numpad-display');
+  const status=document.getElementById(prefix+'-numpad-status');
+  const raiseBtn=document.getElementById(prefix+'-numpad-raise');
+  if(!display)return;
+  const val=numpadValues[prefix];
+  if(!val){
+    display.textContent='_ _ _'; display.className='numpad-display-num placeholder';
+    status.innerHTML=''; raiseBtn.className='numpad-key key-raise disabled'; raiseBtn.textContent='Raise'; return;
+  }
+  const num=parseInt(val,10);
+  display.textContent=val; display.className='numpad-display-num has-value';
+  if(!getValidPaddleNums().has(num)){
+    status.innerHTML='<span style="color:#B91C1C;font-weight:600">⚠ Not a valid paddle number</span>';
+    raiseBtn.className='numpad-key key-raise disabled'; raiseBtn.textContent='Raise'; return;
+  }
+  if(!activeLevel){
+    status.innerHTML='<span style="color:#D97706;font-weight:600">⚠ Select a giving level first</span>';
+    raiseBtn.className='numpad-key key-raise disabled'; raiseBtn.textContent='Raise'; return;
+  }
+  const h=HEX[activeLevel]; const lvl=LEVELS.find(l=>l.id===activeLevel);
+  const already=isPaddleActive(num,activeLevel);
+  status.innerHTML='<span style="background:'+h.bg+';color:'+h.c+';padding:2px 8px;border-radius:4px;border:1px solid '+h.bd+'">'+(already?num+' raised at '+lvl.label+' — tap to remove':lvl.label+' selected')+'</span>';
+  raiseBtn.className='numpad-key key-raise'+(already?' already-raised':'');
+  raiseBtn.textContent=already?'✕ Remove Paddle '+num:'✔ Raise Paddle '+num;
+}
+
+function numpadRaise(prefix){
+  const val=numpadValues[prefix]; const num=parseInt(val,10);
+  if(!num||!activeLevel||!getValidPaddleNums().has(num))return;
+  togglePaddle(num);
+  const recent=document.getElementById(prefix+'-numpad-recent');
+  const h=HEX[activeLevel]; const lvl=LEVELS.find(l=>l.id===activeLevel);
+  recent.innerHTML='Last: <span style="background:'+h.bg+';color:'+h.c+';padding:1px 7px;border-radius:4px;border:1px solid '+h.bd+';font-family:DM Mono,monospace;font-weight:700;">'+num+' @ '+lvl.label+'</span>';
+  numpadValues[prefix]=''; updateNumpadDisplay(prefix);
+}
+
+/* ════ EXPORT ════ */
+function exportCSV(){
   const rows=[['Operator','Paddle Number','Level','Amount','Timestamp','Status']];
   log.forEach(e=>{
     const lvl=LEVELS.find(l=>l.id===e.levelId);
@@ -823,162 +1054,42 @@ function exportCSV() {
   const now=new Date();
   const stamp=now.getFullYear()+String(now.getMonth()+1).padStart(2,'0')+String(now.getDate()).padStart(2,'0')+'_'+String(now.getHours()).padStart(2,'0')+String(now.getMinutes()).padStart(2,'0');
   a.href=url; a.download='paddle_raise_'+operatorName.replace(/\s+/g,'_')+'_'+stamp+'.csv'; a.click();
-  URL.revokeObjectURL(url);
-  showToast('CSV exported!');
+  URL.revokeObjectURL(url); showToast('CSV exported!');
 }
 
-/* ════════ TOAST / FLASH / RESET ════════ */
-function showToast(msg) {
+/* ════ TOAST / FLASH / RESET ════ */
+function showToast(msg){
   document.getElementById('toast-msg').textContent=msg;
   document.getElementById('toast').classList.add('show');
   if(toastTimer)clearTimeout(toastTimer);
   toastTimer=setTimeout(()=>document.getElementById('toast').classList.remove('show'),3000);
 }
-
-function flashBar() {
-  const bar=document.getElementById('active-bar');
-  bar.className='active-bar'; bar.style.borderColor='#FCA5A5'; bar.style.background='#FEF2F2';
-  bar.innerHTML='<span style="color:#B91C1C;font-weight:600">⚠ Select a giving level first</span>';
-  setTimeout(()=>{if(!activeLevel){bar.className='active-bar empty';bar.style.borderColor='';bar.style.background='';bar.innerHTML='Select a giving level';}},2200);
+function flashBars(){
+  [
+    {id:'d-active-status', dflt:'active-status empty', msg:'⚠ Select a giving level above'},
+    {id:'m-active-bar',    dflt:'m-active-bar empty',  msg:'⚠ Select a giving level first'},
+  ].forEach(({id,dflt,msg})=>{
+    const el=document.getElementById(id); if(!el)return;
+    el.className=id.startsWith('d')?'active-status':'m-active-bar';
+    el.style.borderColor='#FCA5A5'; el.style.background='#FEF2F2';
+    el.innerHTML='<span style="color:#B91C1C;font-weight:600">'+msg+'</span>';
+    setTimeout(()=>{if(!activeLevel){el.className=dflt;el.style.borderColor='';el.style.background='';el.innerHTML=msg.replace('⚠ ','');}},2200);
+  });
 }
-
 function openReset(){document.getElementById('modal').classList.add('show');}
 function closeReset(){document.getElementById('modal').classList.remove('show');}
 function confirmReset(){
   log=[];
-  document.querySelectorAll('.paddle-btn').forEach(b=>renderPaddle(parseInt(b.id.slice(1))));
+  document.querySelectorAll('.paddle-btn').forEach(b=>{
+    const num=parseInt(b.id.replace(/[^\d]/g,''),10); if(num) renderPaddle(num);
+  });
   activeLevel=null; selectLevel(null);
-  renderTotals(); renderLevelCounts(); renderSummary(); closeReset();
+  renderTotals(); renderLevelCounts(); renderSidebar(); renderSummarySheet(); closeReset();
   syncToFirebase();
 }
 
-/* ════════ MODE TOGGLE (grid ↔ numpad) ════════ */
-let numpadMode = false;
-let numpadValue = '';
-
-function toggleMode() {
-  numpadMode = !numpadMode;
-  const btn = document.getElementById('mode-toggle-btn');
-  const label = document.getElementById('mode-label');
-  const paddleArea = document.getElementById('paddle-area');
-  const numpadArea = document.getElementById('numpad-area');
-  const locTabBar = document.getElementById('loc-tab-bar');
-
-  if (numpadMode) {
-    btn.classList.add('on');
-    label.textContent = 'Numpad';
-    paddleArea.style.display = 'none';
-    locTabBar.style.display = 'none';
-    numpadArea.classList.add('active');
-    numpadValue = '';
-    updateNumpadDisplay();
-  } else {
-    btn.classList.remove('on');
-    label.textContent = 'Grid';
-    paddleArea.style.display = '';
-    if (activeLocs.length > 1) locTabBar.style.display = '';
-    numpadArea.classList.remove('active');
-  }
-}
-
-function numpadKey(digit) {
-  if (numpadValue.length >= 3) return;
-  numpadValue += digit;
-  updateNumpadDisplay();
-}
-
-function numpadBack() {
-  numpadValue = numpadValue.slice(0, -1);
-  updateNumpadDisplay();
-}
-
-function numpadClear() {
-  numpadValue = '';
-  updateNumpadDisplay();
-}
-
-function updateNumpadDisplay() {
-  const display = document.getElementById('numpad-display');
-  const status  = document.getElementById('numpad-status');
-  const raiseBtn = document.getElementById('numpad-raise-btn');
-
-  if (!numpadValue) {
-    display.textContent = '_ _ _';
-    display.className = 'numpad-display-num placeholder';
-    status.innerHTML = '';
-    raiseBtn.className = 'numpad-key key-raise disabled';
-    raiseBtn.textContent = 'Raise';
-    return;
-  }
-
-  const num = parseInt(numpadValue, 10);
-  display.textContent = numpadValue;
-  display.className = 'numpad-display-num has-value';
-
-  // Validate range
-  const validNums = getValidPaddleNums();
-  const inRange = validNums.has(num);
-
-  if (!inRange) {
-    status.innerHTML = '<span style="color:#B91C1C;font-weight:600">⚠ Not a valid paddle number</span>';
-    raiseBtn.className = 'numpad-key key-raise disabled';
-    raiseBtn.textContent = 'Raise';
-    return;
-  }
-
-  if (!activeLevel) {
-    status.innerHTML = '<span style="color:#D97706;font-weight:600">⚠ Select a giving level first</span>';
-    raiseBtn.className = 'numpad-key key-raise disabled';
-    raiseBtn.textContent = 'Raise';
-    return;
-  }
-
-  // Check if already raised at this level
-  const alreadyRaised = isPaddleActive(num, activeLevel);
-  const lvl = LEVELS.find(l => l.id === activeLevel);
-  const h = HEX[activeLevel];
-
-  if (alreadyRaised) {
-    status.innerHTML = '<span style="background:'+h.bg+';color:'+h.c+';padding:2px 8px;border-radius:4px;border:1px solid '+h.bd+'">'+num+' already raised at '+lvl.label+' — tap to remove</span>';
-    raiseBtn.className = 'numpad-key key-raise already-raised';
-    raiseBtn.textContent = '✕ Remove Paddle '+num;
-  } else {
-    status.innerHTML = '<span style="background:'+h.bg+';color:'+h.c+';padding:2px 8px;border-radius:4px;border:1px solid '+h.bd+'">'+lvl.label+' selected</span>';
-    raiseBtn.className = 'numpad-key key-raise';
-    raiseBtn.textContent = '✔ Raise Paddle '+num;
-  }
-}
-
-function getValidPaddleNums() {
-  const s = new Set();
-  activeLocs.forEach(loc => {
-    LOC_CONFIG[loc].cols.forEach(col => {
-      col.groups.forEach(g => { for(let n=g.start;n<=g.end;n++) s.add(n); });
-    });
-  });
-  return s;
-}
-
-function numpadRaise() {
-  const num = parseInt(numpadValue, 10);
-  if (!num || !activeLevel) return;
-  if (!getValidPaddleNums().has(num)) return;
-
-  togglePaddle(num);
-
-  // Show recent entry
-  const recent = document.getElementById('numpad-recent');
-  const lvl = LEVELS.find(l => l.id === activeLevel);
-  const h = HEX[activeLevel];
-  recent.innerHTML = 'Last: <span style="background:'+h.bg+';color:'+h.c+';padding:1px 7px;border-radius:4px;border:1px solid '+h.bd+';font-family:DM Mono,monospace;font-weight:700;">'+num+' @ '+lvl.label+'</span>';
-
-  // Clear input for next entry
-  numpadValue = '';
-  updateNumpadDisplay();
-}
-
-/* ════════ FIREBASE SYNC ════════ */
-function syncToFirebase() {
+/* ════ FIREBASE SYNC ════ */
+function syncToFirebase(){
   if(!window._fbReady)return;
   window._fbSyncLog(log.map(e=>Object.assign({},e,{ts:e.ts?e.ts.toISOString():null})));
 }
@@ -1009,14 +1120,15 @@ var _db=firebase.database();
 var _sessionId=_db.ref('sessions').push().key;
 
 function setFbStatus(state,label){
-  var el=document.getElementById('fb-status');
-  var lb=document.getElementById('fb-label');
-  if(!el)return;
-  el.className='fb-status '+state;
-  lb.textContent=label;
+  ['d','m'].forEach(function(p){
+    var el=document.getElementById('fb-status-'+p);
+    var lb=document.getElementById('fb-label-'+p);
+    if(el){ el.className='fb-status '+state; }
+    if(lb){ lb.textContent=label; }
+  });
 }
 _db.ref('.info/connected').on('value',function(snap){
-  setFbStatus(snap.val()===true?'connected':'syncing',snap.val()===true?'● Live':'○ Reconnecting');
+  setFbStatus(snap.val()===true?'connected':'syncing',snap.val()===true?'● Live':'○ Connecting');
 });
 window._fbReady=true;
 window._fbInitSession=function(operator,locations){
