@@ -135,8 +135,82 @@ body { height:100%; font-family:'DM Sans',sans-serif; background:var(--bg); colo
   cursor:pointer; -webkit-appearance:none;
 }
 
-/* ── LOCATION TABS ── */
-.loc-tab-bar {
+/* ── MODE TOGGLE ── */
+.mode-toggle {
+  display:flex; align-items:center; gap:8px; flex-shrink:0;
+}
+.mode-toggle-label { font-size:.68rem; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:.08em; white-space:nowrap; }
+.toggle-track {
+  width:42px; height:24px; background:#D1D5DB; border-radius:12px;
+  position:relative; cursor:pointer; transition:background .2s; flex-shrink:0;
+  border:none; padding:0; -webkit-appearance:none;
+}
+.toggle-track.on { background:var(--ink); }
+.toggle-thumb {
+  position:absolute; top:3px; left:3px;
+  width:18px; height:18px; border-radius:50%; background:#fff;
+  box-shadow:0 1px 4px rgba(0,0,0,.3); transition:transform .2s;
+  pointer-events:none;
+}
+.toggle-track.on .toggle-thumb { transform:translateX(18px); }
+
+/* ── NUMPAD MODE ── */
+.numpad-area {
+  flex:1; display:none; flex-direction:column; align-items:center;
+  justify-content:center; padding:12px 16px 80px; gap:10px;
+  overflow-y:auto; -webkit-overflow-scrolling:touch;
+}
+.numpad-area.active { display:flex; }
+
+.numpad-display {
+  width:100%; max-width:340px;
+  background:var(--white); border:2px solid var(--border); border-radius:12px;
+  padding:12px 16px; display:flex; flex-direction:column; gap:4px;
+}
+.numpad-display-label { font-size:.6rem; text-transform:uppercase; letter-spacing:.12em; color:var(--muted); font-weight:700; }
+.numpad-display-num {
+  font-family:'DM Mono',monospace; font-size:2.2rem; font-weight:700;
+  color:var(--ink); letter-spacing:.08em; min-height:48px;
+  display:flex; align-items:center;
+}
+.numpad-display-num.has-value { color:var(--ink); }
+.numpad-display-num.placeholder { color:#D1D5DB; }
+.numpad-status {
+  font-size:.75rem; font-weight:600; min-height:20px;
+  display:flex; align-items:center; gap:5px;
+}
+
+.numpad-grid {
+  display:grid; grid-template-columns:repeat(3, 1fr);
+  gap:8px; width:100%; max-width:340px;
+}
+.numpad-key {
+  font-family:'DM Mono',monospace; font-size:1.4rem; font-weight:600;
+  padding:0; height:68px; border:1.5px solid var(--border); border-radius:12px;
+  background:var(--white); color:var(--ink); cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  -webkit-appearance:none; transition:background .1s;
+  box-shadow:0 1px 3px rgba(0,0,0,.08);
+}
+.numpad-key:active { background:#F3F4F6; transform:scale(.97); }
+.numpad-key.key-back { font-size:1.2rem; color:var(--muted); }
+.numpad-key.key-clear { font-size:.78rem; font-weight:700; letter-spacing:.04em; color:#B91C1C; background:#FEF2F2; border-color:#FCA5A5; }
+.numpad-key.key-raise {
+  grid-column:span 3; height:58px; font-size:1rem; font-weight:800;
+  letter-spacing:.06em; background:var(--ink); color:#fff; border-color:var(--ink);
+  border-radius:14px; text-transform:uppercase;
+}
+.numpad-key.key-raise:active { background:#374151; }
+.numpad-key.key-raise.disabled { background:#D1D5DB; border-color:#D1D5DB; color:#fff; cursor:not-allowed; }
+.numpad-key.key-raise.already-raised { background:#047857; border-color:#047857; }
+.numpad-key.key-raise.already-raised:active { background:#065f46; }
+
+.numpad-recent {
+  width:100%; max-width:340px;
+  font-size:.72rem; color:var(--muted); text-align:center;
+  min-height:20px;
+}
+
   display:flex; gap:0; border-bottom:2px solid var(--border);
   flex-shrink:0; background:var(--bg);
 }
@@ -317,6 +391,12 @@ body { height:100%; font-family:'DM Sans',sans-serif; background:var(--bg); colo
         <span class="total-pill-label">Total</span>
         <span class="total-pill-val" id="total-val">$0</span>
       </div>
+      <div class="mode-toggle">
+        <span class="mode-toggle-label" id="mode-label">Grid</span>
+        <button class="toggle-track" id="mode-toggle-btn" onclick="toggleMode()" aria-label="Switch input mode">
+          <div class="toggle-thumb"></div>
+        </button>
+      </div>
     </div>
     <!-- Level buttons -->
     <div class="level-row" id="level-buttons"></div>
@@ -332,8 +412,33 @@ body { height:100%; font-family:'DM Sans',sans-serif; background:var(--bg); colo
   <!-- Location tabs -->
   <div class="loc-tab-bar" id="loc-tab-bar"></div>
 
-  <!-- Paddle area -->
+  <!-- Grid mode paddle area -->
   <div class="paddle-area" id="paddle-area"></div>
+
+  <!-- Numpad mode -->
+  <div class="numpad-area" id="numpad-area">
+    <div class="numpad-display">
+      <span class="numpad-display-label">Paddle Number</span>
+      <div class="numpad-display-num placeholder" id="numpad-display">_ _ _</div>
+      <div class="numpad-status" id="numpad-status"></div>
+    </div>
+    <div class="numpad-grid">
+      <button class="numpad-key" onclick="numpadKey('1')">1</button>
+      <button class="numpad-key" onclick="numpadKey('2')">2</button>
+      <button class="numpad-key" onclick="numpadKey('3')">3</button>
+      <button class="numpad-key" onclick="numpadKey('4')">4</button>
+      <button class="numpad-key" onclick="numpadKey('5')">5</button>
+      <button class="numpad-key" onclick="numpadKey('6')">6</button>
+      <button class="numpad-key" onclick="numpadKey('7')">7</button>
+      <button class="numpad-key" onclick="numpadKey('8')">8</button>
+      <button class="numpad-key" onclick="numpadKey('9')">9</button>
+      <button class="numpad-key key-clear" onclick="numpadClear()">CLR</button>
+      <button class="numpad-key" onclick="numpadKey('0')">0</button>
+      <button class="numpad-key key-back" onclick="numpadBack()">⌫</button>
+      <button class="numpad-key key-raise disabled" id="numpad-raise-btn" onclick="numpadRaise()">Raise</button>
+    </div>
+    <div class="numpad-recent" id="numpad-recent"></div>
+  </div>
 
 </div>
 
@@ -571,6 +676,8 @@ function selectLevel(id) {
     bar.className='active-bar empty'; bar.style.borderColor=''; bar.style.background='';
     bar.innerHTML='Select a giving level';
   }
+  // Update numpad if in numpad mode
+  if (numpadMode) updateNumpadDisplay();
 }
 
 /* ════════ TOGGLE PADDLE ════════ */
@@ -743,6 +850,131 @@ function confirmReset(){
   activeLevel=null; selectLevel(null);
   renderTotals(); renderLevelCounts(); renderSummary(); closeReset();
   syncToFirebase();
+}
+
+/* ════════ MODE TOGGLE (grid ↔ numpad) ════════ */
+let numpadMode = false;
+let numpadValue = '';
+
+function toggleMode() {
+  numpadMode = !numpadMode;
+  const btn = document.getElementById('mode-toggle-btn');
+  const label = document.getElementById('mode-label');
+  const paddleArea = document.getElementById('paddle-area');
+  const numpadArea = document.getElementById('numpad-area');
+  const locTabBar = document.getElementById('loc-tab-bar');
+
+  if (numpadMode) {
+    btn.classList.add('on');
+    label.textContent = 'Numpad';
+    paddleArea.style.display = 'none';
+    locTabBar.style.display = 'none';
+    numpadArea.classList.add('active');
+    numpadValue = '';
+    updateNumpadDisplay();
+  } else {
+    btn.classList.remove('on');
+    label.textContent = 'Grid';
+    paddleArea.style.display = '';
+    if (activeLocs.length > 1) locTabBar.style.display = '';
+    numpadArea.classList.remove('active');
+  }
+}
+
+function numpadKey(digit) {
+  if (numpadValue.length >= 3) return;
+  numpadValue += digit;
+  updateNumpadDisplay();
+}
+
+function numpadBack() {
+  numpadValue = numpadValue.slice(0, -1);
+  updateNumpadDisplay();
+}
+
+function numpadClear() {
+  numpadValue = '';
+  updateNumpadDisplay();
+}
+
+function updateNumpadDisplay() {
+  const display = document.getElementById('numpad-display');
+  const status  = document.getElementById('numpad-status');
+  const raiseBtn = document.getElementById('numpad-raise-btn');
+
+  if (!numpadValue) {
+    display.textContent = '_ _ _';
+    display.className = 'numpad-display-num placeholder';
+    status.innerHTML = '';
+    raiseBtn.className = 'numpad-key key-raise disabled';
+    raiseBtn.textContent = 'Raise';
+    return;
+  }
+
+  const num = parseInt(numpadValue, 10);
+  display.textContent = numpadValue;
+  display.className = 'numpad-display-num has-value';
+
+  // Validate range
+  const validNums = getValidPaddleNums();
+  const inRange = validNums.has(num);
+
+  if (!inRange) {
+    status.innerHTML = '<span style="color:#B91C1C;font-weight:600">⚠ Not a valid paddle number</span>';
+    raiseBtn.className = 'numpad-key key-raise disabled';
+    raiseBtn.textContent = 'Raise';
+    return;
+  }
+
+  if (!activeLevel) {
+    status.innerHTML = '<span style="color:#D97706;font-weight:600">⚠ Select a giving level first</span>';
+    raiseBtn.className = 'numpad-key key-raise disabled';
+    raiseBtn.textContent = 'Raise';
+    return;
+  }
+
+  // Check if already raised at this level
+  const alreadyRaised = isPaddleActive(num, activeLevel);
+  const lvl = LEVELS.find(l => l.id === activeLevel);
+  const h = HEX[activeLevel];
+
+  if (alreadyRaised) {
+    status.innerHTML = '<span style="background:'+h.bg+';color:'+h.c+';padding:2px 8px;border-radius:4px;border:1px solid '+h.bd+'">'+num+' already raised at '+lvl.label+' — tap to remove</span>';
+    raiseBtn.className = 'numpad-key key-raise already-raised';
+    raiseBtn.textContent = '✕ Remove Paddle '+num;
+  } else {
+    status.innerHTML = '<span style="background:'+h.bg+';color:'+h.c+';padding:2px 8px;border-radius:4px;border:1px solid '+h.bd+'">'+lvl.label+' selected</span>';
+    raiseBtn.className = 'numpad-key key-raise';
+    raiseBtn.textContent = '✔ Raise Paddle '+num;
+  }
+}
+
+function getValidPaddleNums() {
+  const s = new Set();
+  activeLocs.forEach(loc => {
+    LOC_CONFIG[loc].cols.forEach(col => {
+      col.groups.forEach(g => { for(let n=g.start;n<=g.end;n++) s.add(n); });
+    });
+  });
+  return s;
+}
+
+function numpadRaise() {
+  const num = parseInt(numpadValue, 10);
+  if (!num || !activeLevel) return;
+  if (!getValidPaddleNums().has(num)) return;
+
+  togglePaddle(num);
+
+  // Show recent entry
+  const recent = document.getElementById('numpad-recent');
+  const lvl = LEVELS.find(l => l.id === activeLevel);
+  const h = HEX[activeLevel];
+  recent.innerHTML = 'Last: <span style="background:'+h.bg+';color:'+h.c+';padding:1px 7px;border-radius:4px;border:1px solid '+h.bd+';font-family:DM Mono,monospace;font-weight:700;">'+num+' @ '+lvl.label+'</span>';
+
+  // Clear input for next entry
+  numpadValue = '';
+  updateNumpadDisplay();
 }
 
 /* ════════ FIREBASE SYNC ════════ */
