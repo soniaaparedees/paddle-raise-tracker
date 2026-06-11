@@ -136,48 +136,23 @@ html, body { height:100%; font-family:'DM Sans',sans-serif; background:var(--bg)
 .numpad-pane.active { display:flex; }
 .numpad-display { width:100%; max-width:340px; background:var(--white); border:2px solid var(--border); border-radius:12px; padding:12px 16px; display:flex; flex-direction:column; gap:4px; }
 .numpad-display-label { font-size:.6rem; text-transform:uppercase; letter-spacing:.12em; color:var(--muted); font-weight:700; }
-.numpad-display-num { font-family:'DM Mono',monospace; font-size:2.2rem; font-weight:700; letter-spacing:.08em; min-height:48px; display:flex; align-items:center; }
+.numpad-display-num { font-family:'DM Mono',monospace; font-size:1.8rem; font-weight:700; letter-spacing:.08em; min-height:40px; display:flex; align-items:center; }
 .numpad-display-num.placeholder { color:#D1D5DB; }
-.numpad-status { font-size:.75rem; font-weight:600; min-height:20px; display:flex; align-items:center; gap:5px; }
-.numpad-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; width:100%; max-width:340px; }
-.numpad-key { font-family:'DM Mono',monospace; font-size:1.4rem; font-weight:600; height:64px; border:1.5px solid var(--border); border-radius:12px; background:var(--white); color:var(--ink); cursor:pointer; display:flex; align-items:center; justify-content:center; -webkit-appearance:none; box-shadow:0 1px 3px rgba(0,0,0,.08); }
+.numpad-status { font-size:.72rem; font-weight:600; min-height:18px; display:flex; align-items:center; gap:5px; }
+.numpad-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; width:100%; max-width:280px; }
+.numpad-key { font-family:'DM Mono',monospace; font-size:1.15rem; font-weight:600; height:50px; border:1.5px solid var(--border); border-radius:10px; background:var(--white); color:var(--ink); cursor:pointer; display:flex; align-items:center; justify-content:center; -webkit-appearance:none; box-shadow:0 1px 2px rgba(0,0,0,.07); }
 .numpad-key:active { background:#F3F4F6; transform:scale(.97); }
-.numpad-key.key-back { font-size:1.1rem; color:var(--muted); }
-.numpad-key.key-clear { font-size:.76rem; font-weight:700; letter-spacing:.04em; color:#B91C1C; background:#FEF2F2; border-color:#FCA5A5; }
-.numpad-key.key-raise { grid-column:span 3; height:56px; font-size:.95rem; font-weight:800; letter-spacing:.05em; background:var(--ink); color:#fff; border-color:var(--ink); border-radius:12px; text-transform:uppercase; }
+.numpad-key.key-back { font-size:.95rem; color:var(--muted); }
+.numpad-key.key-clear { font-size:.72rem; font-weight:700; letter-spacing:.04em; color:#B91C1C; background:#FEF2F2; border-color:#FCA5A5; }
+.numpad-key.key-raise { grid-column:span 3; height:48px; font-size:.88rem; font-weight:800; letter-spacing:.05em; background:var(--ink); color:#fff; border-color:var(--ink); border-radius:10px; text-transform:uppercase; }
 .numpad-key.key-raise:active { background:#374151; }
 .numpad-key.key-raise.disabled { background:#D1D5DB; border-color:#D1D5DB; cursor:not-allowed; }
 .numpad-key.key-raise.already-raised { background:#047857; border-color:#047857; }
-.numpad-recent { width:100%; max-width:340px; font-size:.72rem; color:var(--muted); text-align:center; min-height:20px; }
+.numpad-recent { width:100%; max-width:280px; font-size:.7rem; color:var(--muted); text-align:center; min-height:18px; }
 
-/* ── ZOOM SLIDER ── */
-.zoom-row {
-  display:flex; align-items:center; gap:8px; flex-shrink:0;
-  padding:3px 0 4px;
-}
-.zoom-icon { font-size:.75rem; color:var(--muted); flex-shrink:0; user-select:none; }
-.zoom-slider {
-  flex:1; -webkit-appearance:none; appearance:none;
-  height:4px; border-radius:2px; background:var(--border); outline:none; cursor:pointer;
-  max-width:220px;
-}
-.zoom-slider::-webkit-slider-thumb {
-  -webkit-appearance:none; width:16px; height:16px;
-  border-radius:50%; background:var(--ink); cursor:pointer;
-  box-shadow:0 1px 4px rgba(0,0,0,.25);
-}
-.zoom-slider::-moz-range-thumb {
-  width:16px; height:16px; border-radius:50%; background:var(--ink);
-  border:none; cursor:pointer;
-}
-.zoom-label {
-  font-family:'DM Mono',monospace; font-size:.62rem; font-weight:600;
-  color:var(--muted); min-width:30px; text-align:right; flex-shrink:0;
-}
-
-/* Paddle grid zoom — controlled via CSS variable on the container */
-.paddle-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(var(--paddle-size, 38px), 1fr)); gap:2px; }
-.paddle-btn { font-size:var(--paddle-font, .72rem); }
+/* Fixed paddle grid */
+.paddle-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(38px,1fr)); gap:2px; }
+.paddle-btn { font-size:.72rem; }
 
 /* Shared modal */
 .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:400; align-items:flex-end; justify-content:center; display:none; }
@@ -266,9 +241,8 @@ html, body { height:100%; font-family:'DM Sans',sans-serif; background:var(--bg)
 .total-pill { background:var(--gold-bg); border:1.5px solid var(--gold-bd); border-radius:8px; padding:4px 12px; text-align:center; flex-shrink:0; }
 .total-pill-label { font-size:.52rem; text-transform:uppercase; letter-spacing:.12em; color:var(--gold); font-weight:700; display:block; }
 .total-pill-val { font-family:'DM Mono',monospace; font-size:1.05rem; font-weight:700; color:var(--gold); }
-.m-level-row { display:flex; gap:5px; overflow-x:auto; padding-bottom:2px; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
-.m-level-row::-webkit-scrollbar { display:none; }
-.m-level-btn { font-size:.82rem; padding:8px 14px; }
+.m-level-row { display:grid; grid-template-columns:repeat(2,1fr); gap:6px; }
+.m-level-btn { font-size:.95rem; padding:11px 10px; }
 .m-active-bar { padding:5px 10px; border-radius:7px; border:1.5px solid var(--border); font-size:.8rem; font-weight:500; background:var(--white); display:flex; align-items:center; gap:7px; min-height:34px; flex-shrink:0; }
 .m-active-bar.empty { color:var(--muted); font-style:italic; font-size:.78rem; justify-content:center; }
 .m-active-bar strong { font-family:'DM Mono',monospace; font-size:.85rem; }
@@ -400,11 +374,6 @@ html, body { height:100%; font-family:'DM Sans',sans-serif; background:var(--bg)
         <button class="d-undo-btn" onclick="undoLast()">↩ Undo</button>
         <button class="d-reset-btn" onclick="openReset()">Reset</button>
       </div>
-      <div class="zoom-row">
-        <span class="zoom-icon">🔍</span>
-        <input class="zoom-slider" id="d-zoom-slider" type="range" min="28" max="64" value="38" oninput="updateZoom('d', this.value)">
-        <span class="zoom-label" id="d-zoom-label">100%</span>
-      </div>
 
       <!-- Location tabs (desktop) -->
       <div class="loc-tab-bar-d" id="d-loc-tabs"></div>
@@ -467,11 +436,6 @@ html, body { height:100%; font-family:'DM Sans',sans-serif; background:var(--bg)
       <button class="m-btn m-btn-reset" onclick="openReset()">Reset</button>
       <button class="m-btn m-btn-export" onclick="exportCSV()">⬇ CSV</button>
       <button class="m-btn m-btn-summary" onclick="openSummary()">📋 <span id="m-count-badge">0</span></button>
-    </div>
-    <div class="zoom-row">
-      <span class="zoom-icon">🔍</span>
-      <input class="zoom-slider" id="m-zoom-slider" type="range" min="28" max="64" value="38" oninput="updateZoom('m', this.value)">
-      <span class="zoom-label" id="m-zoom-label">100%</span>
     </div>
   </div>
 
@@ -1125,24 +1089,6 @@ function confirmReset(){
   activeLevel=null; selectLevel(null);
   renderTotals(); renderLevelCounts(); renderSidebar(); renderSummarySheet(); closeReset();
   syncToFirebase();
-}
-
-/* ════ ZOOM ════ */
-function updateZoom(prefix, val) {
-  const size = parseInt(val, 10);
-  const pct = Math.round((size / 38) * 100);
-  const fontRem = (size * 0.019).toFixed(2); // scales from ~.72rem at 38px
-
-  const label = document.getElementById(prefix + '-zoom-label');
-  if (label) label.textContent = pct + '%';
-
-  // Apply CSS variables to the relevant paddle panes
-  const paneId = prefix === 'd' ? 'd-loc-panes' : 'm-paddle-area';
-  const pane = document.getElementById(paneId);
-  if (pane) {
-    pane.style.setProperty('--paddle-size', size + 'px');
-    pane.style.setProperty('--paddle-font', fontRem + 'rem');
-  }
 }
 
 /* ════ FIREBASE SYNC ════ */
