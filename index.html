@@ -90,7 +90,8 @@ html, body { height:100%; font-family:'DM Sans',sans-serif; background:var(--bg)
 }
 .paddle-btn:active:not(.raised-any) { background:#F3F4F6; }
 .paddle-btn.raised-any { cursor:default; }
-.paddle-btn.raised-l1{background:var(--l1-bg);border-color:var(--l1);color:var(--l1);font-weight:800;}
+.paddle-btn.raised-lc{background:#FCE7F3;border-color:#9D174D;color:#9D174D;font-weight:800;}
+.chip-lc{background:#FCE7F3;color:#9D174D;border-color:#F9A8D4;}
 .paddle-btn.raised-l2{background:var(--l2-bg);border-color:var(--l2);color:var(--l2);font-weight:800;}
 .paddle-btn.raised-l3{background:var(--l3-bg);border-color:var(--l3);color:var(--l3);font-weight:800;}
 .paddle-btn.raised-l4{background:var(--l4-bg);border-color:var(--l4);color:var(--l4);font-weight:800;}
@@ -484,6 +485,23 @@ html, body { height:100%; font-family:'DM Sans',sans-serif; background:var(--bg)
   <div class="sheet-body" id="m-sheet-body"></div>
 </div>
 
+<!-- Custom Amount Modal -->
+<div class="modal-overlay" id="custom-modal">
+  <div class="modal-card">
+    <h3>Custom Amount</h3>
+    <p id="custom-modal-sub" style="margin-bottom:14px;">Enter the giving amount for paddle <strong id="custom-paddle-num"></strong>.</p>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:20px;">
+      <span style="font-family:DM Mono,monospace;font-size:1.3rem;font-weight:700;color:#9D174D;">$</span>
+      <input id="custom-amount-input" type="number" min="1" placeholder="0"
+        style="flex:1;padding:12px 14px;border:2px solid #F9A8D4;border-radius:9px;font-family:DM Mono,monospace;font-size:1.4rem;font-weight:700;color:#9D174D;background:#FCE7F3;-webkit-appearance:none;outline:none;width:100%;">
+    </div>
+    <div class="modal-btns">
+      <button onclick="closeCustomModal()">Cancel</button>
+      <button style="background:#FCE7F3;border-color:#F9A8D4;color:#9D174D;font-weight:700;" onclick="confirmCustomAmount()">Raise Paddle</button>
+    </div>
+  </div>
+</div>
+
 <!-- Shared Reset Modal -->
 <div class="modal-overlay" id="modal">
   <div class="modal-card">
@@ -501,6 +519,7 @@ html, body { height:100%; font-family:'DM Sans',sans-serif; background:var(--bg)
 <script>
 /* ════ CONSTANTS ════ */
 const LEVELS = [
+  { id:'lc', label:'Custom $', value:null },
   { id:'l1', label:'$10,000', value:10000 },
   { id:'l2', label:'$5,000',  value:5000  },
   { id:'l3', label:'$2,500',  value:2500  },
@@ -509,6 +528,7 @@ const LEVELS = [
   { id:'l6', label:'$250',    value:250   },
 ];
 const HEX = {
+  lc:{ c:'#9D174D', bg:'#FCE7F3', bd:'#F9A8D4' },
   l1:{ c:'#B45309', bg:'#FEF3C7', bd:'#FCD34D' },
   l2:{ c:'#1D4ED8', bg:'#DBEAFE', bd:'#93C5FD' },
   l3:{ c:'#B91C1C', bg:'#FEE2E2', bd:'#FCA5A5' },
@@ -814,8 +834,31 @@ function selectLevel(id) {
 }
 
 /* ════ TOGGLE PADDLE ════ */
+let pendingCustomPaddle = null;
+
 function togglePaddle(num) {
   if(!activeLevel){ flashBars(); return; }
+
+  // Custom level — show amount modal instead of direct raise
+  if(activeLevel === 'lc') {
+    if(isPaddleActive(num, 'lc')) {
+      // Already has a custom entry — void the most recent one
+      const idx=[...log].reverse().findIndex(e=>e.num===num&&e.levelId==='lc'&&!e.voided);
+      const real=log.length-1-idx;
+      log[real].voided=true; lastAction={type:'void',logIdx:real};
+      showToast('Paddle '+num+' custom amount removed');
+      renderPaddle(num); renderTotals(); renderLevelCounts(); renderSidebar(); renderSummarySheet();
+      syncToFirebase();
+    } else {
+      pendingCustomPaddle = num;
+      document.getElementById('custom-paddle-num').textContent = '#'+num;
+      document.getElementById('custom-amount-input').value = '';
+      document.getElementById('custom-modal').classList.add('show');
+      setTimeout(()=>document.getElementById('custom-amount-input').focus(), 100);
+    }
+    return;
+  }
+
   const lvl=LEVELS.find(l=>l.id===activeLevel);
   if(isPaddleActive(num,activeLevel)){
     const idx=[...log].reverse().findIndex(e=>e.num===num&&e.levelId===activeLevel&&!e.voided);
@@ -830,6 +873,30 @@ function togglePaddle(num) {
   renderPaddle(num); renderTotals(); renderLevelCounts(); renderSidebar(); renderSummarySheet();
   syncToFirebase();
 }
+
+function closeCustomModal() {
+  document.getElementById('custom-modal').classList.remove('show');
+  pendingCustomPaddle = null;
+}
+
+function confirmCustomAmount() {
+  const raw = document.getElementById('custom-amount-input').value;
+  const amount = parseFloat(raw);
+  if(!amount || amount <= 0) {
+    document.getElementById('custom-amount-input').style.borderColor='#B91C1C';
+    return;
+  }
+  document.getElementById('custom-modal').classList.remove('show');
+  const num = pendingCustomPaddle; pendingCustomPaddle = null;
+  log.push({num, levelId:'lc', voided:false, ts:new Date(), customValue:amount});
+  lastAction={type:'add',logIdx:log.length-1};
+  showToast('Paddle '+num+' raised at $'+amount.toLocaleString()+'!');
+  renderPaddle(num); renderTotals(); renderLevelCounts(); renderSidebar(); renderSummarySheet();
+  syncToFirebase();
+}
+
+// Enter key in custom amount input
+document.getElementById('custom-amount-input').addEventListener('keydown', e=>{ if(e.key==='Enter') confirmCustomAmount(); });
 
 /* ════ RENDER PADDLE ════ */
 function renderPaddle(num) {
@@ -868,7 +935,11 @@ function activeEntries(){return log.filter(e=>!e.voided);}
 /* ════ TOTALS ════ */
 function renderTotals(){
   const active=activeEntries();
-  let total=0; LEVELS.forEach(l=>{total+=active.filter(e=>e.levelId===l.id).length*l.value;});
+  let total=0;
+  active.forEach(e=>{
+    if(e.levelId==='lc') total+=(e.customValue||0);
+    else { const lvl=LEVELS.find(l=>l.id===e.levelId); if(lvl&&lvl.value) total+=lvl.value; }
+  });
   const raised=new Set(active.map(e=>e.num));
   const fmt='$'+total.toLocaleString();
   const dTot=document.getElementById('d-total');
@@ -891,6 +962,21 @@ function renderLevelCounts(){
 }
 
 /* ════ SIDEBAR (desktop) ════ */
+function buildLevelRow(lvl, entries, h) {
+  const isCustom = lvl.id === 'lc';
+  const activeEnts = entries.filter(e=>!e.voided);
+  let subtotal = isCustom
+    ? activeEnts.reduce((s,e)=>s+(e.customValue||0),0)
+    : activeEnts.length * (lvl.value||0);
+  return { subtotal, html: entries.length===0
+    ? '<span class="chip empty-chip">none yet</span>'
+    : entries.map(e=>{
+        const idx=log.indexOf(e);
+        const label = isCustom ? e.num+' $'+(e.customValue||0).toLocaleString() : e.num;
+        return '<span class="chip chip-'+lvl.id+(e.voided?' voided':'')+'" onclick="toggleVoid('+idx+')" title="'+(e.voided?'Restore':'Remove')+'">'+label+'</span>';
+      }).join('') };
+}
+
 function renderSidebar(){
   if(deviceMode!=='desktop') return;
   [
@@ -900,19 +986,14 @@ function renderSidebar(){
   ].forEach(({id,filterFn})=>{
     const container=document.getElementById(id); if(!container)return;
     container.innerHTML='';
-    LEVELS.forEach(lvl=>{
+    // Custom level first, then standard levels
+    const orderedLevels = [LEVELS.find(l=>l.id==='lc'), ...LEVELS.filter(l=>l.id!=='lc')];
+    orderedLevels.forEach(lvl=>{
       const h=HEX[lvl.id];
       const entries=log.filter(e=>e.levelId===lvl.id&&filterFn(e.num));
-      const active=entries.filter(e=>!e.voided).length;
-      const subtotal=active*lvl.value;
+      const { subtotal, html:chips } = buildLevelRow(lvl, entries, h);
       const div=document.createElement('div');
       div.className='level-summary'; div.style.borderLeftColor=h.c;
-      const chips=entries.length===0
-        ?'<span class="chip empty-chip">none yet</span>'
-        :entries.map(e=>{
-            const idx=log.indexOf(e);
-            return '<span class="chip chip-'+lvl.id+(e.voided?' voided':'')+'" onclick="toggleVoid('+idx+')" title="'+(e.voided?'Restore':'Remove')+'">'+e.num+'</span>';
-          }).join('');
       div.innerHTML='<div class="level-summary-head"><div class="level-label-row"><div class="level-dot" style="background:'+h.c+'"></div><span style="color:'+h.c+'">'+lvl.label+'</span></div><div class="level-sub" style="color:'+h.c+'">'+(subtotal>0?'$'+subtotal.toLocaleString():'—')+'</div></div><div class="paddle-chips">'+chips+'</div>';
       container.appendChild(div);
     });
@@ -928,22 +1009,17 @@ function renderSummarySheet(){
   const filterFn=activeSummaryTab==='all'?()=>true:activeSummaryTab==='a'?n=>n>=101&&n<=375:n=>n>=376&&n<=450;
   const body=document.getElementById('m-sheet-body'); if(!body)return;
   body.innerHTML='';
-  LEVELS.forEach(lvl=>{
+  const orderedLevels=[LEVELS.find(l=>l.id==='lc'),...LEVELS.filter(l=>l.id!=='lc')];
+  orderedLevels.forEach(lvl=>{
     const h=HEX[lvl.id];
     const entries=log.filter(e=>e.levelId===lvl.id&&filterFn(e.num));
-    const active=entries.filter(e=>!e.voided).length;
-    const subtotal=active*lvl.value;
+    const { subtotal, html:chips } = buildLevelRow(lvl, entries, h);
     const div=document.createElement('div');
     div.className='sheet-level'; div.style.borderLeftColor=h.c;
-    const chips=entries.length===0
-      ?'<span class="chip empty-chip">none yet</span>'
-      :entries.map(e=>{
-          const idx=log.indexOf(e);
-          return '<span class="chip chip-'+lvl.id+(e.voided?' voided':'')+'" onclick="toggleVoid('+idx+')" title="'+(e.voided?'Restore':'Remove')+'">'+e.num+'</span>';
-        }).join('');
     div.innerHTML='<div class="sheet-level-head"><div class="sheet-level-label"><div class="sheet-level-dot" style="background:'+h.c+'"></div><span style="color:'+h.c+'">'+lvl.label+'</span></div><div class="sheet-level-sub" style="color:'+h.c+'">'+(subtotal>0?'$'+subtotal.toLocaleString():'—')+'</div></div><div class="sheet-chips">'+chips+'</div>';
     body.appendChild(div);
   });
+}
 }
 
 /* ════ VOID / UNDO ════ */
@@ -1046,8 +1122,10 @@ function exportCSV(){
   const rows=[['Operator','Paddle Number','Level','Amount','Timestamp','Status']];
   log.forEach(e=>{
     const lvl=LEVELS.find(l=>l.id===e.levelId);
+    const amount = e.levelId==='lc' ? (e.customValue||0) : lvl.value;
+    const label  = e.levelId==='lc' ? 'Custom $'+(e.customValue||0).toLocaleString() : lvl.label;
     const ts=e.ts?e.ts.toLocaleString('en-US',{month:'2-digit',day:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true}):'';
-    rows.push([operatorName,e.num,lvl.label,lvl.value,ts,e.voided?'Removed':'Active']);
+    rows.push([operatorName,e.num,label,amount,ts,e.voided?'Removed':'Active']);
   });
   if(rows.length===1){showToast('No entries to export yet.');return;}
   const csv=rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n');
