@@ -150,8 +150,37 @@ html, body { height:100%; font-family:'DM Sans',sans-serif; background:var(--bg)
 .numpad-key.key-raise.already-raised { background:#047857; border-color:#047857; }
 .numpad-recent { width:100%; max-width:340px; font-size:.72rem; color:var(--muted); text-align:center; min-height:20px; }
 
+/* ── ZOOM SLIDER ── */
+.zoom-row {
+  display:flex; align-items:center; gap:8px; flex-shrink:0;
+  padding:3px 0 4px;
+}
+.zoom-icon { font-size:.75rem; color:var(--muted); flex-shrink:0; user-select:none; }
+.zoom-slider {
+  flex:1; -webkit-appearance:none; appearance:none;
+  height:4px; border-radius:2px; background:var(--border); outline:none; cursor:pointer;
+  max-width:220px;
+}
+.zoom-slider::-webkit-slider-thumb {
+  -webkit-appearance:none; width:16px; height:16px;
+  border-radius:50%; background:var(--ink); cursor:pointer;
+  box-shadow:0 1px 4px rgba(0,0,0,.25);
+}
+.zoom-slider::-moz-range-thumb {
+  width:16px; height:16px; border-radius:50%; background:var(--ink);
+  border:none; cursor:pointer;
+}
+.zoom-label {
+  font-family:'DM Mono',monospace; font-size:.62rem; font-weight:600;
+  color:var(--muted); min-width:30px; text-align:right; flex-shrink:0;
+}
+
+/* Paddle grid zoom — controlled via CSS variable on the container */
+.paddle-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(var(--paddle-size, 38px), 1fr)); gap:2px; }
+.paddle-btn { font-size:var(--paddle-font, .72rem); }
+
 /* Shared modal */
-.modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:400; align-items:flex-end; justify-content:center; }
+.modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:400; align-items:flex-end; justify-content:center; display:none; }
 .modal-overlay.show { display:flex; }
 .modal-card { background:var(--white); border-radius:18px 18px 0 0; padding:28px 24px 36px; width:100%; max-width:480px; box-shadow:0 -8px 32px rgba(0,0,0,.15); }
 .modal-card h3 { font-family:'Playfair Display',serif; font-size:1.1rem; color:var(--ink); margin-bottom:8px; }
@@ -371,6 +400,11 @@ html, body { height:100%; font-family:'DM Sans',sans-serif; background:var(--bg)
         <button class="d-undo-btn" onclick="undoLast()">↩ Undo</button>
         <button class="d-reset-btn" onclick="openReset()">Reset</button>
       </div>
+      <div class="zoom-row">
+        <span class="zoom-icon">🔍</span>
+        <input class="zoom-slider" id="d-zoom-slider" type="range" min="28" max="64" value="38" oninput="updateZoom('d', this.value)">
+        <span class="zoom-label" id="d-zoom-label">100%</span>
+      </div>
 
       <!-- Location tabs (desktop) -->
       <div class="loc-tab-bar-d" id="d-loc-tabs"></div>
@@ -433,6 +467,11 @@ html, body { height:100%; font-family:'DM Sans',sans-serif; background:var(--bg)
       <button class="m-btn m-btn-reset" onclick="openReset()">Reset</button>
       <button class="m-btn m-btn-export" onclick="exportCSV()">⬇ CSV</button>
       <button class="m-btn m-btn-summary" onclick="openSummary()">📋 <span id="m-count-badge">0</span></button>
+    </div>
+    <div class="zoom-row">
+      <span class="zoom-icon">🔍</span>
+      <input class="zoom-slider" id="m-zoom-slider" type="range" min="28" max="64" value="38" oninput="updateZoom('m', this.value)">
+      <span class="zoom-label" id="m-zoom-label">100%</span>
     </div>
   </div>
 
@@ -1086,6 +1125,24 @@ function confirmReset(){
   activeLevel=null; selectLevel(null);
   renderTotals(); renderLevelCounts(); renderSidebar(); renderSummarySheet(); closeReset();
   syncToFirebase();
+}
+
+/* ════ ZOOM ════ */
+function updateZoom(prefix, val) {
+  const size = parseInt(val, 10);
+  const pct = Math.round((size / 38) * 100);
+  const fontRem = (size * 0.019).toFixed(2); // scales from ~.72rem at 38px
+
+  const label = document.getElementById(prefix + '-zoom-label');
+  if (label) label.textContent = pct + '%';
+
+  // Apply CSS variables to the relevant paddle panes
+  const paneId = prefix === 'd' ? 'd-loc-panes' : 'm-paddle-area';
+  const pane = document.getElementById(paneId);
+  if (pane) {
+    pane.style.setProperty('--paddle-size', size + 'px');
+    pane.style.setProperty('--paddle-font', fontRem + 'rem');
+  }
 }
 
 /* ════ FIREBASE SYNC ════ */
