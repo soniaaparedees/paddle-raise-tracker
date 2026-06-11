@@ -650,15 +650,15 @@ function initDesktop() {
   const locPanesWrap = document.getElementById('d-loc-panes');
 
   if (desktopLayout === 'split' && activeLocs.length > 1) {
-    // Split: both locations side by side, no tabs needed
+    // Split: both locations stacked top/bottom, no tabs needed
     locTabBar.style.display = 'none';
-    locPanesWrap.style.cssText = 'display:flex;flex-direction:row;flex:1;overflow:hidden;height:100%;';
+    locPanesWrap.style.cssText = 'display:flex;flex-direction:column;flex:1;overflow:hidden;height:100%;';
 
     activeLocs.forEach((loc, i) => {
       const panel = document.createElement('div');
-      // loc A gets 2/3, loc B gets 1/3
+      // loc A gets 2/3 height, loc B gets 1/3
       const flexVal = loc === 'a' ? '2' : '1';
-      panel.style.cssText = 'flex:'+flexVal+';display:flex;flex-direction:column;overflow:hidden;border-right:'+(i<activeLocs.length-1?'2px solid var(--border)':'none')+';';
+      panel.style.cssText = 'flex:'+flexVal+';display:flex;flex-direction:column;overflow:hidden;border-bottom:'+(i<activeLocs.length-1?'2px solid var(--border)':'none')+';min-height:0;';
       panel.id = 'd-lpanel-'+loc;
 
       // Panel header label
