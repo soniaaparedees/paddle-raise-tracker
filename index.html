@@ -72,7 +72,10 @@ html, body { height:100%; font-family:'DM Sans',sans-serif; background:var(--bg)
   opacity:0; transition:opacity .12s;
 }
 .level-btn[data-count]:not([data-count="0"])::after { opacity:1; }
-.level-btn.active { transform:translateY(-1px); box-shadow:0 3px 10px rgba(0,0,0,.15); }
+.level-btn.active { transform:translateY(-2px); box-shadow:0 4px 16px rgba(0,0,0,.2); outline:3px solid currentColor; outline-offset:2px; }
+@keyframes lvl-pulse { 0%,100%{outline-width:3px;outline-offset:2px;} 50%{outline-width:3px;outline-offset:4px;} }
+.level-btn.active { animation:lvl-pulse 1.6s ease-in-out infinite; }
+@keyframes shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-5px)} 40%{transform:translateX(5px)} 60%{transform:translateX(-4px)} 80%{transform:translateX(4px)} }
 .level-btn.active.lvl-l1{background:var(--l1-bg);border-color:var(--l1);color:var(--l1);}
 .level-btn.active.lvl-l2{background:var(--l2-bg);border-color:var(--l2);color:var(--l2);}
 .level-btn.active.lvl-l3{background:var(--l3-bg);border-color:var(--l3);color:var(--l3);}
@@ -201,13 +204,9 @@ html, body { height:100%; font-family:'DM Sans',sans-serif; background:var(--bg)
 
 /* Desktop main */
 .desktop-main { flex:1; display:flex; flex-direction:column; overflow:hidden; padding:6px 10px 4px; gap:0; min-width:0; }
-.controls-row { display:flex; align-items:center; gap:6px; margin-bottom:5px; flex-shrink:0; flex-wrap:nowrap; }
+.controls-row { display:flex; align-items:center; gap:6px; margin-bottom:5px; flex-shrink:0; flex-wrap:wrap; }
 .d-level-buttons { display:flex; flex-wrap:wrap; gap:6px; flex-shrink:0; }
 .d-level-btn { font-size:1.05rem; padding:9px 22px; }
-.active-status { flex:1; min-width:0; display:flex; align-items:center; gap:8px; padding:5px 12px; border-radius:7px; border:1.5px solid var(--border); font-size:.85rem; font-weight:500; background:var(--white); overflow:hidden; white-space:nowrap; }
-.active-status.empty { color:var(--muted); font-style:italic; font-size:.8rem; justify-content:center; }
-.active-status strong { font-family:'DM Mono',monospace; font-size:.88rem; }
-.active-status .hint { margin-left:auto; font-size:.72rem; color:var(--muted); }
 .d-undo-btn { font-family:'DM Mono',monospace; font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.08em; padding:8px 13px; border:1.5px solid var(--ink); border-radius:7px; background:var(--ink); color:#fff; cursor:pointer; flex-shrink:0; }
 .d-reset-btn { font-family:'DM Mono',monospace; font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.08em; padding:8px 13px; border:1.5px solid #FCA5A5; border-radius:7px; background:#FEF2F2; color:#B91C1C; cursor:pointer; flex-shrink:0; }
 .loc-tab-bar-d { display:flex; border-bottom:2px solid var(--border); flex-shrink:0; margin-bottom:5px; }
@@ -244,10 +243,6 @@ html, body { height:100%; font-family:'DM Sans',sans-serif; background:var(--bg)
 .total-pill-val { font-family:'DM Mono',monospace; font-size:1.05rem; font-weight:700; color:var(--gold); }
 .m-level-row { display:grid; grid-template-columns:repeat(2,1fr); gap:6px; }
 .m-level-btn { font-size:.95rem; padding:11px 10px; }
-.m-active-bar { padding:5px 10px; border-radius:7px; border:1.5px solid var(--border); font-size:.8rem; font-weight:500; background:var(--white); display:flex; align-items:center; gap:7px; min-height:34px; flex-shrink:0; }
-.m-active-bar.empty { color:var(--muted); font-style:italic; font-size:.78rem; justify-content:center; }
-.m-active-bar strong { font-family:'DM Mono',monospace; font-size:.85rem; }
-.m-active-bar .hint { margin-left:auto; font-size:.68rem; color:var(--muted); }
 .m-action-row { display:flex; gap:6px; flex-shrink:0; }
 .m-btn { flex:1; font-family:'DM Mono',monospace; font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.07em; padding:9px 10px; border-radius:8px; cursor:pointer; -webkit-appearance:none; border:1.5px solid; }
 .m-btn-undo { background:var(--ink); color:#fff; border-color:var(--ink); }
@@ -321,8 +316,13 @@ html, body { height:100%; font-family:'DM Sans',sans-serif; background:var(--bg)
     <div class="device-options">
       <div class="device-option" id="dev-desktop" onclick="selectDevice('desktop')">
         <div class="dev-icon">🖥️</div>
-        <div class="dev-name">Desktop</div>
-        <div class="dev-desc">Sidebar summary, full grid</div>
+        <div class="dev-name">Desktop — Tabs</div>
+        <div class="dev-desc">Sidebar + location tabs</div>
+      </div>
+      <div class="device-option" id="dev-desktop-split" onclick="selectDevice('desktop-split')">
+        <div class="dev-icon">⬛⬛</div>
+        <div class="dev-name">Desktop — Split</div>
+        <div class="dev-desc">Sidebar + both locations side by side</div>
       </div>
       <div class="device-option" id="dev-mobile" onclick="selectDevice('mobile')">
         <div class="dev-icon">📱</div>
@@ -367,7 +367,6 @@ html, body { height:100%; font-family:'DM Sans',sans-serif; background:var(--bg)
     <main class="desktop-main">
       <div class="controls-row">
         <div class="d-level-buttons" id="d-level-buttons"></div>
-        <div class="active-status empty" id="d-active-status">Select a giving level above</div>
         <div class="mode-toggle">
           <span class="mode-toggle-label" id="d-mode-label">Grid</span>
           <button class="toggle-track" id="d-mode-toggle" onclick="toggleMode('d')" aria-label="Switch mode"><div class="toggle-thumb"></div></button>
@@ -431,7 +430,6 @@ html, body { height:100%; font-family:'DM Sans',sans-serif; background:var(--bg)
       </div>
     </div>
     <div class="m-level-row" id="m-level-buttons"></div>
-    <div class="m-active-bar empty" id="m-active-bar">Select a giving level</div>
     <div class="m-action-row">
       <button class="m-btn m-btn-undo" onclick="undoLast()">↩ Undo</button>
       <button class="m-btn m-btn-reset" onclick="openReset()">Reset</button>
@@ -563,6 +561,7 @@ let toastTimer = null;
 let operatorName = '';
 let activeLocs = [];
 let deviceMode = null; // 'desktop' | 'mobile'
+let desktopLayout = 'tabs'; // 'tabs' | 'split'
 let selectedLoc = null;
 let selectedDevice = null;
 let activeLocTabD = null;
@@ -580,7 +579,7 @@ function toggleLocOption(loc) {
 }
 function selectDevice(dev) {
   selectedDevice = dev;
-  ['desktop','mobile'].forEach(d=>{
+  ['desktop','desktop-split','mobile'].forEach(d=>{
     document.getElementById('dev-'+d).className='device-option'+(d===dev?' selected':'');
   });
 }
@@ -591,11 +590,12 @@ function startApp() {
   const err  = document.getElementById('setup-err');
   if (!name) { err.textContent='Please enter your name.'; return; }
   if (!selectedLoc) { err.textContent='Please select a location.'; return; }
-  if (!selectedDevice) { err.textContent='Please select desktop or mobile.'; return; }
+  if (!selectedDevice) { err.textContent='Please select a device layout.'; return; }
   err.textContent='';
   operatorName = name;
   activeLocs = selectedLoc==='both' ? ['a','b'] : [selectedLoc];
-  deviceMode = selectedDevice;
+  deviceMode = selectedDevice.startsWith('desktop') ? 'desktop' : 'mobile';
+  desktopLayout = selectedDevice === 'desktop-split' ? 'split' : 'tabs';
   document.getElementById('setup-overlay').classList.add('hidden');
   if (deviceMode === 'desktop') {
     document.body.style.overflow = 'hidden';
@@ -645,54 +645,102 @@ function initDesktop() {
     tabsEl.appendChild(btn);
   });
 
-  // Location tabs + paddle area
+  // Location layout: tabs or split
   const locTabBar = document.getElementById('d-loc-tabs');
   const locPanesWrap = document.getElementById('d-loc-panes');
-  locPanesWrap.style.cssText = 'display:flex;flex-direction:column;flex:1;overflow:hidden;height:100%;';
-  if (activeLocs.length === 1) locTabBar.style.display = 'none';
 
-  activeLocs.forEach((loc,i)=>{
-    if(activeLocs.length > 1) {
-      const tab=document.createElement('button');
-      tab.className='loc-tab-d'+(i===0?' active-'+loc:'');
-      tab.id='d-ltab-'+loc;
-      tab.innerHTML='<div class="loc-dot" style="background:var(--loc-'+loc+')"></div>'+(loc==='a'?'Location A · 101–375':'Location B · 376–450');
-      tab.addEventListener('click',()=>switchLocTabD(loc));
-      locTabBar.appendChild(tab);
-    }
+  if (desktopLayout === 'split' && activeLocs.length > 1) {
+    // Split: both locations side by side, no tabs needed
+    locTabBar.style.display = 'none';
+    locPanesWrap.style.cssText = 'display:flex;flex-direction:row;flex:1;overflow:hidden;height:100%;';
 
-    const pane=document.createElement('div');
-    pane.className='loc-pane-d'+(i===0?' active':'');
-    pane.id='d-lpane-'+loc;
-    pane.style.cssText='flex:1;overflow:hidden;min-height:0;';
-    LOC_CONFIG[loc].cols.forEach(colDef=>{
-      const col=document.createElement('div');
-      col.className='hundreds-col';
-      col.style.overflowY='auto';
-      const hdrRow=document.createElement('div');
-      hdrRow.className='col-header-row';
-      hdrRow.innerHTML='<span class="col-header loc-'+loc+'">'+colDef.label+'</span><div class="col-header-line"></div>';
-      col.appendChild(hdrRow);
-      colDef.groups.forEach(g=>{
-        const wrap=document.createElement('div');
-        wrap.className='digit-group';
-        wrap.innerHTML='<div class="digit-group-line"></div>';
-        const grid=document.createElement('div');
-        grid.className='paddle-grid';
-        for(let n=g.start;n<=g.end;n++){
-          const btn=document.createElement('button');
-          btn.className='paddle-btn d-paddle-btn'; btn.id='p'+n;
-          btn.innerHTML=n+'<div class="pip-row" id="pips-'+n+'"></div>';
-          btn.addEventListener('click',()=>togglePaddle(n));
-          grid.appendChild(btn);
-        }
-        wrap.appendChild(grid); col.appendChild(wrap);
+    activeLocs.forEach((loc, i) => {
+      const panel = document.createElement('div');
+      // loc A gets 2/3, loc B gets 1/3
+      const flexVal = loc === 'a' ? '2' : '1';
+      panel.style.cssText = 'flex:'+flexVal+';display:flex;flex-direction:column;overflow:hidden;border-right:'+(i<activeLocs.length-1?'2px solid var(--border)':'none')+';';
+      panel.id = 'd-lpanel-'+loc;
+
+      // Panel header label
+      const panelHdr = document.createElement('div');
+      panelHdr.style.cssText = 'display:flex;align-items:center;gap:6px;padding:4px 8px 3px;border-bottom:1px solid var(--border);flex-shrink:0;background:var(--white);';
+      panelHdr.innerHTML = '<span style="font-family:DM Mono,monospace;font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#fff;background:var(--loc-'+loc+');padding:2px 7px;border-radius:3px;">'+(loc==='a'?'Loc A · 101–375':'Loc B · 376–450')+'</span>';
+      panel.appendChild(panelHdr);
+
+      // Columns inside panel
+      const colsWrap = document.createElement('div');
+      colsWrap.style.cssText = 'display:flex;flex:1;overflow:hidden;';
+      LOC_CONFIG[loc].cols.forEach(colDef=>{
+        const col=document.createElement('div');
+        col.className='hundreds-col'; col.style.overflowY='auto';
+        const hdrRow=document.createElement('div');
+        hdrRow.className='col-header-row';
+        hdrRow.innerHTML='<span class="col-header loc-'+loc+'">'+colDef.label+'</span><div class="col-header-line"></div>';
+        col.appendChild(hdrRow);
+        colDef.groups.forEach(g=>{
+          const wrap=document.createElement('div'); wrap.className='digit-group';
+          wrap.innerHTML='<div class="digit-group-line"></div>';
+          const grid=document.createElement('div'); grid.className='paddle-grid';
+          for(let n=g.start;n<=g.end;n++){
+            const btn=document.createElement('button');
+            btn.className='paddle-btn d-paddle-btn'; btn.id='p'+n;
+            btn.innerHTML=n+'<div class="pip-row" id="pips-'+n+'"></div>';
+            btn.addEventListener('click',()=>togglePaddle(n));
+            grid.appendChild(btn);
+          }
+          wrap.appendChild(grid); col.appendChild(wrap);
+        });
+        colsWrap.appendChild(col);
       });
-      pane.appendChild(col);
+      panel.appendChild(colsWrap);
+      locPanesWrap.appendChild(panel);
     });
-    locPanesWrap.appendChild(pane);
-    if(i===0) activeLocTabD=loc;
-  });
+
+  } else {
+    // Tabs mode (default)
+    locPanesWrap.style.cssText = 'display:flex;flex-direction:column;flex:1;overflow:hidden;height:100%;';
+    if (activeLocs.length === 1) locTabBar.style.display = 'none';
+
+    activeLocs.forEach((loc,i)=>{
+      if(activeLocs.length > 1) {
+        const tab=document.createElement('button');
+        tab.className='loc-tab-d'+(i===0?' active-'+loc:'');
+        tab.id='d-ltab-'+loc;
+        tab.innerHTML='<div class="loc-dot" style="background:var(--loc-'+loc+')"></div>'+(loc==='a'?'Location A · 101–375':'Location B · 376–450');
+        tab.addEventListener('click',()=>switchLocTabD(loc));
+        locTabBar.appendChild(tab);
+      }
+
+      const pane=document.createElement('div');
+      pane.className='loc-pane-d'+(i===0?' active':'');
+      pane.id='d-lpane-'+loc;
+      pane.style.cssText='flex:1;overflow:hidden;min-height:0;';
+      LOC_CONFIG[loc].cols.forEach(colDef=>{
+        const col=document.createElement('div');
+        col.className='hundreds-col'; col.style.overflowY='auto';
+        const hdrRow=document.createElement('div');
+        hdrRow.className='col-header-row';
+        hdrRow.innerHTML='<span class="col-header loc-'+loc+'">'+colDef.label+'</span><div class="col-header-line"></div>';
+        col.appendChild(hdrRow);
+        colDef.groups.forEach(g=>{
+          const wrap=document.createElement('div'); wrap.className='digit-group';
+          wrap.innerHTML='<div class="digit-group-line"></div>';
+          const grid=document.createElement('div'); grid.className='paddle-grid';
+          for(let n=g.start;n<=g.end;n++){
+            const btn=document.createElement('button');
+            btn.className='paddle-btn d-paddle-btn'; btn.id='p'+n;
+            btn.innerHTML=n+'<div class="pip-row" id="pips-'+n+'"></div>';
+            btn.addEventListener('click',()=>togglePaddle(n));
+            grid.appendChild(btn);
+          }
+          wrap.appendChild(grid); col.appendChild(wrap);
+        });
+        pane.appendChild(col);
+      });
+      locPanesWrap.appendChild(pane);
+      if(i===0) activeLocTabD=loc;
+    });
+  }
 
   renderSidebar(); renderTotals(); renderLevelCounts();
 }
@@ -798,37 +846,9 @@ function switchLocTabM(loc) {
 
 /* ════ LEVEL SELECT ════ */
 function selectLevel(id) {
-  activeLevel=(activeLevel===id)?null:id;
-  // Clear both sets of buttons
+  activeLevel = (activeLevel===id) ? null : id;
   document.querySelectorAll('.level-btn').forEach(b=>b.classList.remove('active'));
-  const h=id?HEX[id]:null;
-  const lvl=id?LEVELS.find(l=>l.id===id):null;
-
-  // Desktop status
-  const dStatus=document.getElementById('d-active-status');
-  if(dStatus){
-    if(activeLevel){
-      dStatus.className='active-status';
-      dStatus.style.borderColor=h.bd; dStatus.style.background=h.bg;
-      dStatus.innerHTML='<div class="level-dot" style="background:'+h.c+'"></div><strong style="color:'+h.c+'">'+lvl.label+'</strong><span class="hint">Click paddle to raise · again to lower</span>';
-    } else {
-      dStatus.className='active-status empty'; dStatus.style.borderColor=''; dStatus.style.background='';
-      dStatus.innerHTML='Select a giving level above';
-    }
-  }
-  // Mobile status
-  const mBar=document.getElementById('m-active-bar');
-  if(mBar){
-    if(activeLevel){
-      mBar.className='m-active-bar';
-      mBar.style.borderColor=h.bd; mBar.style.background=h.bg;
-      mBar.innerHTML='<div class="level-dot" style="background:'+h.c+'"></div><strong style="color:'+h.c+'">'+lvl.label+'</strong><span class="hint">Tap paddle to raise · again to lower</span>';
-    } else {
-      mBar.className='m-active-bar empty'; mBar.style.borderColor=''; mBar.style.background='';
-      mBar.innerHTML='Select a giving level';
-    }
-  }
-
+  if (activeLevel) document.querySelectorAll('.lvl-'+activeLevel).forEach(b=>b.classList.add('active'));
   if(numpadModes.d) updateNumpadDisplay('d');
   if(numpadModes.m) updateNumpadDisplay('m');
 }
@@ -1055,8 +1075,14 @@ function toggleMode(prefix) {
     const pArea=document.getElementById('d-paddle-area');
     const nPane=document.getElementById('d-numpad-pane');
     const lTabs=document.getElementById('d-loc-tabs');
-    if(isOn){ pArea.style.display='none'; nPane.classList.add('active'); lTabs.style.display='none'; }
-    else { pArea.style.display='flex'; pArea.style.flexDirection='column'; pArea.style.overflow='hidden'; nPane.classList.remove('active'); if(activeLocs.length>1) lTabs.style.display=''; }
+    if(isOn){
+      pArea.style.display='none'; nPane.classList.add('active'); lTabs.style.display='none';
+    } else {
+      pArea.style.display='flex'; pArea.style.flexDirection='column'; pArea.style.overflow='hidden';
+      nPane.classList.remove('active');
+      // Only show loc tabs in tabs mode with multiple locs
+      if(desktopLayout==='tabs' && activeLocs.length>1) lTabs.style.display='';
+    }
   } else {
     const pArea=document.getElementById('m-paddle-area');
     const nPane=document.getElementById('m-numpad-pane');
@@ -1145,15 +1171,12 @@ function showToast(msg){
   toastTimer=setTimeout(()=>document.getElementById('toast').classList.remove('show'),3000);
 }
 function flashBars(){
-  [
-    {id:'d-active-status', dflt:'active-status empty', msg:'⚠ Select a giving level above'},
-    {id:'m-active-bar',    dflt:'m-active-bar empty',  msg:'⚠ Select a giving level first'},
-  ].forEach(({id,dflt,msg})=>{
+  ['d-level-buttons','m-level-buttons'].forEach(id=>{
     const el=document.getElementById(id); if(!el)return;
-    el.className=id.startsWith('d')?'active-status':'m-active-bar';
-    el.style.borderColor='#FCA5A5'; el.style.background='#FEF2F2';
-    el.innerHTML='<span style="color:#B91C1C;font-weight:600">'+msg+'</span>';
-    setTimeout(()=>{if(!activeLevel){el.className=dflt;el.style.borderColor='';el.style.background='';el.innerHTML=msg.replace('⚠ ','');}},2200);
+    el.style.animation='none';
+    el.offsetHeight; // force reflow
+    el.style.animation='shake .35s ease';
+    setTimeout(()=>{ el.style.animation=''; }, 400);
   });
 }
 function openReset(){document.getElementById('modal').classList.add('show');}
