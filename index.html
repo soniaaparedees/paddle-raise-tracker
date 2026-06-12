@@ -1059,13 +1059,17 @@ function confirmReset(){
 
 /* ════ FIREBASE SYNC ════ */
 function syncToFirebase(){
-  if(!window._fbDb || !window._fbSessionId) return;
-  window._fbDb.ref('sessions/'+window._fbSessionId+'/log').set(
-    log.map(e=>Object.assign({},e,{ts:e.ts?e.ts.toISOString():null}))
-  ).catch(function(err){
-    setFbStatus('error','✕ Sync failed');
-    console.error('Firebase sync error:', err);
-  });
+  if(!window._fbDb || !window._fbSessionId) {
+    console.warn('[Tracker] syncToFirebase: Firebase not ready, skipping');
+    return;
+  }
+  var data = log.map(e=>Object.assign({},e,{ts:e.ts?e.ts.toISOString():null}));
+  console.log('[Tracker] syncToFirebase: writing', data.length, 'entries');
+  window._fbDb.ref('sessions/'+window._fbSessionId+'/log').set(data)
+    .catch(function(err){
+      console.error('[Tracker] log write failed:', err);
+      setFbStatus('error','✕ Sync failed');
+    });
 }
 </script>
 
@@ -1137,11 +1141,18 @@ try {
 
   // Called once when operator hits Start
   window._fbInitSession = function(operator) {
+    console.log('[Tracker] _fbInitSession called with operator:', operator, 'sessionId:', _sid);
     setFbStatus('syncing', '↑ Saving…');
     _db.ref('sessions/'+_sid+'/meta')
       .set({ operator: operator, startedAt: new Date().toISOString() })
-      .then(function()  { setFbStatus('connected', '● Live'); })
-      .catch(function(e){ setFbStatus('error', '✕ '+e.code); console.error(e); });
+      .then(function()  {
+        console.log('[Tracker] meta written successfully');
+        setFbStatus('connected', '● Live');
+      })
+      .catch(function(e){
+        console.error('[Tracker] meta write failed:', e);
+        setFbStatus('error', '✕ '+e.code);
+      });
   };
 
 } catch(e) {
