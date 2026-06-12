@@ -290,6 +290,15 @@ html, body { height:100%; font-family:'DM Sans',sans-serif; background:var(--bg)
     <h1>🏆 Paddle Raise</h1>
     <p class="sub">Set up your tracking session.</p>
 
+    <!-- Location map status — checked on load -->
+    <div id="locmap-check" style="margin-bottom:18px;padding:10px 13px;border-radius:9px;border:1.5px solid #D6D0C4;background:#F4F2EE;display:flex;align-items:center;gap:9px;">
+      <span id="locmap-check-icon" style="font-size:1.1rem;">⏳</span>
+      <div>
+        <div id="locmap-check-title" style="font-size:.82rem;font-weight:700;color:#111;">Checking event setup…</div>
+        <div id="locmap-check-sub" style="font-size:.72rem;color:#6B6355;margin-top:1px;">Connecting to Firebase</div>
+      </div>
+    </div>
+
     <label class="setup-label">Your Name</label>
     <input class="setup-input" id="operator-input" type="text" placeholder="e.g. Sarah Johnson" autocomplete="off">
 
@@ -312,7 +321,7 @@ html, body { height:100%; font-family:'DM Sans',sans-serif; background:var(--bg)
       </div>
     </div>
 
-    <button class="setup-btn" onclick="startApp()">Start Tracking</button>
+    <button class="setup-btn" id="setup-start-btn" onclick="startApp()" disabled>Waiting for event setup…</button>
     <div class="setup-err" id="setup-err"></div>
   </div>
 </div>
@@ -580,8 +589,6 @@ function startApp() {
     initMobile();
   }
   if (window._fbInitSession) window._fbInitSession(operatorName);
-  // Load paddle→location map from Firebase
-  if (window._fbLoadLocMap) window._fbLoadLocMap();
 }
 
 /* ════ DESKTOP INIT ════ */
@@ -1092,6 +1099,37 @@ function setFbStatus(state,label){
 _db.ref('.info/connected').on('value',function(snap){
   setFbStatus(snap.val()===true?'connected':'syncing',snap.val()===true?'● Live':'○ Connecting');
 });
+
+// ── Load locmap immediately on page load, before user can start ──
+_db.ref('locmap').on('value', function(snap) {
+  var map = snap.val();
+  paddleLocMap = map || {};
+
+  var icon  = document.getElementById('locmap-check-icon');
+  var title = document.getElementById('locmap-check-title');
+  var sub   = document.getElementById('locmap-check-sub');
+  var btn   = document.getElementById('setup-start-btn');
+  var box   = document.getElementById('locmap-check');
+
+  if (map && Object.keys(map).length > 0) {
+    var locs = {};
+    Object.values(map).forEach(function(l){ locs[l]=true; });
+    var locList = Object.keys(locs).sort().join(', ');
+    var count   = Object.keys(map).length;
+    if(icon)  icon.textContent  = '✅';
+    if(title) title.textContent = 'Event ready — '+count+' paddles mapped';
+    if(sub)   sub.textContent   = 'Locations: '+locList;
+    if(box)   { box.style.borderColor='#6EE7B7'; box.style.background='#ECFDF5'; }
+    if(btn)   { btn.disabled=false; btn.textContent='Start Tracking'; }
+  } else {
+    if(icon)  icon.textContent  = '⏳';
+    if(title) title.textContent = 'Waiting for event setup…';
+    if(sub)   sub.textContent   = 'The admin needs to upload the location map first';
+    if(box)   { box.style.borderColor='#FCD34D'; box.style.background='#FFFBEB'; }
+    if(btn)   { btn.disabled=true; btn.textContent='Waiting for event setup…'; }
+  }
+});
+
 window._fbReady=true;
 window._fbInitSession=function(operator){
   setFbStatus('syncing','↑ Saving…');
@@ -1102,12 +1140,6 @@ window._fbInitSession=function(operator){
 window._fbSyncLog=function(logData){
   _db.ref('sessions/'+_sessionId+'/log').set(logData)
     .catch(function(err){setFbStatus('error','✕ Write failed');});
-};
-// Load paddle→location map uploaded by admin
-window._fbLoadLocMap=function(){
-  _db.ref('locmap').on('value',function(snap){
-    paddleLocMap = snap.val() || {};
-  });
 };
 </script>
 
