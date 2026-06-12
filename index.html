@@ -1054,7 +1054,11 @@ function confirmReset(){
   });
   activeLevel=null; selectLevel(null);
   renderTotals(); renderLevelCounts(); renderSidebar(); renderSummarySheet(); closeReset();
-  syncToFirebase();
+  // Write explicit reset — use empty object so Firebase doesn't remove the node
+  if(window._fbDb && window._fbSessionId){
+    window._fbDb.ref('sessions/'+window._fbSessionId+'/log').set({});
+    window._fbDb.ref('sessions/'+window._fbSessionId+'/meta/resetAt').set(new Date().toISOString());
+  }
 }
 
 /* ════ FIREBASE SYNC ════ */
