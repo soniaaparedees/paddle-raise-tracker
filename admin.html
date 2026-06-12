@@ -109,6 +109,7 @@ html, body { min-height:100%; font-family:'DM Sans',sans-serif; background:var(-
 .detail-loc-tabs { display:flex; border-bottom:1.5px solid var(--border); flex-shrink:0; background:var(--bg); overflow-x:auto; }
 .detail-loc-tab { padding:9px 16px; font-family:'DM Mono',monospace; font-size:.75rem; font-weight:700; text-align:center; cursor:pointer; color:var(--muted); border-bottom:3px solid transparent; margin-bottom:-1.5px; background:none; border-top:none; border-left:none; border-right:none; transition:all .12s; white-space:nowrap; }
 .detail-loc-tab.active { color:var(--ink); border-bottom-color:var(--ink); background:var(--white); }
+.loc-tab-sub { font-family:'DM Mono',monospace; font-size:.65rem; font-weight:700; color:var(--gold); background:var(--gold-bg); border:1px solid var(--gold-bd); border-radius:4px; padding:1px 6px; margin-left:6px; vertical-align:middle; }
 
 .detail-levels { flex:1; overflow-y:auto; padding-bottom:32px; }
 .detail-level-row { padding:10px 16px; border-bottom:1px solid #F0EDE8; border-left:4px solid transparent; }
@@ -558,9 +559,11 @@ function renderDetailPage(sid) {
 }
 
 function buildDetailLocTabs(sid) {
-  var tabsEl = document.getElementById('detail-loc-tabs');
+  var tabsEl  = document.getElementById('detail-loc-tabs');
   tabsEl.innerHTML = '';
+  var session = allSessions[sid];
 
+  // "All" tab — no subtotal badge (full total is shown in hero)
   var allBtn = document.createElement('button');
   allBtn.className = 'detail-loc-tab' + (detailFilter==='all'?' active':'');
   allBtn.textContent = 'All';
@@ -569,9 +572,12 @@ function buildDetailLocTabs(sid) {
 
   if (locNames.length > 0) {
     locNames.forEach(function(name) {
+      var locTotal = session ? calcTotal(session, name) : 0;
       var btn = document.createElement('button');
       btn.className = 'detail-loc-tab' + (detailFilter===name?' active':'');
-      btn.textContent = name;
+      btn.id = 'dtab-' + name.replace(/\s+/g,'_');
+      btn.innerHTML = escHtml(name) +
+        (locTotal > 0 ? '<span class="loc-tab-sub">$'+locTotal.toLocaleString()+'</span>' : '');
       btn.onclick = function(){ setDetailFilter(name); };
       tabsEl.appendChild(btn);
     });
@@ -629,9 +635,21 @@ function renderDetailLevels(sid) {
     container.appendChild(row);
   });
 
-  // Also update the total for the current filter
-  var filtered = calcTotal(allSessions[sid], detailFilter);
-  document.getElementById('detail-total-val').textContent = '$'+filtered.toLocaleString();
+  // Update tab subtotals to stay current with live data
+  if (locNames.length > 0 && allSessions[sid]) {
+    locNames.forEach(function(name) {
+      var locTotal = calcTotal(allSessions[sid], name);
+      var tabId = 'dtab-' + name.replace(/\s+/g,'_');
+      var tab = document.getElementById(tabId);
+      if (tab) {
+        var badge = tab.querySelector('.loc-tab-sub');
+        if (locTotal > 0) {
+          if (badge) { badge.textContent = '$'+locTotal.toLocaleString(); }
+          else { tab.innerHTML = escHtml(name)+'<span class="loc-tab-sub">$'+locTotal.toLocaleString()+'</span>'; tab.onclick = function(){ setDetailFilter(name); }; }
+        }
+      }
+    });
+  }
 }
 
 // ════════════════════════════
