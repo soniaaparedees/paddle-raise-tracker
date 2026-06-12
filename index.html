@@ -293,25 +293,6 @@ html, body { height:100%; font-family:'DM Sans',sans-serif; background:var(--bg)
     <label class="setup-label">Your Name</label>
     <input class="setup-input" id="operator-input" type="text" placeholder="e.g. Sarah Johnson" autocomplete="off">
 
-    <label class="setup-label">Location(s)</label>
-    <div class="loc-options">
-      <div class="loc-option" id="opt-a" onclick="toggleLocOption('a')">
-        <div class="loc-icon">🅰</div>
-        <div class="loc-name">Loc A</div>
-        <div class="loc-range">101–375</div>
-      </div>
-      <div class="loc-option" id="opt-b" onclick="toggleLocOption('b')">
-        <div class="loc-icon">🅱</div>
-        <div class="loc-name">Loc B</div>
-        <div class="loc-range">376–450</div>
-      </div>
-      <div class="loc-option" id="opt-both" onclick="toggleLocOption('both')">
-        <div class="loc-icon">🔀</div>
-        <div class="loc-name">Both</div>
-        <div class="loc-range">101–450</div>
-      </div>
-    </div>
-
     <label class="setup-label">Device</label>
     <div class="device-options">
       <div class="device-option" id="dev-desktop" onclick="selectDevice('desktop')">
@@ -322,12 +303,12 @@ html, body { height:100%; font-family:'DM Sans',sans-serif; background:var(--bg)
       <div class="device-option" id="dev-desktop-split" onclick="selectDevice('desktop-split')">
         <div class="dev-icon">⬛⬛</div>
         <div class="dev-name">Desktop — Split</div>
-        <div class="dev-desc">Sidebar + both locations side by side</div>
+        <div class="dev-desc">Sidebar + top/bottom split</div>
       </div>
       <div class="device-option" id="dev-mobile" onclick="selectDevice('mobile')">
         <div class="dev-icon">📱</div>
         <div class="dev-name">Mobile</div>
-        <div class="dev-desc">Location tabs, bottom summary</div>
+        <div class="dev-desc">Scrollable grid, bottom summary</div>
       </div>
     </div>
 
@@ -540,18 +521,21 @@ function buildGroups(start, end) {
   while(i<=end){const p=Math.floor(i/10),e=Math.min(p*10+9,end);g.push({prefix:p,start:i,end:e});i=e+1;}
   return g;
 }
-const LOC_CONFIG = {
-  a:{ cols:[
-    {label:'100s',groups:buildGroups(101,199)},
-    {label:'200s',groups:buildGroups(200,299)},
-    {label:'300s',groups:buildGroups(300,375)},
-  ]},
-  b:{ cols:[
-    {label:'376–399',groups:buildGroups(376,399)},
-    {label:'400–424',groups:buildGroups(400,424)},
-    {label:'425–450',groups:buildGroups(425,450)},
-  ]},
-};
+// All paddles 101–450, grouped by hundreds for the grid display
+const ALL_COLS = [
+  {label:'100s', groups:buildGroups(101,199)},
+  {label:'200s', groups:buildGroups(200,299)},
+  {label:'300s', groups:buildGroups(300,375)},
+  {label:'376–399', groups:buildGroups(376,399)},
+  {label:'400–424', groups:buildGroups(400,424)},
+  {label:'425–450', groups:buildGroups(425,450)},
+];
+// For split mode: top panel = 101–375 (cols 0-2), bottom = 376–450 (cols 3-5)
+const SPLIT_TOP_COLS    = ALL_COLS.slice(0,3);
+const SPLIT_BOTTOM_COLS = ALL_COLS.slice(3);
+
+// paddleLocMap: loaded from Firebase, set by admin. { 101:'Ballroom', 102:'Ballroom', ... }
+let paddleLocMap = {};
 
 /* ════ STATE ════ */
 let log = [];
@@ -559,24 +543,15 @@ let activeLevel = null;
 let lastAction = null;
 let toastTimer = null;
 let operatorName = '';
-let activeLocs = [];
-let deviceMode = null; // 'desktop' | 'mobile'
-let desktopLayout = 'tabs'; // 'tabs' | 'split'
-let selectedLoc = null;
+let deviceMode = null;
+let desktopLayout = 'tabs';
 let selectedDevice = null;
 let activeLocTabD = null;
-let activeLocTabM = null;
 let activeSummaryTab = 'all';
 let numpadValues = { d:'', m:'' };
 let numpadModes = { d:false, m:false };
 
 /* ════ SETUP ════ */
-function toggleLocOption(loc) {
-  selectedLoc = (selectedLoc===loc) ? null : loc;
-  ['a','b','both'].forEach(l=>{
-    document.getElementById('opt-'+l).className='loc-option'+(l===selectedLoc?' selected-'+l:'');
-  });
-}
 function selectDevice(dev) {
   selectedDevice = dev;
   ['desktop','desktop-split','mobile'].forEach(d=>{
@@ -589,11 +564,9 @@ function startApp() {
   const name = document.getElementById('operator-input').value.trim();
   const err  = document.getElementById('setup-err');
   if (!name) { err.textContent='Please enter your name.'; return; }
-  if (!selectedLoc) { err.textContent='Please select a location.'; return; }
   if (!selectedDevice) { err.textContent='Please select a device layout.'; return; }
   err.textContent='';
   operatorName = name;
-  activeLocs = selectedLoc==='both' ? ['a','b'] : [selectedLoc];
   deviceMode = selectedDevice.startsWith('desktop') ? 'desktop' : 'mobile';
   desktopLayout = selectedDevice === 'desktop-split' ? 'split' : 'tabs';
   document.getElementById('setup-overlay').classList.add('hidden');
@@ -606,7 +579,9 @@ function startApp() {
     document.getElementById('app-mobile').style.cssText = 'display:flex;flex-direction:column;height:100%;overflow:hidden;';
     initMobile();
   }
-  if (window._fbInitSession) window._fbInitSession(operatorName, activeLocs);
+  if (window._fbInitSession) window._fbInitSession(operatorName);
+  // Load paddle→location map from Firebase
+  if (window._fbLoadLocMap) window._fbLoadLocMap();
 }
 
 /* ════ DESKTOP INIT ════ */
@@ -625,135 +600,76 @@ function initDesktop() {
     el.appendChild(btn);
   });
 
-  // Sidebar tabs
+  // Sidebar: just "All" (location tabs are admin-only)
   const tabsEl = document.getElementById('d-sidebar-tabs');
-  const defs = [{id:'all',label:'All'}];
-  if(activeLocs.includes('a')) defs.push({id:'a',label:'Loc A'});
-  if(activeLocs.includes('b')) defs.push({id:'b',label:'Loc B'});
-  defs.forEach((t,i)=>{
-    const btn=document.createElement('button');
-    btn.className='sidebar-tab'+(i===0?' active-tab':'');
-    btn.textContent=t.label;
-    btn.addEventListener('click',()=>{
-      document.querySelectorAll('.sidebar-tab').forEach(b=>b.classList.remove('active-tab'));
-      btn.classList.add('active-tab');
-      ['all','a','b'].forEach(id=>{
-        const p=document.getElementById('d-sb-'+id);
-        if(p) p.className='sidebar-pane'+(id===t.id?' active':'');
-      });
-    });
-    tabsEl.appendChild(btn);
-  });
+  const allTabBtn = document.createElement('button');
+  allTabBtn.className = 'sidebar-tab active-tab';
+  allTabBtn.textContent = 'All';
+  tabsEl.appendChild(allTabBtn);
 
-  // Location layout: tabs or split
-  const locTabBar = document.getElementById('d-loc-tabs');
+  // Build paddle grid
+  const locTabBar    = document.getElementById('d-loc-tabs');
   const locPanesWrap = document.getElementById('d-loc-panes');
+  locTabBar.style.display = 'none';
 
-  if (desktopLayout === 'split' && activeLocs.length > 1) {
-    // Split: both locations stacked top/bottom, no tabs needed
-    locTabBar.style.display = 'none';
+  if (desktopLayout === 'split') {
     locPanesWrap.style.cssText = 'display:flex;flex-direction:column;flex:1;overflow:hidden;height:100%;';
-
-    activeLocs.forEach((loc, i) => {
+    [
+      { cols:SPLIT_TOP_COLS,    flex:'2', label:'101–375', border:'2px solid var(--border)' },
+      { cols:SPLIT_BOTTOM_COLS, flex:'1', label:'376–450', border:'none' },
+    ].forEach(({cols,flex,label,border})=>{
       const panel = document.createElement('div');
-      // loc A gets 2/3 height, loc B gets 1/3
-      const flexVal = loc === 'a' ? '2' : '1';
-      panel.style.cssText = 'flex:'+flexVal+';display:flex;flex-direction:column;overflow:hidden;border-bottom:'+(i<activeLocs.length-1?'2px solid var(--border)':'none')+';min-height:0;';
-      panel.id = 'd-lpanel-'+loc;
-
-      // Panel header label
-      const panelHdr = document.createElement('div');
-      panelHdr.style.cssText = 'display:flex;align-items:center;gap:6px;padding:4px 8px 3px;border-bottom:1px solid var(--border);flex-shrink:0;background:var(--white);';
-      panelHdr.innerHTML = '<span style="font-family:DM Mono,monospace;font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#fff;background:var(--loc-'+loc+');padding:2px 7px;border-radius:3px;">'+(loc==='a'?'Loc A · 101–375':'Loc B · 376–450')+'</span>';
-      panel.appendChild(panelHdr);
-
-      // Columns inside panel
+      panel.style.cssText = 'flex:'+flex+';display:flex;flex-direction:column;overflow:hidden;min-height:0;border-bottom:'+border+';';
+      const hdr = document.createElement('div');
+      hdr.style.cssText = 'padding:3px 8px;border-bottom:1px solid var(--border);flex-shrink:0;background:var(--bg);';
+      hdr.innerHTML = '<span style="font-family:DM Mono,monospace;font-size:.62rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;">'+label+'</span>';
+      panel.appendChild(hdr);
       const colsWrap = document.createElement('div');
       colsWrap.style.cssText = 'display:flex;flex:1;overflow:hidden;';
-      LOC_CONFIG[loc].cols.forEach(colDef=>{
-        const col=document.createElement('div');
-        col.className='hundreds-col'; col.style.overflowY='auto';
-        const hdrRow=document.createElement('div');
-        hdrRow.className='col-header-row';
-        hdrRow.innerHTML='<span class="col-header loc-'+loc+'">'+colDef.label+'</span><div class="col-header-line"></div>';
-        col.appendChild(hdrRow);
-        colDef.groups.forEach(g=>{
-          const wrap=document.createElement('div'); wrap.className='digit-group';
-          wrap.innerHTML='<div class="digit-group-line"></div>';
-          const grid=document.createElement('div'); grid.className='paddle-grid';
-          for(let n=g.start;n<=g.end;n++){
-            const btn=document.createElement('button');
-            btn.className='paddle-btn d-paddle-btn'; btn.id='p'+n;
-            btn.innerHTML=n+'<div class="pip-row" id="pips-'+n+'"></div>';
-            btn.addEventListener('click',()=>togglePaddle(n));
-            grid.appendChild(btn);
-          }
-          wrap.appendChild(grid); col.appendChild(wrap);
-        });
-        colsWrap.appendChild(col);
-      });
+      buildColsInto(colsWrap, cols, 'p');
       panel.appendChild(colsWrap);
       locPanesWrap.appendChild(panel);
     });
-
   } else {
-    // Tabs mode (default)
     locPanesWrap.style.cssText = 'display:flex;flex-direction:column;flex:1;overflow:hidden;height:100%;';
-    if (activeLocs.length === 1) locTabBar.style.display = 'none';
-
-    activeLocs.forEach((loc,i)=>{
-      if(activeLocs.length > 1) {
-        const tab=document.createElement('button');
-        tab.className='loc-tab-d'+(i===0?' active-'+loc:'');
-        tab.id='d-ltab-'+loc;
-        tab.innerHTML='<div class="loc-dot" style="background:var(--loc-'+loc+')"></div>'+(loc==='a'?'Location A · 101–375':'Location B · 376–450');
-        tab.addEventListener('click',()=>switchLocTabD(loc));
-        locTabBar.appendChild(tab);
-      }
-
-      const pane=document.createElement('div');
-      pane.className='loc-pane-d'+(i===0?' active':'');
-      pane.id='d-lpane-'+loc;
-      pane.style.cssText='flex:1;overflow:hidden;min-height:0;';
-      LOC_CONFIG[loc].cols.forEach(colDef=>{
-        const col=document.createElement('div');
-        col.className='hundreds-col'; col.style.overflowY='auto';
-        const hdrRow=document.createElement('div');
-        hdrRow.className='col-header-row';
-        hdrRow.innerHTML='<span class="col-header loc-'+loc+'">'+colDef.label+'</span><div class="col-header-line"></div>';
-        col.appendChild(hdrRow);
-        colDef.groups.forEach(g=>{
-          const wrap=document.createElement('div'); wrap.className='digit-group';
-          wrap.innerHTML='<div class="digit-group-line"></div>';
-          const grid=document.createElement('div'); grid.className='paddle-grid';
-          for(let n=g.start;n<=g.end;n++){
-            const btn=document.createElement('button');
-            btn.className='paddle-btn d-paddle-btn'; btn.id='p'+n;
-            btn.innerHTML=n+'<div class="pip-row" id="pips-'+n+'"></div>';
-            btn.addEventListener('click',()=>togglePaddle(n));
-            grid.appendChild(btn);
-          }
-          wrap.appendChild(grid); col.appendChild(wrap);
-        });
-        pane.appendChild(col);
-      });
-      locPanesWrap.appendChild(pane);
-      if(i===0) activeLocTabD=loc;
-    });
+    const pane = document.createElement('div');
+    pane.style.cssText = 'flex:1;overflow:hidden;min-height:0;display:flex;';
+    buildColsInto(pane, ALL_COLS, 'p');
+    locPanesWrap.appendChild(pane);
   }
 
   renderSidebar(); renderTotals(); renderLevelCounts();
 }
 
-function switchLocTabD(loc) {
-  activeLocTabD=loc;
-  activeLocs.forEach(l=>{
-    const t=document.getElementById('d-ltab-'+l);
-    if(t) t.className='loc-tab-d'+(l===loc?' active-'+l:'');
-    const p=document.getElementById('d-lpane-'+l);
-    if(p) p.className='loc-pane-d'+(l===loc?' active':'');
+// Shared helper: build hundreds columns into a container
+function buildColsInto(container, cols, idPrefix) {
+  cols.forEach(colDef=>{
+    const col = document.createElement('div');
+    col.className = 'hundreds-col'; col.style.overflowY = 'auto';
+    const hdrRow = document.createElement('div');
+    hdrRow.className = 'col-header-row';
+    hdrRow.innerHTML = '<span class="col-header" style="background:var(--ink);opacity:.55;">'+colDef.label+'</span><div class="col-header-line"></div>';
+    col.appendChild(hdrRow);
+    colDef.groups.forEach(g=>{
+      const wrap = document.createElement('div');
+      wrap.className = 'digit-group';
+      wrap.innerHTML = '<div class="digit-group-line"></div>';
+      const grid = document.createElement('div');
+      grid.className = 'paddle-grid';
+      for(let n=g.start; n<=g.end; n++){
+        const btn = document.createElement('button');
+        btn.className = 'paddle-btn'; btn.id = idPrefix+n;
+        btn.innerHTML = n+'<div class="pip-row" id="'+idPrefix+'pips-'+n+'"></div>';
+        btn.addEventListener('click', ()=>togglePaddle(n));
+        grid.appendChild(btn);
+      }
+      wrap.appendChild(grid); col.appendChild(wrap);
+    });
+    container.appendChild(col);
   });
 }
+
+
 
 /* ════ MOBILE INIT ════ */
 function initMobile() {
@@ -771,65 +687,20 @@ function initMobile() {
     el.appendChild(btn);
   });
 
-  // Location tabs
-  const locTabBar = document.getElementById('m-loc-tabs');
-  if(activeLocs.length===1) locTabBar.style.display='none';
-  activeLocs.forEach((loc,i)=>{
-    if(activeLocs.length>1){
-      const tab=document.createElement('button');
-      tab.className='loc-tab-m'+(i===0?' active-'+loc:'');
-      tab.id='m-ltab-'+loc; tab.textContent=loc==='a'?'Loc A · 101–375':'Loc B · 376–450';
-      tab.addEventListener('click',()=>switchLocTabM(loc));
-      locTabBar.appendChild(tab);
-    }
-    const pane=document.createElement('div');
-    pane.className='loc-pane-m'+(i===0?' active':'');
-    pane.id='m-lpane-'+loc;
-    LOC_CONFIG[loc].cols.forEach(colDef=>{
-      const col=document.createElement('div');
-      col.className='m-hundreds-col';
-      const hdrRow=document.createElement('div');
-      hdrRow.className='col-header-row';
-      hdrRow.innerHTML='<span class="col-header loc-'+loc+'">'+colDef.label+'</span><div class="col-header-line"></div>';
-      col.appendChild(hdrRow);
-      colDef.groups.forEach(g=>{
-        const wrap=document.createElement('div');
-        wrap.className='digit-group';
-        wrap.innerHTML='<div class="digit-group-line"></div>';
-        const grid=document.createElement('div');
-        grid.className='paddle-grid';
-        for(let n=g.start;n<=g.end;n++){
-          const btn=document.createElement('button');
-          btn.className='paddle-btn m-paddle-btn'; btn.id='mp'+n;
-          btn.innerHTML=n+'<div class="pip-row" id="mpips-'+n+'"></div>';
-          btn.addEventListener('click',()=>togglePaddle(n));
-          grid.appendChild(btn);
-        }
-        wrap.appendChild(grid); col.appendChild(wrap);
-      });
-      pane.appendChild(col);
-    });
-    document.getElementById('m-paddle-area').appendChild(pane);
-    if(i===0) activeLocTabM=loc;
-  });
+  // No location tabs — all paddles in one scrollable grid
+  document.getElementById('m-loc-tabs').style.display = 'none';
+  const pane = document.createElement('div');
+  pane.className = 'loc-pane-m active';
+  pane.style.cssText = 'display:flex;flex:1;';
+  buildColsInto(pane, ALL_COLS, 'mp');
+  document.getElementById('m-paddle-area').appendChild(pane);
 
-  // Summary sheet tabs
+  // Summary sheet: just "All"
   const sheetTabs = document.getElementById('m-sheet-tabs');
-  const defs=[{id:'all',label:'All'}];
-  if(activeLocs.includes('a')) defs.push({id:'a',label:'Loc A'});
-  if(activeLocs.includes('b')) defs.push({id:'b',label:'Loc B'});
-  defs.forEach((t,i)=>{
-    const btn=document.createElement('button');
-    btn.className='sheet-tab'+(i===0?' active-tab':'');
-    btn.textContent=t.label;
-    btn.addEventListener('click',()=>{
-      activeSummaryTab=t.id;
-      document.querySelectorAll('.sheet-tab').forEach(b=>b.classList.remove('active-tab'));
-      btn.classList.add('active-tab');
-      renderSummarySheet();
-    });
-    sheetTabs.appendChild(btn);
-  });
+  const btn = document.createElement('button');
+  btn.className = 'sheet-tab active-tab';
+  btn.textContent = 'All';
+  sheetTabs.appendChild(btn);
 
   renderTotals(); renderLevelCounts();
 }
@@ -999,24 +870,17 @@ function buildLevelRow(lvl, entries, h) {
 
 function renderSidebar(){
   if(deviceMode!=='desktop') return;
-  [
-    {id:'d-sb-all', filterFn:()=>true},
-    {id:'d-sb-a',   filterFn:n=>n>=101&&n<=375},
-    {id:'d-sb-b',   filterFn:n=>n>=376&&n<=450},
-  ].forEach(({id,filterFn})=>{
-    const container=document.getElementById(id); if(!container)return;
-    container.innerHTML='';
-    // Custom level first, then standard levels
-    const orderedLevels = [LEVELS.find(l=>l.id==='lc'), ...LEVELS.filter(l=>l.id!=='lc')];
-    orderedLevels.forEach(lvl=>{
-      const h=HEX[lvl.id];
-      const entries=log.filter(e=>e.levelId===lvl.id&&filterFn(e.num));
-      const { subtotal, html:chips } = buildLevelRow(lvl, entries, h);
-      const div=document.createElement('div');
-      div.className='level-summary'; div.style.borderLeftColor=h.c;
-      div.innerHTML='<div class="level-summary-head"><div class="level-label-row"><div class="level-dot" style="background:'+h.c+'"></div><span style="color:'+h.c+'">'+lvl.label+'</span></div><div class="level-sub" style="color:'+h.c+'">'+(subtotal>0?'$'+subtotal.toLocaleString():'—')+'</div></div><div class="paddle-chips">'+chips+'</div>';
-      container.appendChild(div);
-    });
+  const container=document.getElementById('d-sb-all'); if(!container)return;
+  container.innerHTML='';
+  const orderedLevels = [LEVELS.find(l=>l.id==='lc'), ...LEVELS.filter(l=>l.id!=='lc')];
+  orderedLevels.forEach(lvl=>{
+    const h=HEX[lvl.id];
+    const entries=log.filter(e=>e.levelId===lvl.id);
+    const { subtotal, html:chips } = buildLevelRow(lvl, entries, h);
+    const div=document.createElement('div');
+    div.className='level-summary'; div.style.borderLeftColor=h.c;
+    div.innerHTML='<div class="level-summary-head"><div class="level-label-row"><div class="level-dot" style="background:'+h.c+'"></div><span style="color:'+h.c+'">'+lvl.label+'</span></div><div class="level-sub" style="color:'+h.c+'">'+(subtotal>0?'$'+subtotal.toLocaleString():'—')+'</div></div><div class="paddle-chips">'+chips+'</div>';
+    container.appendChild(div);
   });
 }
 
@@ -1026,13 +890,12 @@ function closeSummary(){ document.getElementById('summary-backdrop').classList.r
 
 function renderSummarySheet(){
   if(deviceMode!=='mobile') return;
-  const filterFn=activeSummaryTab==='all'?()=>true:activeSummaryTab==='a'?n=>n>=101&&n<=375:n=>n>=376&&n<=450;
   const body=document.getElementById('m-sheet-body'); if(!body)return;
   body.innerHTML='';
   const orderedLevels=[LEVELS.find(l=>l.id==='lc'),...LEVELS.filter(l=>l.id!=='lc')];
   orderedLevels.forEach(lvl=>{
     const h=HEX[lvl.id];
-    const entries=log.filter(e=>e.levelId===lvl.id&&filterFn(e.num));
+    const entries=log.filter(e=>e.levelId===lvl.id);
     const { subtotal, html:chips } = buildLevelRow(lvl, entries, h);
     const div=document.createElement('div');
     div.className='sheet-level'; div.style.borderLeftColor=h.c;
@@ -1074,21 +937,17 @@ function toggleMode(prefix) {
   if(prefix==='d'){
     const pArea=document.getElementById('d-paddle-area');
     const nPane=document.getElementById('d-numpad-pane');
-    const lTabs=document.getElementById('d-loc-tabs');
     if(isOn){
-      pArea.style.display='none'; nPane.classList.add('active'); lTabs.style.display='none';
+      pArea.style.display='none'; nPane.classList.add('active');
     } else {
       pArea.style.display='flex'; pArea.style.flexDirection='column'; pArea.style.overflow='hidden';
       nPane.classList.remove('active');
-      // Only show loc tabs in tabs mode with multiple locs
-      if(desktopLayout==='tabs' && activeLocs.length>1) lTabs.style.display='';
     }
   } else {
     const pArea=document.getElementById('m-paddle-area');
     const nPane=document.getElementById('m-numpad-pane');
-    const lTabs=document.getElementById('m-loc-tabs');
-    if(isOn){ pArea.style.display='none'; nPane.classList.add('active'); lTabs.style.display='none'; }
-    else { pArea.style.display=''; nPane.classList.remove('active'); if(activeLocs.length>1) lTabs.style.display=''; }
+    if(isOn){ pArea.style.display='none'; nPane.classList.add('active'); }
+    else { pArea.style.display=''; nPane.classList.remove('active'); }
   }
   numpadValues[prefix]='';
   updateNumpadDisplay(prefix);
@@ -1101,7 +960,7 @@ function numpadClear(prefix){ numpadValues[prefix]=''; updateNumpadDisplay(prefi
 
 function getValidPaddleNums(){
   const s=new Set();
-  activeLocs.forEach(loc=>LOC_CONFIG[loc].cols.forEach(col=>col.groups.forEach(g=>{for(let n=g.start;n<=g.end;n++)s.add(n);})));
+  ALL_COLS.forEach(col=>col.groups.forEach(g=>{for(let n=g.start;n<=g.end;n++)s.add(n);}));
   return s;
 }
 
@@ -1234,15 +1093,21 @@ _db.ref('.info/connected').on('value',function(snap){
   setFbStatus(snap.val()===true?'connected':'syncing',snap.val()===true?'● Live':'○ Connecting');
 });
 window._fbReady=true;
-window._fbInitSession=function(operator,locations){
+window._fbInitSession=function(operator){
   setFbStatus('syncing','↑ Saving…');
-  _db.ref('sessions/'+_sessionId+'/meta').set({operator:operator,locations:locations,startedAt:new Date().toISOString()})
+  _db.ref('sessions/'+_sessionId+'/meta').set({operator:operator,startedAt:new Date().toISOString()})
     .then(function(){setFbStatus('connected','● Live');})
     .catch(function(err){setFbStatus('error','✕ '+err.code);});
 };
 window._fbSyncLog=function(logData){
   _db.ref('sessions/'+_sessionId+'/log').set(logData)
     .catch(function(err){setFbStatus('error','✕ Write failed');});
+};
+// Load paddle→location map uploaded by admin
+window._fbLoadLocMap=function(){
+  _db.ref('locmap').on('value',function(snap){
+    paddleLocMap = snap.val() || {};
+  });
 };
 </script>
 
