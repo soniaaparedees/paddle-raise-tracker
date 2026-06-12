@@ -1059,8 +1059,13 @@ function confirmReset(){
 
 /* ════ FIREBASE SYNC ════ */
 function syncToFirebase(){
-  if(!window._fbReady)return;
-  window._fbSyncLog(log.map(e=>Object.assign({},e,{ts:e.ts?e.ts.toISOString():null})));
+  if(!window._fbDb || !window._fbSessionId) return;
+  window._fbDb.ref('sessions/'+window._fbSessionId+'/log').set(
+    log.map(e=>Object.assign({},e,{ts:e.ts?e.ts.toISOString():null}))
+  ).catch(function(err){
+    setFbStatus('error','✕ Sync failed');
+    console.error('Firebase sync error:', err);
+  });
 }
 </script>
 
@@ -1068,13 +1073,11 @@ function syncToFirebase(){
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 
-<!--
-  ═══════════════════════════════════════
-  FIREBASE ACTIVATION
-  Replace PASTE_YOUR_* with your config.
-  ═══════════════════════════════════════
--->
 <script>
+// ═══════════════════════════════════════
+// FIREBASE ACTIVATION
+// Replace PASTE_YOUR_* with your config.
+// ═══════════════════════════════════════
 var firebaseConfig = {
   apiKey:            "AIzaSyC3-7fk-G7mSA9DSdfR217uVdDsWuk-2n4",
   authDomain:        "paddle-raise-tracker.firebaseapp.com",
@@ -1084,63 +1087,73 @@ var firebaseConfig = {
   messagingSenderId: "238911011317",
   appId:             "1:238911011317:web:4f5b306447b5abb28dc8bc"
 };
-firebase.initializeApp(firebaseConfig);
-var _db=firebase.database();
-var _sessionId=_db.ref('sessions').push().key;
 
-function setFbStatus(state,label){
-  ['d','m'].forEach(function(p){
-    var el=document.getElementById('fb-status-'+p);
-    var lb=document.getElementById('fb-label-'+p);
-    if(el){ el.className='fb-status '+state; }
-    if(lb){ lb.textContent=label; }
+try {
+  firebase.initializeApp(firebaseConfig);
+  var _db  = firebase.database();
+  var _sid = _db.ref('sessions').push().key;
+
+  // Expose on window so syncToFirebase() can reach them
+  window._fbDb        = _db;
+  window._fbSessionId = _sid;
+
+  // Connection indicator
+  _db.ref('.info/connected').on('value', function(snap) {
+    setFbStatus(
+      snap.val() === true ? 'connected' : 'syncing',
+      snap.val() === true ? '● Live'    : '○ Connecting'
+    );
   });
-}
-_db.ref('.info/connected').on('value',function(snap){
-  setFbStatus(snap.val()===true?'connected':'syncing',snap.val()===true?'● Live':'○ Connecting');
-});
 
-// ── Load locmap immediately on page load, before user can start ──
-_db.ref('locmap').on('value', function(snap) {
-  var map = snap.val();
-  paddleLocMap = map || {};
+  // Load locmap on page open — gates the Start button
+  _db.ref('locmap').on('value', function(snap) {
+    var map = snap.val();
+    paddleLocMap = map || {};
 
-  var icon  = document.getElementById('locmap-check-icon');
+    var icon  = document.getElementById('locmap-check-icon');
+    var title = document.getElementById('locmap-check-title');
+    var sub   = document.getElementById('locmap-check-sub');
+    var btn   = document.getElementById('setup-start-btn');
+    var box   = document.getElementById('locmap-check');
+
+    if (map && Object.keys(map).length > 0) {
+      var locs = {};
+      Object.values(map).forEach(function(l){ locs[l]=true; });
+      var locList = Object.keys(locs).sort().join(', ');
+      var count   = Object.keys(map).length;
+      if(icon)  icon.textContent  = '✅';
+      if(title) title.textContent = 'Event ready — '+count+' paddles mapped';
+      if(sub)   sub.textContent   = 'Locations: '+locList;
+      if(box)   { box.style.borderColor='#6EE7B7'; box.style.background='#ECFDF5'; }
+      if(btn)   { btn.disabled=false; btn.textContent='Start Tracking'; }
+    } else {
+      if(icon)  icon.textContent  = '⏳';
+      if(title) title.textContent = 'Waiting for event setup…';
+      if(sub)   sub.textContent   = 'The admin needs to upload the location map first';
+      if(box)   { box.style.borderColor='#FCD34D'; box.style.background='#FFFBEB'; }
+      if(btn)   { btn.disabled=true; btn.textContent='Waiting for event setup…'; }
+    }
+  });
+
+  // Called once when operator hits Start
+  window._fbInitSession = function(operator) {
+    setFbStatus('syncing', '↑ Saving…');
+    _db.ref('sessions/'+_sid+'/meta')
+      .set({ operator: operator, startedAt: new Date().toISOString() })
+      .then(function()  { setFbStatus('connected', '● Live'); })
+      .catch(function(e){ setFbStatus('error', '✕ '+e.code); console.error(e); });
+  };
+
+} catch(e) {
+  console.error('Firebase init failed:', e);
+  setFbStatus('error', '✕ Config error');
+  var box = document.getElementById('locmap-check');
   var title = document.getElementById('locmap-check-title');
   var sub   = document.getElementById('locmap-check-sub');
-  var btn   = document.getElementById('setup-start-btn');
-  var box   = document.getElementById('locmap-check');
-
-  if (map && Object.keys(map).length > 0) {
-    var locs = {};
-    Object.values(map).forEach(function(l){ locs[l]=true; });
-    var locList = Object.keys(locs).sort().join(', ');
-    var count   = Object.keys(map).length;
-    if(icon)  icon.textContent  = '✅';
-    if(title) title.textContent = 'Event ready — '+count+' paddles mapped';
-    if(sub)   sub.textContent   = 'Locations: '+locList;
-    if(box)   { box.style.borderColor='#6EE7B7'; box.style.background='#ECFDF5'; }
-    if(btn)   { btn.disabled=false; btn.textContent='Start Tracking'; }
-  } else {
-    if(icon)  icon.textContent  = '⏳';
-    if(title) title.textContent = 'Waiting for event setup…';
-    if(sub)   sub.textContent   = 'The admin needs to upload the location map first';
-    if(box)   { box.style.borderColor='#FCD34D'; box.style.background='#FFFBEB'; }
-    if(btn)   { btn.disabled=true; btn.textContent='Waiting for event setup…'; }
-  }
-});
-
-window._fbReady=true;
-window._fbInitSession=function(operator){
-  setFbStatus('syncing','↑ Saving…');
-  _db.ref('sessions/'+_sessionId+'/meta').set({operator:operator,startedAt:new Date().toISOString()})
-    .then(function(){setFbStatus('connected','● Live');})
-    .catch(function(err){setFbStatus('error','✕ '+err.code);});
-};
-window._fbSyncLog=function(logData){
-  _db.ref('sessions/'+_sessionId+'/log').set(logData)
-    .catch(function(err){setFbStatus('error','✕ Write failed');});
-};
+  if(box)   { box.style.borderColor='#FCA5A5'; box.style.background='#FEF2F2'; }
+  if(title) title.textContent = '⚠ Firebase config error';
+  if(sub)   sub.textContent   = e.message;
+}
 </script>
 
 </body>
