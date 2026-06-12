@@ -488,11 +488,14 @@ function setLocFilter(name) {
 
 function renderListPage() {
   var allSids = Object.keys(allSessions);
+
+  // Filter by location only when a specific location is selected
   var visible = allSids.filter(function(sid) {
-    if (locFilter === 'all' || locNames.length === 0) return true;
+    if (locFilter === 'all') return true; // always show all sessions on "All" tab
     var log = toArray(allSessions[sid].log);
     return log.some(function(e){ return !e.voided && getPaddleLoc(e.num) === locFilter; });
   });
+
   visible.sort(function(a,b) {
     return calcTotal(allSessions[b], locFilter) - calcTotal(allSessions[a], locFilter);
   });
@@ -507,7 +510,9 @@ function renderListPage() {
 
   visible.forEach(function(sid) {
     var session  = allSessions[sid];
+    if (!session) return; // skip malformed entries
     var meta     = session.meta || {};
+    var operator = meta.operator || meta.name || 'Unknown'; // fallback
     var total    = calcTotal(session, locFilter);
     var startedAt = meta.startedAt ? new Date(meta.startedAt).toLocaleString('en-US',{
       month:'short', day:'numeric', hour:'2-digit', minute:'2-digit', hour12:true
@@ -517,7 +522,7 @@ function renderListPage() {
     card.className = 'session-card';
     card.innerHTML =
       '<div class="session-card-left">' +
-        '<div class="session-card-name">'+escHtml(meta.operator||'Unknown')+'</div>' +
+        '<div class="session-card-name">'+escHtml(operator)+'</div>' +
         '<div class="session-card-meta">'+startedAt+'</div>' +
       '</div>' +
       '<div class="session-card-right">' +
@@ -544,7 +549,7 @@ function renderDetailPage(sid) {
     month:'long', day:'numeric', year:'numeric', hour:'2-digit', minute:'2-digit', hour12:true
   }) : '—';
 
-  document.getElementById('detail-name').textContent = meta.operator || 'Unknown';
+  document.getElementById('detail-name').textContent = meta.operator || meta.name || 'Unknown';
   document.getElementById('detail-meta').textContent = 'Started '+startedAt;
   document.getElementById('detail-total-val').textContent = '$'+total.toLocaleString();
   document.getElementById('detail-paddle-count').textContent = raised.size+' paddle'+(raised.size!==1?'s':'')+' raised';
@@ -658,7 +663,7 @@ function renderDetailLevels(sid) {
 var pendingDeleteSid = null;
 function openDeleteModal(sid) {
   pendingDeleteSid = sid;
-  var name = (allSessions[sid]&&allSessions[sid].meta) ? (allSessions[sid].meta.operator||'Unknown') : 'Unknown';
+  var name = (allSessions[sid]&&allSessions[sid].meta) ? (allSessions[sid].meta.operator||allSessions[sid].meta.name||'Unknown') : 'Unknown';
   document.getElementById('delete-modal-name').textContent = name;
   document.getElementById('delete-modal').classList.add('show');
 }
@@ -667,7 +672,7 @@ document.getElementById('delete-modal').addEventListener('click', function(e){ i
 function confirmDelete() {
   if (!pendingDeleteSid) return;
   var sid  = pendingDeleteSid;
-  var name = (allSessions[sid]&&allSessions[sid].meta) ? (allSessions[sid].meta.operator||'session') : 'session';
+  var name = (allSessions[sid]&&allSessions[sid].meta) ? (allSessions[sid].meta.operator||allSessions[sid].meta.name||'session') : 'session';
   closeDeleteModal();
   db.ref('sessions/'+sid).remove()
     .then(function(){ showToast(name+"'s session deleted."); if(currentSid===sid) goBack(); })
@@ -688,9 +693,9 @@ function exportSession(sid) {
     var amount=e.levelId==='lc'?(e.customValue||0):(lvl?lvl.value:'');
     var label=e.levelId==='lc'?'Custom $'+(e.customValue||0).toLocaleString():(lvl?lvl.label:'');
     var loc=getPaddleLoc(e.num)||'';
-    rows.push([meta.operator||'',e.num,loc,label,amount,ts,e.voided?'Removed':'Active']);
+    rows.push([meta.operator||meta.name||'',e.num,loc,label,amount,ts,e.voided?'Removed':'Active']);
   });
-  triggerCSV(rows,'paddle_raise_'+(meta.operator||'session').replace(/\s+/g,'_')+'_'+datestamp()+'.csv');
+  triggerCSV(rows,'paddle_raise_'+(meta.operator||meta.name||'session').replace(/\s+/g,'_')+'_'+datestamp()+'.csv');
   showToast('CSV exported!');
 }
 function exportAll() {
@@ -703,7 +708,7 @@ function exportAll() {
       var amount=e.levelId==='lc'?(e.customValue||0):(lvl?lvl.value:'');
       var label=e.levelId==='lc'?'Custom $'+(e.customValue||0).toLocaleString():(lvl?lvl.label:'');
       var loc=getPaddleLoc(e.num)||'';
-      rows.push([sid,meta.operator||'',e.num,loc,label,amount,ts,e.voided?'Removed':'Active']);
+      rows.push([sid,meta.operator||meta.name||'',e.num,loc,label,amount,ts,e.voided?'Removed':'Active']);
     });
   });
   if(rows.length===1){showToast('No data to export.');return;}
