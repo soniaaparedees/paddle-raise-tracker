@@ -1010,13 +1010,14 @@ function numpadRaise(prefix){
 
 /* ════ EXPORT ════ */
 function exportCSV(){
-  const rows=[['Operator','Paddle Number','Level','Amount','Timestamp','Status']];
+  const rows=[['Operator','Paddle Number','Location','Level','Amount','Timestamp','Status']];
   log.forEach(e=>{
     const lvl=LEVELS.find(l=>l.id===e.levelId);
     const amount = e.levelId==='lc' ? (e.customValue||0) : lvl.value;
     const label  = e.levelId==='lc' ? 'Custom $'+(e.customValue||0).toLocaleString() : lvl.label;
+    const loc    = paddleLocMap[e.num] || paddleLocMap[String(e.num)] || '';
     const ts=e.ts?e.ts.toLocaleString('en-US',{month:'2-digit',day:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true}):'';
-    rows.push([operatorName,e.num,label,amount,ts,e.voided?'Removed':'Active']);
+    rows.push([operatorName,e.num,loc,label,amount,ts,e.voided?'Removed':'Active']);
   });
   if(rows.length===1){showToast('No entries to export yet.');return;}
   const csv=rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n');
@@ -1099,11 +1100,9 @@ var firebaseConfig = {
 try {
   firebase.initializeApp(firebaseConfig);
   var _db  = firebase.database();
-  var _sid = _db.ref('sessions').push().key;
-
-  // Expose on window so syncToFirebase() can reach them
+  // _sid is generated when the session actually starts, not on page load
   window._fbDb        = _db;
-  window._fbSessionId = _sid;
+  window._fbSessionId = null; // set when startApp fires
 
   // Connection indicator
   _db.ref('.info/connected').on('value', function(snap) {
@@ -1143,14 +1142,16 @@ try {
     }
   });
 
-  // Called once when operator hits Start
+  // Called once when operator hits Start — generates session ID here so it's atomic
   window._fbInitSession = function(operator) {
-    console.log('[Tracker] _fbInitSession called with operator:', operator, 'sessionId:', _sid);
+    var sid = _db.ref('sessions').push().key;
+    window._fbSessionId = sid;
+    console.log('[Tracker] _fbInitSession — operator:', operator, 'sid:', sid);
     setFbStatus('syncing', '↑ Saving…');
-    _db.ref('sessions/'+_sid+'/meta')
+    _db.ref('sessions/'+sid+'/meta')
       .set({ operator: operator, startedAt: new Date().toISOString() })
       .then(function()  {
-        console.log('[Tracker] meta written successfully');
+        console.log('[Tracker] meta written OK');
         setFbStatus('connected', '● Live');
       })
       .catch(function(e){
