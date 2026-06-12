@@ -435,10 +435,11 @@ function startListening() {
   if(dbg) dbg.textContent = '⏳ Connecting…';
 
   db.ref('sessions').on('value', function(snap) {
-    var keys = snap.val() ? Object.keys(snap.val()) : [];
-    console.log('[Admin] sessions snapshot — ' + keys.length + ' sessions:', keys);
+    var raw = snap.val();
+    console.log('[Admin] RAW snapshot:', JSON.stringify(raw, null, 2));
+    var keys = raw ? Object.keys(raw) : [];
     if(dbg) dbg.textContent = '✅ Firebase live — ' + keys.length + ' session(s) in DB';
-    allSessions = snap.val() || {};
+    allSessions = raw || {};
     renderListPage();
     if (currentSid && allSessions[currentSid]) renderDetailPage(currentSid);
   }, function(err) {
@@ -450,8 +451,10 @@ function startListening() {
 
 function toArray(val) {
   if (!val) return [];
-  if (Array.isArray(val)) return val;
-  return Object.keys(val).sort(function(a,b){ return Number(a)-Number(b); }).map(function(k){ return val[k]; });
+  if (Array.isArray(val)) return val.filter(Boolean);
+  var keys = Object.keys(val);
+  if (keys.length === 0) return [];
+  return keys.sort(function(a,b){ return Number(a)-Number(b); }).map(function(k){ return val[k]; }).filter(Boolean);
 }
 
 function getPaddleLoc(num) { return paddleLocMap[num] || paddleLocMap[String(num)] || null; }
@@ -510,13 +513,14 @@ function renderListPage() {
 
   visible.forEach(function(sid) {
     var session  = allSessions[sid];
-    if (!session) return; // skip malformed entries
+    if (!session) return;
     var meta     = session.meta || {};
-    var operator = meta.operator || meta.name || 'Unknown'; // fallback
+    var operator = meta.operator || meta.name || '(no name — session '+sid.slice(-6)+')';
     var total    = calcTotal(session, locFilter);
     var startedAt = meta.startedAt ? new Date(meta.startedAt).toLocaleString('en-US',{
       month:'short', day:'numeric', hour:'2-digit', minute:'2-digit', hour12:true
     }) : '—';
+    console.log('[Admin] Rendering session', sid, 'meta:', meta, 'operator:', operator);
 
     var card = document.createElement('div');
     card.className = 'session-card';
